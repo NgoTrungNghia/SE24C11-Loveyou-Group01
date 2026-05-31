@@ -197,7 +197,7 @@ After creating an account, users build their personal profile\. This is where ph
 
 ![](hinh_anh/anh_3.png)
 
-Đây là giao diện chính của ứng dụng, mọi người có thể thấy hồ sơ của nhau và đưa ra quyết định có trên trao nhau cơ hội không \( vuốt trái tương đương với kí tự X,điều này đồng nghĩa với việc không muốn kết nối và ngược lại là kí tự hình trái tim đồng nghĩa với việc trao cho nhau sẽ một cơ hội\) 
+This is the main interface of the application, where users can view each other's profiles and decide whether they would like to connect. Swiping left, represented by the X icon, indicates that the user is not interested in connecting, while tapping the heart icon indicates interest and a willingness to give the other person a chance.
 
 ### 1\.4 Interface After a Successful Match:
 
@@ -227,25 +227,25 @@ This feature prioritizes premium users\. Free users have limitations on the numb
 
 ![](hinh_anh/anh_8.png)
 
-Giao diện đăng nhập cho phép người dùng tạo tài khoản mới hoặc đăng nhập vào hệ thống thông qua số điện thoại hoặc tài khoản mạng xã hội\. Trong quá trình thiết lập hồ sơ, người dùng có thể cung cấp các thông tin cá nhân như tên, tuổi, giới tính, sở thích, nghề nghiệp, học vấn và hình ảnh đại diện\. Các thông tin này được sử dụng để xây dựng hồ sơ cá nhân và hỗ trợ hệ thống gợi ý những đối tượng phù hợp\. 
+The login interface allows users to create a new account or sign in using their phone number or social media account. During the profile setup process, users can provide personal information such as their name, age, gender, interests, occupation, educational background, and profile picture. This information is used to build a personal profile and help the system recommend suitable matches.
 
 ### 2\.2 Main Interface
 
 ![](hinh_anh/anh_9.png)
 
-Đây là màn hình chính của ứng dụng, nơi người dùng có thể khám phá các hồ sơ được đề xuất\. Mỗi hồ sơ hiển thị các thông tin cơ bản như ảnh đại diện, tên, độ tuổi và sở thích\. Người dùng có thể thực hiện các thao tác thích \(Like\) hoặc bỏ qua \(Pass\) đối với từng hồ sơ\. Giao diện được thiết kế đơn giản, trực quan, giúp người dùng dễ dàng tương tác và tìm kiếm đối tượng phù hợp\. 
+This is the main screen of the application, where users can browse recommended profiles. Each profile displays basic information such as a profile picture, name, age, and interests. Users can choose to Like or Pass a profile. The interface is designed to be simple and intuitive, allowing users to interact easily and find suitable matches.
 
 ### 2\.3 Chat Interface
 
 ![](hinh_anh/anh_10.png)![](hinh_anh/anh_11.png)
 
-Tương tự trước đó,lần lượt là các giao diện và chức năng: Match đối phương, có thẻ xem hồ sơ của họ\( hình ảnh cũng như sở thích…\) nếu ưng ý và cả 2 đều thích nhau \( đồng nghĩa với việc match thành công\), thì sẽ chuyển sang trò chuyện với nhau\. 
+Similar to the previous application, users can view another person's profile, including their photos and interests. If both users are interested in each other (resulting in a successful match), they can proceed to chat with one another through the application.
 
 ### 2\.4 User Profile Interface
 
 ![](hinh_anh/anh_12.png)![](hinh_anh/anh_13.png)
 
-Giao diện hồ sơ người dùng hiển thị toàn bộ thông tin cá nhân đã được thiết lập, bao gồm ảnh đại diện, tiểu sử, sở thích, nghề nghiệp, học vấn và các thông tin liên quan khác\. Người dùng có thể chỉnh sửa, cập nhật hoặc bổ sung thông tin hồ sơ bất kỳ lúc nào để tăng khả năng thu hút và tìm kiếm những đối tượng phù hợp hơn trên nền tảng\. 
+The user profile interface displays all personal information that has been set up, including profile pictures, biography, interests, occupation, educational background, and other relevant details. Users can edit, update, or add information to their profile at any time to improve their attractiveness and increase their chances of finding more suitable matches on the platform.
 
 ### 2\.5 Workflow
 
@@ -319,7 +319,7 @@ Giao diện hồ sơ người dùng hiển thị toàn bộ thông tin cá nhân
 - **Tools:** Use Visual Studio Code and GitHub for code hosting
 - **Rules:**
   - Write code comments in **English**
-  - Name image files uploaded to the web using the structure: `name-function.jpg`
+  - Name image or files uploaded to the web using the structure: `function-PA?` . ex:`create_git-PA1`
 
 **Code Review & Testing:**
 - **Code Review:** Once a feature is completed, notify the Team Leader to review the code
