@@ -1,6 +1,6 @@
+# WEEK 1 - PA1
 
-# SCRUM 1 - WEEK 1
-
+# SCRUM 1
 ## ====== 29/05 =====
 
 ## **A. Group 01**

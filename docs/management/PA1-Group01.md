@@ -9,6 +9,7 @@
 | 23127331 | Nguyễn Công Chiến | ncchien23@clc.fitus.edu.vn |
 | 23127368 | Nguyễn Minh Hoàng | nmhoang23@clc.fitus.edu.vn |
 | 23127197 | Nguyễn Tường Huy | nthuy231@clc.fitus.edu.vn |
+|Vũ Lê Trọng Văn|20127095|vltvan20@clc.fitus.edu.vn|
 
 ## **B - Project Proposal**
 
@@ -357,11 +358,7 @@ The user profile interface displays all personal information that has been set u
 
 ## **E. Development Tools and Process Setup**
 
-| Assignee  | REVIEWER  | Editor  |
+| Assignee  | Reviewer  | Editor  |
 | :--- | :--- | :--- |
-| Nghĩa | Nghĩa | Hoàng |
+| Nghĩa | Nghĩa | Chiến |
 
-Your team will follow the Scrum process throughout the project:
-* Each PA corresponds to one Sprint (approximately 2-3 weeks).
-* Each Sprint includes: 1 Sprint Planning meeting, 2 Scrum meetings (spread across the sprint), and 1 Sprint Review meeting.
-* Follow the meeting format described in the "GoogleDriveFolderStructureRequirement" document (provided separately).
