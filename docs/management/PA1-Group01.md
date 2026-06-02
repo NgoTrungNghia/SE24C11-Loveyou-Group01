@@ -320,7 +320,7 @@ The user profile interface displays all personal information that has been set u
 - **Tools:** Use Visual Studio Code and GitHub for code hosting
 - **Rules:**
   - Write code comments in **English**
-  - Name image or files uploaded to the web using the structure: `function-PA?` . ex:`create_git-PA1`
+  - Name image or files uploaded to the web using the structure: `PA-function?` . Ex: `PA1-create_git`
 
 **Code Review & Testing:**
 - **Code Review:** Once a feature is completed, notify the Team Leader to review the code
