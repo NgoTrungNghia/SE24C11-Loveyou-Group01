@@ -382,3 +382,8 @@ The user profile interface displays all personal information that has been set u
 | :--- | :--- | :--- |
 | Nghĩa | Nghĩa | Chiến |
 
+* **Link Github:** https://github.com/NgoTrungNghia/SE24C11-Loveyou-Group01
+* **Link Trellor:** https://trello.com/b/NcybtpYE/se-g01-24c11
+
+
+
