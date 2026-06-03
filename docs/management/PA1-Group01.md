@@ -65,13 +65,13 @@ LoveYou contains **10 functional groups**. Each group is a cluster of related us
 | # | Functional Group | Use Cases |
 |---|---|---|
 | FG-01 | Authentication & Authorization | Sign up, log in, log out, forgot/reset password, session management, role-based access control |
-| FG-02 | User Profile Management | Edit personal info, upload avatar and photos (up to 5), manage interest tags, change password |
+| FG-02 | User Profile Management | Edit personal info, upload avatar and photos (up to 5), manage interest tags, change password, generate AI-written profile bio |
 | FG-03 | AI-Powered Smart Matching | Calculate AI compatibility score, display ranked candidate list, show match reasons, refresh suggestions |
 | FG-04 | Swipe & Match System | Swipe right (like) / left (skip), detect mutual like → match, show match confirmation, view match history |
 | FG-05 | Advanced Search & Filtering | Filter by gender / age range / city / interest tags, view paginated results, sort by recency or AI score |
-| FG-06 | Real-time Messaging | Send and receive messages instantly, view message history, see online/offline status and typing indicator |
+| FG-06 | Real-time Messaging | Send and receive messages instantly, view message history, see online/offline status and typing indicator, launch AI ice-breaking game |
 | FG-07 | Notification Center | Receive match and message notifications, mark as read, view notification list with timestamps |
-| FG-08 | Privacy & Safety Controls | Block/report users, hide contact info until matched, deactivate or permanently delete account |
+| FG-08 | Privacy & Safety Controls | Block/report users, hide contact info until matched, deactivate or permanently delete account, analyze chat for AI red flags |
 | FG-09 | Admin Dashboard | View platform statistics, manage users (search/view/block/delete), manage interest tag catalogue |
 | FG-10 | Onboarding & Preference Setup | Complete first-login wizard, upload photo, set gender preference and age range, pick initial interest tags |
 
@@ -100,7 +100,28 @@ When a user opens the matching screen, LoveYou's AI engine evaluates compatibili
 
 ---
 
-#### Feature 4 — Swipe & Match System
+#### Feature 4 — AI Profile Bio Generator ⭐ *(AI Feature)*
+*(FG-02 / FG-03)*
+
+LoveYou helps users build compelling dating profiles with minimal effort. Users only need to enter basic information such as interests, occupation, and personality traits, and the AI writes an attractive biography automatically. For example, a simple input like “Likes movies, travels” is transformed into a richer bio such as “A person who is always searching for great films and weekend adventures full of surprises.” This feature improves profile quality, boosts engagement, and makes new users feel more confident when they start matching.
+
+---
+
+#### Feature 5 — AI Red Flag Detection ⭐ *(AI Feature)*
+*(FG-08)*
+
+LoveYou analyzes chat messages and interaction patterns to detect early warning signs of unsafe behavior. The AI scans for psychological manipulation, financial scams, harassment, toxic content, and other harmful signals in conversations. When potential red flags are found, the app warns the user promptly and encourages safer choices. This proactive safety layer is powered by algorithms that interpret user-provided signals and message content to protect the community.
+
+---
+
+#### Feature 6 — AI Ice-Breaking Game ⭐ *(AI Feature)*
+*(FG-06)*
+
+After two users match, LoveYou can generate a fun ice-breaking experience to keep the conversation moving. The AI creates a shared quiz that measures compatibility, offers interactive prompts, and suggests a “20 questions to discover your match” game. This feature increases engagement during quiet moments and helps matched users start conversations in a playful and meaningful way.
+
+---
+
+#### Feature 7 — Swipe & Match System
 *(FG-04)*
 
 Users interact with AI-ranked candidates through an intuitive swipe-card interface: swiping right to like a profile and swiping left to skip. When two users have mutually liked each other, a match is instantly created and both parties receive an in-app notification — no refresh required. This feature is the core engagement loop of the platform, converting AI-ranked suggestions into real human connections.
@@ -149,26 +170,36 @@ New users are guided through a lightweight first-login wizard that collects the 
 
 ---
 
-### 6. AI Feature — AI Smart Matching Engine
+### 6. AI Features — Smart Matching, Profile Writing, Red Flag Detection, and Ice-Breaking
 
-#### 6.1 Problem Statement
+LoveYou's AI capabilities go beyond compatibility scoring. In addition to the AI Smart Matching Engine, the platform uses AI to generate attractive profile bios, detect unsafe conversation behavior, and create interactive ice-breaking experiences after a match.
 
-The most common complaint about existing dating apps is that the feed feels random and overwhelming. Users waste time swiping through profiles that are clearly incompatible, leading to frustration and churn. A simple filter by age or location narrows the pool but does not rank by quality of fit. LoveYou's AI Matching Engine solves this by bringing **intelligent, explainable compatibility ranking** to every session.
+#### 6.1 AI Smart Matching Engine
+
+The most common complaint about existing dating apps is that the feed feels random and overwhelming. Users waste time swiping through profiles that are clearly incompatible, leading to frustration and churn. LoveYou's AI Matching Engine solves this by bringing **intelligent, explainable compatibility ranking** to every session.
 
 #### 6.2 How It Works
 
 The AI engine takes the current user's full profile — biography, interest tags, age, location, and preferences — and compares it against each unseen candidate using a large language model. The model reasons about compatibility holistically: it understands that two people with different tag labels can still share a similar lifestyle if their biographies express it, something no hand-coded formula can capture. The output is a ranked list of candidates, each with a score and a plain-language reason in Vietnamese, delivered to the user every time they open the matching screen.
 
-#### 6.3 How It Enhances User Experience
+#### 6.3 AI Profile Bio Generator
 
-From the user's perspective, the matching screen feels **curated rather than random**. The most compatible profiles appear at the top of the swipe stack with a visible score badge and a short reason beneath the profile photo. This transparency reduces decision fatigue — users can quickly skip low-score profiles — while increasing confidence in high-score suggestions because they understand the reasoning, not just the number.
+LoveYou helps users build compelling dating profiles with minimal effort. Users only need to input basic information such as interests, occupation, and personality traits, and the AI writes an attractive biography automatically. For example, a simple “Likes movies, travels” can become “A person who is always searching for great films and weekend adventures full of surprises.” This feature improves profile quality and makes new users feel more confident when they start matching.
 
-#### 6.4 Why This Qualifies as a Meaningful AI Feature
+#### 6.4 AI Red Flag Detection
 
-- The engine uses **natural language understanding** to assess compatibility from unstructured biography text, going far beyond what simple tag-matching or numeric filters can achieve.
-- It delivers **real, practical value in every session** — every user benefits every time they open the matching screen, not just in edge cases.
-- It produces **explainable output** in Vietnamese rather than a black-box score, building user trust and making the AI feel transparent rather than opaque.
-- It directly addresses a **genuine and widespread pain point** on dating platforms rather than serving as a novelty add-on.
+The platform analyzes chat messages and interaction patterns to detect early warning signs of unsafe behavior. The AI scans for psychological manipulation, financial scams, harassment, toxic content, and other harmful signals in conversations. When potential red flags are found, the app warns the user promptly and encourages safer choices.
+
+#### 6.5 AI Ice-Breaking Game
+
+After two users match, LoveYou can generate a fun ice-breaking experience to keep the conversation moving. The AI creates a shared quiz that measures compatibility, offers interactive prompts, and suggests a “20 questions to discover your match” game. This feature increases engagement during quiet moments and helps matched users start conversations in a playful and meaningful way.
+
+#### 6.6 Why This Qualifies as a Meaningful AI Suite
+
+- The system uses **natural language understanding** to assess compatibility, write bios, and interpret conversation safety, offering more than simple rule-based matching.
+- It delivers **real, practical value across the user journey** — from profile creation to matching to safe communication.
+- It produces **explainable output** and proactive warnings, building trust in the platform instead of relying on opaque black-box behavior.
+- It addresses multiple user needs: quality matches, attractive profiles, safer chat, and better initial interaction, making the AI suite a core differentiator for LoveYou.
 
 ---
 
