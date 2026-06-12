@@ -204,73 +204,73 @@ After two users match, LoveYou can generate a fun ice-breaking experience to kee
 
 ### 1\.1 Login Interface:
 
-![](hinh_anh/anh_1.png)
+![](image/anh_1.png)
 
 Users log in with a personal account to use the application\. If they do not have an account, they can create a new one using a phone number or by signing in with Apple\.
 
 ### 1\.2 User Profile Creation Interface:
 
-![](hinh_anh/anh_2.png)
+![](image/anh_2.png)
 
 After creating an account, users build their personal profile\. This is where photos, personality traits, interests, age, height, and other personal information are stored, allowing them to introduce themselves to potential matches who view their profile\.
 
 ### 1\.3 Main Interface – Where Users Decide Whether to Connect:
 
-![](hinh_anh/anh_3.png)
+![](image/anh_3.png)
 
 This is the main interface of the application, where users can view each other's profiles and decide whether they would like to connect. Swiping left, represented by the X icon, indicates that the user is not interested in connecting, while tapping the heart icon indicates interest and a willingness to give the other person a chance.
 
 ### 1\.4 Interface After a Successful Match:
 
-![](hinh_anh/anh_4.png)
+![](image/anh_4.png)
 
 When both users like each other, the system notifies them of a successful match\. They can then chat through the application or arrange to meet in person\.
 
 ### 1\.5 Safety Features and Alternative Actions:
 
-![](hinh_anh/anh_5.png)
+![](image/anh_5.png)
 
 During interactions or conversations, users can unmatch, block, or report others to the system administrators if they engage in behavior considered a violation of community standards\.
 
 ### 1\.6 Enhanced User Experience:
 
-![](hinh_anh/anh_6.png)
+![](image/anh_6.png)
 
 This feature prioritizes premium users\. Free users have limitations on the number of likes per day and restricted access to seeing who liked them, reducing their chances of making successful matches\. Paid plans provide increasing benefits and priority levels: Platinum > Gold > Tinder\+\.
 
 ### 1\.7 Main Tinder Workflow:
 
-![](hinh_anh/anh_7.png)
+![](image/anh_7.png)
 
 ### 2\. Bumble
 
 ### 2\.1 Login Interface
 
-![](hinh_anh/anh_8.png)
+![](image/anh_8.png)
 
 The login interface allows users to create a new account or sign in using their phone number or social media account. During the profile setup process, users can provide personal information such as their name, age, gender, interests, occupation, educational background, and profile picture. This information is used to build a personal profile and help the system recommend suitable matches.
 
 ### 2\.2 Main Interface
 
-![](hinh_anh/anh_9.png)
+![](image/anh_9.png)
 
 This is the main screen of the application, where users can browse recommended profiles. Each profile displays basic information such as a profile picture, name, age, and interests. Users can choose to Like or Pass a profile. The interface is designed to be simple and intuitive, allowing users to interact easily and find suitable matches.
 
 ### 2\.3 Chat Interface
 
-![](hinh_anh/anh_10.png)![](hinh_anh/anh_11.png)
+![](image/anh_10.png)![](image/anh_11.png)
 
 Similar to the previous application, users can view another person's profile, including their photos and interests. If both users are interested in each other (resulting in a successful match), they can proceed to chat with one another through the application.
 
 ### 2\.4 User Profile Interface
 
-![](hinh_anh/anh_12.png)![](hinh_anh/anh_13.png)
+![](image/anh_12.png)![](image/anh_13.png)
 
 The user profile interface displays all personal information that has been set up, including profile pictures, biography, interests, occupation, educational background, and other relevant details. Users can edit, update, or add information to their profile at any time to improve their attractiveness and increase their chances of finding more suitable matches on the platform.
 
 ### 2\.5 Workflow
 
-![](hinh_anh/anh_14.png)
+![](image/anh_14.png)
 
 # <a id="_heading=h.ngaa8htlpff8"></a>
 
