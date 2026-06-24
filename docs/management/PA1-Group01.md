@@ -9,11 +9,11 @@
 | 23127331 | Nguyễn Công Chiến | ncchien23@clc.fitus.edu.vn |
 | 23127368 | Nguyễn Minh Hoàng | nmhoang23@clc.fitus.edu.vn |
 | 23127197 | Nguyễn Tường Huy | nthuy231@clc.fitus.edu.vn |
-|Vũ Lê Trọng Văn|20127095|vltvan20@clc.fitus.edu.vn|
+|20127095|Vũ Lê Trọng Văn|vltvan20@clc.fitus.edu.vn|
 
 ## **B - Project Proposal**
 
-| Assignee  | REVIEWER  | Editor  |
+| Assignee  | Reviewer  | Editor  |
 | :--- | :--- | :--- |
 | Chiến | Nghĩa | Nghĩa |
 
@@ -194,7 +194,7 @@ After two users match, LoveYou can generate a fun ice-breaking experience to kee
 
 ## **C - Existing App Survey**
 
-| Assignee  | REVIEWER  | Editor  |
+| Assignee  | Reviewer  | Editor  |
 | :--- | :--- | :--- |
 | Tấn | Nghĩa | Hoàng |
 
@@ -294,7 +294,7 @@ The user profile interface displays all personal information that has been set u
 
 ## **D -  Team contract**
 
-| Assignee  | REVIEWER  | Editor  |
+| Assignee  | Reviewer  | Editor  |
 | :--- | :--- | :--- |
 | Nghĩa | Nghĩa | Hoàng |
 
@@ -377,7 +377,6 @@ The user profile interface displays all personal information that has been set u
 * **Amendments:** Changes are only approved with everyone present and 100% consensus.
 
 ## **E. Development Tools and Process Setup**
-
 | Assignee  | Reviewer  | Editor  |
 | :--- | :--- | :--- |
 | Nghĩa | Nghĩa | Chiến |
