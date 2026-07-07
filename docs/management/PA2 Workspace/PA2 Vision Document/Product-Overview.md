@@ -135,7 +135,7 @@ The following AI tools were used during the preparation of the " Product Overvie
 - Removed sections not relevant to a dating web app (e.g., hardware interface placeholders).
 - Validated the structure against the course's Vision Document guidelines from CSC13002.
 
-![](./AI-Log 01.png)
+![](./AI-Log%2001.png)
 
 ---
 
@@ -157,7 +157,7 @@ The following AI tools were used during the preparation of the " Product Overvie
 - Wrote the final "Compatibility Score (0–100)" table entry and supporting prose entirely in the student's own words.
 - Cross-checked the claimed four analysis dimensions (interests, biography, age preference, geographic proximity) against the team's actual matching engine design before including them.
 
-![](./AI-Log 02.png)
+![](./AI-Log%2002.png)
 
 ---
 
