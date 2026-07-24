@@ -78,6 +78,12 @@
 - What happens when [boundary condition]?
 - How does system handle [error scenario]?
 
+## Project Constraints *(mandatory)*
+
+- Authentication and personal data features MUST include backend validation, authorization, and privacy protections.
+- The frontend MUST interact with backend APIs and MUST NOT access the database directly.
+- Features MUST follow the product priority order: Authentication → User Profiles → Smart Matching → Swipe & Match → Messaging → Notifications → Safety → Admin → Additional AI.
+
 ## Requirements *(mandatory)*
 
 <!--

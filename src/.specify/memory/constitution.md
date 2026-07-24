@@ -1,50 +1,48 @@
-# [PROJECT_NAME] Constitution
-<!-- Example: Spec Constitution, TaskFlow Constitution, etc. -->
+<!--
+Sync Impact Report
+- Version change: 0.0.0 → 1.0.0
+- Modified principles: none → 5 new principles
+- Added sections: Technology and Architecture Constraints, Development Workflow and Review
+- Removed sections: none
+- Templates requiring updates: ✅ .specify/templates/plan-template.md, ✅ .specify/templates/spec-template.md, ✅ .specify/templates/tasks-template.md
+- Follow-up TODOs: none
+-->
+
+# LoveYou Constitution
 
 ## Core Principles
 
-### [PRINCIPLE_1_NAME]
-<!-- Example: I. Library-First -->
-[PRINCIPLE_1_DESCRIPTION]
-<!-- Example: Every feature starts as a standalone library; Libraries must be self-contained, independently testable, documented; Clear purpose required - no organizational-only libraries -->
+### I. Security and Privacy by Default
+LoveYou MUST treat personal data as sensitive by default. Plain-text passwords MUST NEVER be stored, all endpoints MUST validate input before use, and access to private user data MUST be limited to authorized actors through explicit authorization checks.
 
-### [PRINCIPLE_2_NAME]
-<!-- Example: II. CLI Interface -->
-[PRINCIPLE_2_DESCRIPTION]
-<!-- Example: Every library exposes functionality via CLI; Text in/out protocol: stdin/args → stdout, errors → stderr; Support JSON + human-readable formats -->
+### II. Architecture Discipline
+The platform MUST follow the agreed architecture: a Node.js + Express backend, Prisma ORM with PostgreSQL (Neon), a React + Vite frontend, bcrypt with 10 rounds and JWTs with 7-day expiry for authentication, and Zod for validation. The frontend MUST NOT access the database directly; backend services remain the only integration point for persistence and auth state.
 
-### [PRINCIPLE_3_NAME]
-<!-- Example: III. Test-First (NON-NEGOTIABLE) -->
-[PRINCIPLE_3_DESCRIPTION]
-<!-- Example: TDD mandatory: Tests written → User approved → Tests fail → Then implement; Red-Green-Refactor cycle strictly enforced -->
+### III. Simplicity and Maintainability
+Features MUST be implemented with the simplest viable design that solves the current problem. YAGNI governs scope, comments and documentation MUST be written in English, dead or unused code MUST be removed, and complexity MUST be justified when it is introduced.
 
-### [PRINCIPLE_4_NAME]
-<!-- Example: IV. Integration Testing -->
-[PRINCIPLE_4_DESCRIPTION]
-<!-- Example: Focus areas requiring integration tests: New library contract tests, Contract changes, Inter-service communication, Shared schemas -->
+### IV. Quality Through Validation and Review
+Every change that affects API behavior, authentication, or user data MUST include validation and verification before merge. Pull requests MUST receive review before merge, and security-sensitive or user-impacting changes MUST not bypass review or testing.
 
-### [PRINCIPLE_5_NAME]
-<!-- Example: V. Observability, VI. Versioning & Breaking Changes, VII. Simplicity -->
-[PRINCIPLE_5_DESCRIPTION]
-<!-- Example: Text I/O ensures debuggability; Structured logging required; Or: MAJOR.MINOR.BUILD format; Or: Start simple, YAGNI principles -->
+### V. Prioritized Product Delivery
+Delivery MUST follow the product priority order: Authentication, User Profiles, Smart Matching, Swipe & Match, Messaging, Notifications, Safety, Admin, and Additional AI. Work that advances an earlier priority MUST be completed before later capabilities are considered for scope expansion.
 
-## [SECTION_2_NAME]
-<!-- Example: Additional Constraints, Security Requirements, Performance Standards, etc. -->
+## Technology and Architecture Constraints
+- Backend services MUST be implemented in Node.js with Express and Prisma.
+- PostgreSQL (Neon) MUST remain the source of truth for persistent data.
+- Frontend work MUST use React and Vite and communicate with backend APIs only.
+- Authentication MUST use bcrypt with 10 rounds and JWTs with 7-day expiry.
+- Input validation MUST use Zod on relevant request boundaries.
+- Secrets, tokens, and personal data MUST be handled in a way that prevents disclosure in logs or client code.
 
-[SECTION_2_CONTENT]
-<!-- Example: Technology stack requirements, compliance standards, deployment policies, etc. -->
-
-## [SECTION_3_NAME]
-<!-- Example: Development Workflow, Review Process, Quality Gates, etc. -->
-
-[SECTION_3_CONTENT]
-<!-- Example: Code review requirements, testing gates, deployment approval process, etc. -->
+## Development Workflow and Review
+- All work MUST be documented in English.
+- Features MUST be implemented in small, reviewable increments that can be validated independently.
+- Changes that alter contracts, security behavior, or persistence MUST be reviewed before merge.
+- No feature or refactor MAY introduce unused code, unreviewed shortcuts, or bypasses to validation rules.
+- The implementation plan and task breakdown MUST reflect the priority order above and preserve the platform's security and architecture constraints.
 
 ## Governance
-<!-- Example: Constitution supersedes all other practices; Amendments require documentation, approval, migration plan -->
+This constitution supersedes informal shortcuts for product and engineering decisions. Amendments require a documented rationale, review by the project maintainers, and a version update. Compliance is assessed during planning, implementation review, and release readiness; violations MUST be addressed before merge or release.
 
-[GOVERNANCE_RULES]
-<!-- Example: All PRs/reviews must verify compliance; Complexity must be justified; Use [GUIDANCE_FILE] for runtime development guidance -->
-
-**Version**: [CONSTITUTION_VERSION] | **Ratified**: [RATIFICATION_DATE] | **Last Amended**: [LAST_AMENDED_DATE]
-<!-- Example: Version: 2.1.1 | Ratified: 2025-06-13 | Last Amended: 2025-07-16 -->
+**Version**: 1.0.0 | **Ratified**: 2026-07-24 | **Last Amended**: 2026-07-24

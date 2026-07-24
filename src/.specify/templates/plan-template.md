@@ -40,7 +40,10 @@
 
 *GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
 
-[Gates determined based on constitution file]
+- The plan MUST preserve the security and privacy requirements for authentication and personal data.
+- The architecture MUST keep the frontend separated from direct database access and route data through backend APIs.
+- Validation, review, and documentation requirements MUST be reflected in the implementation approach.
+- The planned scope MUST follow the product priority order: Authentication → User Profiles → Smart Matching → Swipe & Match → Messaging → Notifications → Safety → Admin → Additional AI.
 
 ## Project Structure
 
