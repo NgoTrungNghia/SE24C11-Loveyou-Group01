@@ -39,12 +39,16 @@ model User {
 }
 
 model PasswordResetToken {
-  id        Int      @id @default(autoincrement()) @map("id")
-  token     String   @unique @db.VarChar(255)
-  userId    Int      @map("user_id")
-  user      User     @relation(fields: [userId], references: [userId])
-  expiresAt DateTime @map("expires_at")
-  createdAt DateTime @default(now()) @map("created_at")
+  id           Int       @id @default(autoincrement()) @map("id")
+  token        String?   @unique @db.VarChar(255)
+  userId       Int       @map("user_id")
+  user         User      @relation(fields: [userId], references: [userId])
+  expiresAt    DateTime? @map("expires_at")
+  otpCodeHash  String?   @map("otp_code_hash") @db.VarChar(255)
+  otpExpiresAt DateTime? @map("otp_expires_at")
+  verified     Boolean   @default(false)
+  attemptCount Int       @default(0) @map("attempt_count")
+  createdAt    DateTime  @default(now()) @map("created_at")
 
   @@map("password_reset_tokens")
 }

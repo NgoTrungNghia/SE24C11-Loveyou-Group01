@@ -26,11 +26,14 @@ out/
 src/loveyou-backend/node_modules/
 src/loveyou-backend/generated/
 src/loveyou-backend/.env
+src/loveyou-backend/coverage/
+!src/loveyou-backend/.env.example
 
 # ── Frontend / Vite ────────────────────────────────────────
 src/loveyou-frontend/node_modules/
 src/loveyou-frontend/dist/
 src/loveyou-frontend/.env
+!src/loveyou-frontend/.env.example
 
 # ── OS files ─────────────────────────────────────────────────
 .DS_Store

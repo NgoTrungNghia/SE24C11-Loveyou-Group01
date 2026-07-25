@@ -1,21 +1,27 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { AuthLayout, Brand, Field } from '../components/shared';
 import { authApi } from '../utils/api';
 
 export default function ResetPassword() {
   const location = useLocation();
-  const navigate  = useNavigate();
+  const navigate = useNavigate();
+  const resetToken = location.state?.resetToken || '';
 
   const [form, setForm] = useState({
-    token:       location.state?.token || '',
     newPassword: '',
-    confirm:     '',
+    confirm: '',
   });
-  const [errors, setErrors]   = useState({});
+  const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
   const [apiError, setApiError] = useState('');
-  const [done, setDone]       = useState(false);
+  const [done, setDone] = useState(false);
+
+  useEffect(() => {
+    if (!resetToken) {
+      setApiError('Reset authorization is missing or expired. Request a new code.');
+    }
+  }, [resetToken]);
 
   const set = (k) => (e) => {
     setForm((f) => ({ ...f, [k]: e.target.value }));
@@ -24,7 +30,7 @@ export default function ResetPassword() {
 
   const validate = () => {
     const e = {};
-    if (!form.token.trim())       e.token       = 'Reset token is required';
+    if (!resetToken) e.token = 'Reset authorization is required';
     if (form.newPassword.length < 6) e.newPassword = 'Password must be at least 6 characters';
     if (form.newPassword !== form.confirm) e.confirm = 'Passwords do not match';
     return e;
@@ -34,16 +40,23 @@ export default function ResetPassword() {
     e.preventDefault();
     setApiError('');
     const errs = validate();
-    if (Object.keys(errs).length) { setErrors(errs); return; }
+    if (Object.keys(errs).length) {
+      setErrors(errs);
+      return;
+    }
 
     setLoading(true);
     try {
-      await authApi.resetPassword(form.token.trim(), form.newPassword);
+      await authApi.resetPassword(resetToken, form.newPassword);
       setDone(true);
       setTimeout(() => navigate('/login'), 3000);
     } catch (err) {
-      setApiError(err.response?.data?.error?.message || 'Reset failed. Token may be expired or invalid.');
-    } finally { setLoading(false); }
+      setApiError(
+        err.response?.data?.error?.message || 'Reset failed. Authorization may be expired or invalid.'
+      );
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -51,32 +64,32 @@ export default function ResetPassword() {
       <Brand />
 
       <h2 className="card-title">New password</h2>
-      <p className="card-subtitle">Enter your reset token and choose a new password 🔐</p>
+      <p className="card-subtitle">Choose a new password for your account</p>
 
       {done ? (
         <div className="form">
-          <div className="alert alert-success" style={{ flexDirection:'column', gap:'0.5rem' }}>
+          <div className="alert alert-success" style={{ flexDirection: 'column', gap: '0.5rem' }}>
             <strong>✓ Password updated successfully!</strong>
-            <span style={{ fontSize:'0.82rem' }}>Redirecting to sign in in 3 seconds…</span>
+            <span style={{ fontSize: '0.82rem' }}>Redirecting to sign in in 3 seconds…</span>
           </div>
           <Link to="/login">
-            <button className="btn btn-primary" style={{ width:'100%' }}>Go to sign in →</button>
+            <button className="btn btn-primary" style={{ width: '100%' }}>
+              Go to sign in →
+            </button>
           </Link>
         </div>
       ) : (
         <form className="form" onSubmit={handleSubmit} noValidate>
-          {apiError && <div className="alert alert-error"><span>⚠</span> {apiError}</div>}
-
-          <Field
-            label="Reset token"
-            id="reset-token"
-            type="text"
-            placeholder="Paste your reset token here"
-            value={form.token}
-            onChange={set('token')}
-            error={errors.token}
-            icon="🔑"
-          />
+          {apiError && (
+            <div className="alert alert-error">
+              <span>⚠</span> {apiError}
+            </div>
+          )}
+          {errors.token && (
+            <div className="alert alert-error">
+              <span>⚠</span> {errors.token}
+            </div>
+          )}
 
           <Field
             label="New password"
@@ -102,14 +115,21 @@ export default function ResetPassword() {
             icon="✅"
           />
 
-          <button className="btn btn-primary" type="submit" disabled={loading} id="reset-btn">
+          <button
+            className="btn btn-primary"
+            type="submit"
+            disabled={loading || !resetToken}
+            id="reset-btn"
+          >
             {loading ? <span className="spinner" /> : null}
             {loading ? 'Updating…' : 'Update password'}
           </button>
 
           <div className="divider">or</div>
           <Link to="/forgot-password">
-            <button type="button" className="btn btn-ghost">Get a new token</button>
+            <button type="button" className="btn btn-ghost">
+              Request a new code
+            </button>
           </Link>
         </form>
       )}

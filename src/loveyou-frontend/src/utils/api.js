@@ -13,11 +13,13 @@ api.interceptors.request.use((cfg) => {
 
 // ── Auth endpoints ──
 export const authApi = {
-  signup: (data)                => api.post('/auth/signup', data),
-  login:  (data)                => api.post('/auth/login',  data),
-  logout: ()                    => api.post('/auth/logout'),
-  forgotPassword: (email)       => api.post('/auth/password-reset/request', { email }),
-  resetPassword: (token, newPassword) => api.post('/auth/password-reset/confirm', { token, newPassword }),
+  signup: (data) => api.post('/auth/signup', data),
+  login: (data) => api.post('/auth/login', data),
+  logout: () => api.post('/auth/logout'),
+  forgotPassword: (email) => api.post('/auth/forgot-password', { email }),
+  verifyOtp: (email, otp) => api.post('/auth/verify-otp', { email, otp }),
+  resetPassword: (resetToken, newPassword) =>
+    api.post('/auth/reset-password', { resetToken, newPassword }),
 };
 
 export const adminApi = {
