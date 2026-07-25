@@ -3,7 +3,7 @@
 ## 1. Introduction
 | Assignee | Reviewer | Editor |
 | :--- | :--- | :--- |
-| Nghĩa |  |  |
+| Nghĩa | Văn |  |
 
 ### 1.1 Purpose
 This Project Planning document describes the overall approach, schedule, and management strategy for developing **LoveYou**, an AI-enhanced dating web application designed to help Vietnamese users find meaningful romantic connections online. It serves as the roadmap for the team during development and is used to coordinate work, track progress, and control delivery.
@@ -17,7 +17,7 @@ This document is organized into the following parts: Project Overview, Project O
 ## 2. Project Overview
 | Assignee | Reviewer | Editor |
 | :--- | :--- | :--- |
-| Nghĩa | | |
+| Nghĩa | Văn | |
 
 ### 2.1 Project Purpose, Scope, and Objectives
 The purpose of LoveYou is to provide a secure, user-friendly, and intelligent dating platform for Vietnamese users. The project aims to improve online matchmaking quality through AI support, help users communicate more effectively, and provide a modern experience across desktop and mobile devices.
@@ -62,7 +62,7 @@ The main objectives are:
 ## 3. Project Organization
 | Assignee | Reviewer | Editor |
 | :--- | :--- | :--- |
-| Nghĩa | | |
+| Nghĩa | Văn | |
 
 ### 3.1 Team Structure and Roles
 | ID | Full Name | Role |
@@ -94,7 +94,7 @@ The main objectives are:
 ## 4. Project Plan
 | Assignee | Reviewer | Editor |
 | :--- | :--- | :--- |
-| Nghĩa |  |  |
+| Nghĩa | Văn |  |
 
 The project follows the Scrum framework and is organized into five sprints, each corresponding to one course assignment. Scrum meetings are held regularly every Friday evening or during the weekend, and progress is tracked using Trello/Jira.
 
@@ -201,7 +201,7 @@ All source code and documentation will be stored in GitHub with version control 
 ## 5. Build Plan
 | Assignee | Reviewer | Editor |
 | :--- | :--- | :--- |
-| Nghĩa | | |
+| Nghĩa | Văn | |
 
 The team plans to produce three major software builds throughout the project lifecycle. Each build will be used for testing, integration validation, and stakeholder review before moving to the next stage.
 
