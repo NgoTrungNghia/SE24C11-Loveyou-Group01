@@ -236,17 +236,19 @@ export default function OnboardingWizard() {
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                 <div className="field">
-                  <label htmlFor="wiz-gender" className="label">Giới tính</label>
-                  <select
-                    id="wiz-gender"
-                    className="input"
-                    value={form.gender}
-                    onChange={(e) => setForm({ ...form, gender: e.target.value })}
-                  >
-                    <option value="MALE">Nam</option>
-                    <option value="FEMALE">Nữ</option>
-                    <option value="OTHER">Khác</option>
-                  </select>
+                  <label htmlFor="wiz-gender">Giới tính</label>
+                  <div className="input-wrap">
+                    <select
+                      id="wiz-gender"
+                      className="input"
+                      value={form.gender}
+                      onChange={(e) => setForm({ ...form, gender: e.target.value })}
+                    >
+                      <option value="MALE">Nam</option>
+                      <option value="FEMALE">Nữ</option>
+                      <option value="OTHER">Khác</option>
+                    </select>
+                  </div>
                 </div>
 
                 <Field
@@ -279,7 +281,7 @@ export default function OnboardingWizard() {
           {step === 2 && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem' }}>
               <h2 style={{ fontSize: '1.4rem', fontWeight: 700, marginBottom: '0.2rem' }}>
-                Sở thích & Phong cách sống
+                Sở thích cá nhân
               </h2>
               <p style={{ fontSize: '0.88rem', color: 'rgba(255,255,255,0.6)', marginBottom: '0.6rem' }}>
                 Chọn các thẻ sở thích để thuật toán AI ghép đôi bạn với người hợp cạ hơn.
@@ -316,16 +318,17 @@ export default function OnboardingWizard() {
               </div>
 
               <div className="field">
-                <label htmlFor="wiz-bio" className="label">Bài giới thiệu bản thân (About Me)</label>
-                <textarea
-                  id="wiz-bio"
-                  className="input"
-                  rows="3"
-                  placeholder="Chia sẻ về thói quen, công việc hay mẫu người bạn tìm kiếm..."
-                  value={form.bio}
-                  onChange={(e) => setForm({ ...form, bio: e.target.value })}
-                  style={{ resize: 'vertical', minHeight: '85px', fontFamily: 'inherit' }}
-                />
+                <label htmlFor="wiz-bio">Bài giới thiệu bản thân (About Me)</label>
+                <div className="input-wrap">
+                  <textarea
+                    id="wiz-bio"
+                    className="input"
+                    rows="3"
+                    placeholder="Chia sẻ về thói quen, công việc hay mẫu người bạn tìm kiếm..."
+                    value={form.bio}
+                    onChange={(e) => setForm({ ...form, bio: e.target.value })}
+                  />
+                </div>
               </div>
 
               <Field
