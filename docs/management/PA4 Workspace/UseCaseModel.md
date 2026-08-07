@@ -4,6 +4,11 @@
 | :--- | :--- | :--- |
 | Minh Hoàng | Hoàng Tấn | Nghia |
 
+> Repairing Use-Case Model: Feedback from assistant teacher.
+| Assignee | Reviewer | Editor |
+| :--- | :--- | :--- |
+| Văn | Minh Hoàng | Nghia |
+
 ## 1. Actors
 
 ### 1.1 User
