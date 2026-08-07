@@ -5,6 +5,11 @@
 | Hoàng Tấn | Minh Hoàng | Nghia |
 ---
 
+> Repairing Use-Case Model: Feedback from assistant teacher.
+| Assignee | Reviewer | Editor |
+| :--- | :--- | :--- |
+| Văn | Hoàng Tấn | Nghia |
+
 ## 1. Authentication & Authorization (FG-01)
 
 
@@ -200,7 +205,7 @@
 
 * **Postconditions:** Protected resources accessed only by authorized roles.
 * **Special Requirements:** RBAC enforcement on 100% of endpoints (`SEC-11`).
-* **UI Prototype Reference:** `![Access Control Screen](prototypes/uc02_log_in.png)`
+* **UI Prototype Reference:** `![Access Control Screen](./prototypes/uc02_log_in.png)`
 
 ---
 
@@ -233,7 +238,7 @@
 
 * **Postconditions:** Updated profile information saved and visible to potential matches.
 * **Special Requirements:** Response time < 1s (`PERF-04`).
-* **UI Prototype Reference:** `![Edit Personal Info Screen](prototypes/uc01_sign_up.png)`
+* **UI Prototype Reference:** `![Edit Personal Info Screen](./prototypes/uc01_sign_up.png)`
 
 ---
 
@@ -266,7 +271,7 @@
 
 * **Postconditions:** New photo stored and associated with user's profile card gallery.
 * **Special Requirements:** Max 5MB per image, up to 5 images (`PERF-12`).
-* **UI Prototype Reference:** `![Upload Photos Screen](prototypes/uc01_sign_up.png)`
+* **UI Prototype Reference:** `![Upload Photos Screen](./prototypes/uc01_sign_up.png)`
 
 ---
 
@@ -293,7 +298,7 @@
 
 * **Postconditions:** User interest tag preferences stored for AI compatibility calculations.
 * **Special Requirements:** UI response within 200ms.
-* **UI Prototype Reference:** `![Manage Interest Tags Screen](prototypes/uc01_sign_up.png)`
+* **UI Prototype Reference:** `![Manage Interest Tags Screen](./prototypes/uc01_sign_up.png)`
 
 ---
 
@@ -321,7 +326,7 @@
 
 * **Postconditions:** User password hash updated in database; security log updated.
 * **Special Requirements:** Hash cost factor 12 (`SEC-01`).
-* **UI Prototype Reference:** `![Change Password Screen](prototypes/uc010_change_password.png)`
+* **UI Prototype Reference:** `![Change Password Screen](./prototypes/uc010_change_password.png)`
 
 ---
 
@@ -354,7 +359,7 @@
 
 * **Postconditions:** User profile is fully initialized and active for candidate discovery.
 * **Special Requirements:** Complete wizard within 3 minutes (`UX-01`).
-* **UI Prototype Reference:** `![Complete Onboarding Screen](prototypes/uc01_sign_up.png)`
+* **UI Prototype Reference:** `![Complete Onboarding Screen](./prototypes/uc01_sign_up.png)`
 
 ---
 
@@ -379,7 +384,7 @@
 
 * **Postconditions:** Primary avatar photo saved to user profile.
 * **Special Requirements:** File size $\le 5\text{MB}$ (`PERF-12`).
-* **UI Prototype Reference:** `![Upload Initial Photo Screen](prototypes/uc01_sign_up.png)`
+* **UI Prototype Reference:** `![Upload Initial Photo Screen](./prototypes/uc01_sign_up.png)`
 
 ---
 
@@ -402,7 +407,7 @@
   * Step 2b: System defaults preference to "Everyone".
 
 * **Postconditions:** Match gender filter saved.
-* **UI Prototype Reference:** `![Set Gender Preference Screen](prototypes/uc01_sign_up.png)`
+* **UI Prototype Reference:** `![Set Gender Preference Screen](./prototypes/uc01_sign_up.png)`
 
 ---
 
@@ -426,7 +431,7 @@
   * Step 3b: System auto-adjusts min value to equal max value.
 
 * **Postconditions:** Target age boundary saved.
-* **UI Prototype Reference:** `![Set Preferred Age Range Screen](prototypes/uc01_sign_up.png)`
+* **UI Prototype Reference:** `![Set Preferred Age Range Screen](./prototypes/uc01_sign_up.png)`
 
 ---
 
@@ -450,7 +455,7 @@
 
 * **Postconditions:** Province/City level location recorded (`PRIV-03`).
 * **Special Requirements:** Store city level only, no raw GPS (`PRIV-03`).
-* **UI Prototype Reference:** `![Set Home City Screen](prototypes/uc01_sign_up.png)`
+* **UI Prototype Reference:** `![Set Home City Screen](./prototypes/uc01_sign_up.png)`
 
 ---
 
@@ -474,7 +479,7 @@
   * Step 3b: System keeps "Complete" button disabled with guidance text.
 
 * **Postconditions:** Initial interest tags saved to user profile.
-* **UI Prototype Reference:** `![Select Initial Interest Tags Screen](prototypes/uc01_sign_up.png)`
+* **UI Prototype Reference:** `![Select Initial Interest Tags Screen](./prototypes/uc01_sign_up.png)`
 
 ---
 
@@ -499,7 +504,7 @@
   * Step 3b: System resumes current onboarding step.
 
 * **Postconditions:** Account activated with default preference parameters.
-* **UI Prototype Reference:** `![Skip Onboarding Screen](prototypes/uc01_sign_up.png)`
+* **UI Prototype Reference:** `![Skip Onboarding Screen](./prototypes/uc01_sign_up.png)`
 
 ---
 
@@ -534,7 +539,7 @@
 
 * **Postconditions:** User views personalized candidate profiles sorted by compatibility.
 * **Special Requirements:** AI score generation for 50 candidates < 5s (`PERF-06`).
-* **UI Prototype Reference:** `![View AI Match Suggestions Screen](prototypes/uc18_ai_match_suggestions.png)`
+* **UI Prototype Reference:** `![View AI Match Suggestions Screen](./prototypes/uc18_ai_match_suggestions.png)`
 
 ---
 
@@ -560,7 +565,7 @@
 
 * **Postconditions:** Integer score $[0, 100]$ generated for candidate pair.
 * **Special Requirements:** Standalone service architecture (`MAINT-04`).
-* **UI Prototype Reference:** `![Calculate Score Screen](prototypes/uc18_ai_match_suggestions.png)`
+* **UI Prototype Reference:** `![Calculate Score Screen](./prototypes/uc18_ai_match_suggestions.png)`
 
 ---
 
@@ -584,7 +589,7 @@
   * Step 1b: System displays default match reason: "Cùng độ tuổi phù hợp và có phong cách sống tương đồng."
 
 * **Postconditions:** Vietnamese match reason displayed on candidate card.
-* **UI Prototype Reference:** `![Display Match Reasons Screen](prototypes/uc18_ai_match_suggestions.png)`
+* **UI Prototype Reference:** `![Display Match Reasons Screen](./prototypes/uc18_ai_match_suggestions.png)`
 
 ---
 
@@ -608,7 +613,7 @@
   * Step 2b: System shows toast: "Please wait a moment before refreshing again."
 
 * **Postconditions:** Candidate feed updated with new recommendations.
-* **UI Prototype Reference:** `![Refresh Suggestions Screen](prototypes/uc18_ai_match_suggestions.png)`
+* **UI Prototype Reference:** `![Refresh Suggestions Screen](./prototypes/uc18_ai_match_suggestions.png)`
 
 ---
 
@@ -639,7 +644,7 @@
 
 * **Postconditions:** Interaction stored; mutual match created if target previously liked user.
 * **Special Requirements:** Micro-animation feedback < 200ms (`PERF-08` / `UX-02`).
-* **UI Prototype Reference:** `![Like Candidate Screen](prototypes/uc24_mutual_match_modal.png)`
+* **UI Prototype Reference:** `![Like Candidate Screen](./prototypes/uc24_mutual_match_modal.png)`
 
 ---
 
@@ -663,7 +668,7 @@
   * Step 1b: System provides 3-second undo snackbar to revert last skip.
 
 * **Postconditions:** Candidate skipped and hidden from active discovery deck.
-* **UI Prototype Reference:** `![Skip Candidate Screen](prototypes/uc24_mutual_match_modal.png)`
+* **UI Prototype Reference:** `![Skip Candidate Screen](./prototypes/uc24_mutual_match_modal.png)`
 
 ---
 
@@ -688,7 +693,7 @@
   * Step 1b: System cancels match creation silently.
 
 * **Postconditions:** Match record created in database; conversation channel enabled.
-* **UI Prototype Reference:** `![Create Mutual Match Screen](prototypes/uc24_mutual_match_modal.png)`
+* **UI Prototype Reference:** `![Create Mutual Match Screen](./prototypes/uc24_mutual_match_modal.png)`
 
 ---
 
@@ -713,7 +718,7 @@
   * Step 3b: Modal closes, returning user to deck.
 
 * **Postconditions:** User acknowledges match and chooses immediate chat or browsing.
-* **UI Prototype Reference:** `![Show Match Confirmation Screen](prototypes/uc24_mutual_match_modal.png)`
+* **UI Prototype Reference:** `![Show Match Confirmation Screen](./prototypes/uc24_mutual_match_modal.png)`
 
 ---
 
@@ -737,7 +742,7 @@
   * Step 2b: System displays motivational empty state: "No matches yet. Keep swiping to find your connection!"
 
 * **Postconditions:** Active matches displayed to user.
-* **UI Prototype Reference:** `![View Match History Screen](prototypes/uc24_mutual_match_modal.png)`
+* **UI Prototype Reference:** `![View Match History Screen](./prototypes/uc24_mutual_match_modal.png)`
 
 ---
 
@@ -768,7 +773,7 @@
 
 * **Postconditions:** Paginated search results rendered to user.
 * **Special Requirements:** Response time < 2s for paginated results (`PERF-13`).
-* **UI Prototype Reference:** `![Search Profiles Screen](prototypes/uc18_ai_match_suggestions.png)`
+* **UI Prototype Reference:** `![Search Profiles Screen](./prototypes/uc18_ai_match_suggestions.png)`
 
 ---
 
@@ -792,7 +797,7 @@
   * Step 3b: System restores default preference filters and updates search results.
 
 * **Postconditions:** Custom search filters applied to query.
-* **UI Prototype Reference:** `![Apply Search Filters Screen](prototypes/uc18_ai_match_suggestions.png)`
+* **UI Prototype Reference:** `![Apply Search Filters Screen](./prototypes/uc18_ai_match_suggestions.png)`
 
 ---
 
@@ -815,7 +820,7 @@
   * Step 1b: System defaults to AI Compatibility Score descending.
 
 * **Postconditions:** Search results displayed in selected order.
-* **UI Prototype Reference:** `![Sort Search Results Screen](prototypes/uc18_ai_match_suggestions.png)`
+* **UI Prototype Reference:** `![Sort Search Results Screen](./prototypes/uc18_ai_match_suggestions.png)`
 
 ---
 
@@ -840,7 +845,7 @@
 
 * **Postconditions:** Smooth paginated rendering of candidate profiles achieved.
 * **Special Requirements:** Max 20 items per page batch (`PERF-13`).
-* **UI Prototype Reference:** `![View Paginated Results Screen](prototypes/uc18_ai_match_suggestions.png)`
+* **UI Prototype Reference:** `![View Paginated Results Screen](./prototypes/uc18_ai_match_suggestions.png)`
 
 ---
 
@@ -873,7 +878,7 @@
   * Step 2b: System shows top horizontal row of match avatars prompting user to "Say Hello!".
 
 * **Postconditions:** User inbox rendered with real-time status indicators.
-* **UI Prototype Reference:** `![View Conversations Screen](prototypes/uc31_realtime_chat.png)`
+* **UI Prototype Reference:** `![View Conversations Screen](./prototypes/uc31_realtime_chat.png)`
 
 ---
 
@@ -905,7 +910,7 @@
 
 * **Postconditions:** Message persisted and delivered to recipient; conversation timestamp updated.
 * **Special Requirements:** End-to-end latency < 300ms (`PERF-05`); WebSocket auto-reconnect (`PLAT-06`).
-* **UI Prototype Reference:** `![Send Message Screen](prototypes/uc31_realtime_chat.png)`
+* **UI Prototype Reference:** `![Send Message Screen](./prototypes/uc31_realtime_chat.png)`
 
 ---
 
@@ -954,7 +959,7 @@
   * Step 5b: System displays top marker: "Beginning of conversation".
 
 * **Postconditions:** Message history rendered to user.
-* **UI Prototype Reference:** `![View Message History Screen](prototypes/uc31_realtime_chat.png)`
+* **UI Prototype Reference:** `![View Message History Screen](./prototypes/uc31_realtime_chat.png)`
 
 ---
 
@@ -977,7 +982,7 @@
   * Step 2b: System suppresses status indicator display.
 
 * **Postconditions:** Online status accurately reflected.
-* **UI Prototype Reference:** `![View Online Status Screen](prototypes/uc31_realtime_chat.png)`
+* **UI Prototype Reference:** `![View Online Status Screen](./prototypes/uc31_realtime_chat.png)`
 
 ---
 
@@ -1000,7 +1005,7 @@
   * Step 3b: Client automatically hides typing indicator.
 
 * **Postconditions:** Typing status dynamically displayed.
-* **UI Prototype Reference:** `![View Typing Indicator Screen](prototypes/uc31_realtime_chat.png)`
+* **UI Prototype Reference:** `![View Typing Indicator Screen](./prototypes/uc31_realtime_chat.png)`
 
 ---
 
@@ -1079,7 +1084,7 @@
   * Step 1b: Button is disabled.
 
 * **Postconditions:** All notifications marked `READ`; unread badge cleared.
-* **UI Prototype Reference:** `![Mark All as Read Screen](prototypes/uc31_realtime_chat.png)`
+* **UI Prototype Reference:** `![Mark All as Read Screen](./prototypes/uc31_realtime_chat.png)`
 
 ---
 
@@ -1103,7 +1108,7 @@
   * Step 2b: Notification stored in database and shown on next log in.
 
 * **Postconditions:** Match alert delivered to user.
-* **UI Prototype Reference:** `![Receive Match Notification Screen](prototypes/uc31_realtime_chat.png)`
+* **UI Prototype Reference:** `![Receive Match Notification Screen](./prototypes/uc31_realtime_chat.png)`
 
 ---
 
@@ -1127,7 +1132,7 @@
   * Step 1b: System increments unread badge silently without banner toast.
 
 * **Postconditions:** Message notification delivered.
-* **UI Prototype Reference:** `![Receive Message Notification Screen](prototypes/uc31_realtime_chat.png)`
+* **UI Prototype Reference:** `![Receive Message Notification Screen](./prototypes/uc31_realtime_chat.png)`
 
 ---
 
@@ -1158,7 +1163,7 @@
   * Step 4b: System closes modal without modifying block list.
 
 * **Postconditions:** User blocked; communication channels destroyed; profiles mutually invisible (`SEC-12`).
-* **UI Prototype Reference:** `![Block User Screen](prototypes/uc31_realtime_chat.png)`
+* **UI Prototype Reference:** `![Block User Screen](./prototypes/uc31_realtime_chat.png)`
 
 ---
 
@@ -1184,7 +1189,7 @@
   * Step 3b: System highlights required category selection.
 
 * **Postconditions:** Moderation ticket generated for Admin review in Admin Dashboard (`UC48`).
-* **UI Prototype Reference:** `![Report User Screen](prototypes/uc31_realtime_chat.png)`
+* **UI Prototype Reference:** `![Report User Screen](./prototypes/uc31_realtime_chat.png)`
 
 ---
 
@@ -1209,7 +1214,7 @@
   * Step 4b: System displays error and denies deactivation.
 
 * **Postconditions:** Account state set to `DEACTIVATED`; profile hidden from feeds.
-* **UI Prototype Reference:** `![Deactivate Account Screen](prototypes/uc31_realtime_chat.png)`
+* **UI Prototype Reference:** `![Deactivate Account Screen](./prototypes/uc31_realtime_chat.png)`
 
 ---
 
@@ -1236,7 +1241,7 @@
 
 * **Postconditions:** User data queued for total removal within 24 hours (`PRIV-01`).
 * **Special Requirements:** Full data purge within 24 hours (`PRIV-01`).
-* **UI Prototype Reference:** `![Permanently Delete Account Screen](prototypes/uc31_realtime_chat.png)`
+* **UI Prototype Reference:** `![Permanently Delete Account Screen](./prototypes/uc31_realtime_chat.png)`
 
 ---
 
@@ -1264,7 +1269,7 @@
   * Step 2b: System blocks access with HTTP 403 Forbidden and logs security incident (`SEC-13`).
 
 * **Postconditions:** Admin metrics and management interface displayed.
-* **UI Prototype Reference:** `![View Admin Dashboard Screen](prototypes/uc46_admin_dashboard.png)`
+* **UI Prototype Reference:** `![View Admin Dashboard Screen](./prototypes/uc46_admin_dashboard.png)`
 
 ---
 
@@ -1287,7 +1292,7 @@
   * Step 1b: System displays cached statistics snapshot with timestamp indicator.
 
 * **Postconditions:** Platform telemetry visualized for Admin.
-* **UI Prototype Reference:** `![View Platform Statistics Screen](prototypes/uc46_admin_dashboard.png)`
+* **UI Prototype Reference:** `![View Platform Statistics Screen](./prototypes/uc46_admin_dashboard.png)`
 
 ---
 
@@ -1310,7 +1315,7 @@
   * Step 2b: System filters list to show only accounts with pending report tickets.
 
 * **Postconditions:** Account list rendered for administration.
-* **UI Prototype Reference:** `![Manage Users Screen](prototypes/uc46_admin_dashboard.png)`
+* **UI Prototype Reference:** `![Manage Users Screen](./prototypes/uc46_admin_dashboard.png)`
 
 ---
 
@@ -1333,7 +1338,7 @@
   * Step 2b: System displays: "No users found matching search term."
 
 * **Postconditions:** Target user accounts filtered for Admin.
-* **UI Prototype Reference:** `![Search Users Screen](prototypes/uc46_admin_dashboard.png)`
+* **UI Prototype Reference:** `![Search Users Screen](./prototypes/uc46_admin_dashboard.png)`
 
 ---
 
@@ -1359,7 +1364,7 @@
   * Step 3a: Admin selects "Delete Account" to trigger `UC53`.
 
 * **Postconditions:** Complete audit details displayed to Admin.
-* **UI Prototype Reference:** `![View User Details Screen](prototypes/uc46_admin_dashboard.png)`
+* **UI Prototype Reference:** `![View User Details Screen](./prototypes/uc46_admin_dashboard.png)`
 
 ---
 
@@ -1386,7 +1391,7 @@
 
 * **Postconditions:** User account blocked; active session revoked; audit log recorded (`SEC-13`).
 * **Special Requirements:** Audit log record required (`SEC-13`).
-* **UI Prototype Reference:** `![Block User Account Screen](prototypes/uc46_admin_dashboard.png)`
+* **UI Prototype Reference:** `![Block User Account Screen](./prototypes/uc46_admin_dashboard.png)`
 
 ---
 
@@ -1411,7 +1416,7 @@
   * Step 1b: Unblock button is disabled.
 
 * **Postconditions:** Account state restored to `ACTIVE`; audit entry logged (`SEC-13`).
-* **UI Prototype Reference:** `![Unblock User Account Screen](prototypes/uc46_admin_dashboard.png)`
+* **UI Prototype Reference:** `![Unblock User Account Screen](./prototypes/uc46_admin_dashboard.png)`
 
 ---
 
@@ -1436,7 +1441,7 @@
   * Step 4b: System denies deletion action.
 
 * **Postconditions:** Target user data purged from system database; audit logged (`SEC-13`).
-* **UI Prototype Reference:** `![Delete User Account Screen](prototypes/uc46_admin_dashboard.png)`
+* **UI Prototype Reference:** `![Delete User Account Screen](./prototypes/uc46_admin_dashboard.png)`
 
 ---
 
@@ -1460,7 +1465,7 @@
   * Step 2b: System displays empty category container with "Add Tag" button.
 
 * **Postconditions:** Interest tag catalogue displayed for management.
-* **UI Prototype Reference:** `![Manage Interest Tag Catalogue Screen](prototypes/uc46_admin_dashboard.png)`
+* **UI Prototype Reference:** `![Manage Interest Tag Catalogue Screen](./prototypes/uc46_admin_dashboard.png)`
 
 ---
 
@@ -1486,7 +1491,7 @@
   * Step 4b: System displays error: "Interest tag already exists in catalogue."
 
 * **Postconditions:** New interest tag added to global catalogue.
-* **UI Prototype Reference:** `![Add Interest Tag Screen](prototypes/uc46_admin_dashboard.png)`
+* **UI Prototype Reference:** `![Add Interest Tag Screen](./prototypes/uc46_admin_dashboard.png)`
 
 ---
 
@@ -1511,4 +1516,4 @@
   * Step 3b: Tag remains active in catalogue.
 
 * **Postconditions:** Interest tag removed from active global selection list.
-* **UI Prototype Reference:** `![Remove Interest Tag Screen](prototypes/uc46_admin_dashboard.png)`
+* **UI Prototype Reference:** `![Remove Interest Tag Screen](./prototypes/uc46_admin_dashboard.png)`
