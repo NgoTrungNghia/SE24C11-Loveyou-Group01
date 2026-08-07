@@ -70,7 +70,6 @@ export default function Login() {
           value={form.email}
           onChange={set('email')}
           error={fieldErrors.email}
-          icon="✉"
         />
 
         <Field
@@ -82,7 +81,6 @@ export default function Login() {
           value={form.password}
           onChange={set('password')}
           error={fieldErrors.password}
-          icon="🔒"
         />
 
         <div style={{ textAlign: 'right', marginTop: '-0.25rem' }}>
