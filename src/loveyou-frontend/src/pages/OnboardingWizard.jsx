@@ -163,6 +163,27 @@ export default function OnboardingWizard() {
         setError('Vui lòng nhập tên bạn muốn mọi người gọi mình!');
         return;
       }
+      if (!form.dateOfBirth) {
+        setError('Vui lòng chọn ngày sinh!');
+        return;
+      }
+      const dob = new Date(form.dateOfBirth);
+      const now = new Date();
+      if (dob > now) {
+        setError('Ngày sinh không thể ở tương lai!');
+        return;
+      }
+      let age = now.getFullYear() - dob.getFullYear();
+      const m = now.getMonth() - dob.getMonth();
+      if (m < 0 || (m === 0 && now.getDate() < dob.getDate())) age--;
+      if (age < 18) {
+        setError('Bạn phải từ 18 tuổi trở lên để sử dụng ứng dụng hẹn hò LoveYou!');
+        return;
+      }
+      if (age > 100) {
+        setError('Ngày sinh không hợp lệ (Tuổi phải dưới 100 tuổi)!');
+        return;
+      }
       await saveProfileData(false);
       setStep(2);
     } else if (step === 2) {
@@ -292,6 +313,8 @@ export default function OnboardingWizard() {
                   label="Ngày sinh"
                   id="wiz-dob"
                   type="date"
+                  min={new Date(new Date().getFullYear() - 100, new Date().getMonth(), new Date().getDate()).toISOString().split('T')[0]}
+                  max={new Date(new Date().getFullYear() - 18, new Date().getMonth(), new Date().getDate()).toISOString().split('T')[0]}
                   value={form.dateOfBirth}
                   onChange={(e) => setForm({ ...form, dateOfBirth: e.target.value })}
                 />

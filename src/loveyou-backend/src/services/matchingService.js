@@ -310,12 +310,20 @@ async function unmatchUser(currentUserId, targetId) {
   const userId = Number(currentUserId);
   const targetUserId = Number(targetId);
 
+  // If target is bot (negative ID), delete swipe record so bot reappears in deck
   if (targetUserId < 0) {
+    try {
+      await prisma.swipe.deleteMany({
+        where: { swiperId: userId, targetId: targetUserId },
+      });
+    } catch {
+      /* ignore */
+    }
     return { success: true };
   }
 
   try {
-    // 1. Delete match from Match table
+    // 1. Delete match row from Match table
     await prisma.match.deleteMany({
       where: {
         OR: [
@@ -325,7 +333,7 @@ async function unmatchUser(currentUserId, targetId) {
       },
     });
 
-    // 2. Delete swipes from Swipe table
+    // 2. Delete ALL swipe records between both users from Swipe table
     await prisma.swipe.deleteMany({
       where: {
         OR: [
