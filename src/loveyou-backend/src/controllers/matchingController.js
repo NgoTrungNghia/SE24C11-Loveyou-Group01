@@ -32,8 +32,20 @@ async function getMatches(req, res, next) {
   }
 }
 
+async function unmatch(req, res, next) {
+  try {
+    const userId = req.user.userId;
+    const { targetId } = req.body;
+    const result = await matchingService.unmatchUser(userId, targetId);
+    return success(res, result);
+  } catch (err) {
+    return next(err);
+  }
+}
+
 module.exports = {
   getCandidates,
   swipe,
   getMatches,
+  unmatch,
 };

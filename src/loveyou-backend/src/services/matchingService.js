@@ -6,8 +6,13 @@ const SYSTEM_BOT_CANDIDATES = [
     name: 'Mai Phương',
     age: 22,
     location: 'TP. Hồ Chí Minh • 3 km',
-    bio: 'Yêu âm nhạc, thích đi cafe chill cuối tuần và chụp ảnh phim 📸✨',
+    height: 165,
+    bio: 'Yêu âm nhạc, thích đi cafe chill cuối tuần và chụp ảnh phim 📸✨. Đang tìm kiếm một tâm hồn đồng điệu để cùng đi xem hòa nhạc!',
     photo: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=600',
+    photos: [
+      'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=600',
+      'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&q=80&w=600',
+    ],
     tags: ['🎵 Music', '☕ Coffee', '📸 Photography'],
   },
   {
@@ -15,8 +20,13 @@ const SYSTEM_BOT_CANDIDATES = [
     name: 'Thanh Hằng',
     age: 24,
     location: 'Hà Nội • 5 km',
+    height: 168,
     bio: 'Gym, yoga và lối sống lành mạnh. Đang tìm một người cùng tập luyện 🏋️‍♀️🧘‍♀️',
     photo: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&q=80&w=600',
+    photos: [
+      'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&q=80&w=600',
+      'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&q=80&w=600',
+    ],
     tags: ['🏋️ Gym', '🧘 Yoga', '✈️ Travel'],
   },
   {
@@ -24,8 +34,13 @@ const SYSTEM_BOT_CANDIDATES = [
     name: 'Bảo Ngọc',
     age: 23,
     location: 'Đà Nẵng • 2 km',
+    height: 162,
     bio: 'Đam mê du lịch và ẩm thực. Thích nuôi mèo 🐱 và nấu ăn 🍳',
     photo: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&q=80&w=600',
+    photos: [
+      'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&q=80&w=600',
+      'https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?auto=format&fit=crop&q=80&w=600',
+    ],
     tags: ['✈️ Travel', '🐱 Pets', '🍳 Cooking'],
   },
   {
@@ -33,8 +48,13 @@ const SYSTEM_BOT_CANDIDATES = [
     name: 'Minh Anh',
     age: 25,
     location: 'TP. Hồ Chí Minh • 7 km',
+    height: 170,
     bio: 'Software engineer 💻 thích chơi game 🎮 và xem phim chiếu rạp 🎬',
     photo: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=600',
+    photos: [
+      'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=600',
+      'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=600',
+    ],
     tags: ['💻 Coding', '🎮 Gaming', '🎬 Movies'],
   },
   {
@@ -42,54 +62,14 @@ const SYSTEM_BOT_CANDIDATES = [
     name: 'Hoàng Nam',
     age: 26,
     location: 'TP. Hồ Chí Minh • 4 km',
+    height: 178,
     bio: 'Nhiếp ảnh tự do 📸 yêu cắm trại và khám phá những vùng đất mới 🏕️',
     photo: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=600',
+    photos: [
+      'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=600',
+      'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=600',
+    ],
     tags: ['📸 Photography', '✈️ Travel', '☕ Coffee'],
-  },
-  {
-    id: -6,
-    name: 'Thu Thảo',
-    age: 21,
-    location: 'TP. Hồ Chí Minh • 2 km',
-    bio: 'Sinh viên Mỹ thuật 🎨 yêu vẽ tranh, hòa mình vào thiên nhiên 🌿',
-    photo: 'https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?auto=format&fit=crop&q=80&w=600',
-    tags: ['🎨 Art', '📚 Books', '☕ Coffee'],
-  },
-  {
-    id: -7,
-    name: 'Đức Minh',
-    age: 27,
-    location: 'Hà Nội • 6 km',
-    bio: 'Kiến trúc sư 📐 đam mê thiết kế không gian và đánh đàn guitar 🎸',
-    photo: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=600',
-    tags: ['🎨 Art', '🎵 Music', '☕ Coffee'],
-  },
-  {
-    id: -8,
-    name: 'Khánh Linh',
-    age: 23,
-    location: 'Cần Thơ • 8 km',
-    bio: 'Fashion designer 👗 đam mê thời trang đương đại và phim chiếu rạp 🎬',
-    photo: 'https://images.unsplash.com/photo-1488426862026-3ee34a7d66df?auto=format&fit=crop&q=80&w=600',
-    tags: ['🎬 Movies', '🎨 Art', '✈️ Travel'],
-  },
-  {
-    id: -9,
-    name: 'Gia Huy',
-    age: 25,
-    location: 'Đà Nẵng • 3 km',
-    bio: 'HLV Fitness 🏋️‍♂️ yêu các môn thể thao outdoor và leo núi 🏔️',
-    photo: 'https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?auto=format&fit=crop&q=80&w=600',
-    tags: ['🏋️ Gym', '⚽ Sports', '✈️ Travel'],
-  },
-  {
-    id: -10,
-    name: 'Phương Thảo',
-    age: 24,
-    location: 'TP. Hồ Chí Minh • 5 km',
-    bio: 'Marketing executive 💼 thích du lịch biển và làm bánh pastry 🍰',
-    photo: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=600',
-    tags: ['🍳 Cooking', '✈️ Travel', '☕ Coffee'],
   },
 ];
 
@@ -158,9 +138,11 @@ async function getCandidates(userId) {
         id: u.userId,
         name: u.fullName || u.username,
         age: calculateAge(u.dateOfBirth),
+        height: u.height || null,
         location: u.location ? `${u.location} • 3 km` : 'TP. Hồ Chí Minh • 3 km',
         bio: u.bio || 'Chưa thêm tiểu sử giới thiệu',
         photo: primaryPhoto,
+        photos: photosList.length > 0 ? photosList : [primaryPhoto],
         tags: parseJsonField(u.interests),
       };
     });
@@ -168,7 +150,7 @@ async function getCandidates(userId) {
     /* fallback */
   }
 
-  // 3. Filter system bots that haven't been swiped yet
+  // 3. Filter system bots (5 bots) that haven't been swiped yet
   const unswipedBots = SYSTEM_BOT_CANDIDATES.filter(bot => !swipedTargetIds.includes(bot.id));
 
   // Combine real candidates + unswiped bots
@@ -195,8 +177,8 @@ async function handleSwipe(swiperId, targetId, action) {
 
     const botObj = SYSTEM_BOT_CANDIDATES.find(b => b.id === currentTargetId);
     if ((action === 'LIKE' || action === 'SUPER_LIKE') && botObj) {
-      // Randomly select 2-3 bots (e.g. -1, -3, -7) to trigger a mutual match!
-      const randomMatchBotIds = [-1, -3, -7];
+      // Randomly select 1-2 bots (e.g. -1, -3) to trigger a mutual match
+      const randomMatchBotIds = [-1, -3];
       const isMutualMatch = randomMatchBotIds.includes(currentTargetId);
       return {
         isMatch: isMutualMatch,
@@ -259,6 +241,10 @@ async function handleSwipe(swiperId, targetId, action) {
           profilePicture: true,
           photos: true,
           dateOfBirth: true,
+          height: true,
+          location: true,
+          bio: true,
+          interests: true,
         },
       });
 
@@ -268,7 +254,12 @@ async function handleSwipe(swiperId, targetId, action) {
           id: targetUserObj.userId,
           name: targetUserObj.fullName || targetUserObj.username,
           age: calculateAge(targetUserObj.dateOfBirth),
+          height: targetUserObj.height || null,
+          location: targetUserObj.location ? `${targetUserObj.location} • 3 km` : 'TP. Hồ Chí Minh • 3 km',
+          bio: targetUserObj.bio || '',
           photo: photosList[0] || targetUserObj.profilePicture || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=600',
+          photos: photosList.length > 0 ? photosList : [targetUserObj.profilePicture],
+          tags: parseJsonField(targetUserObj.interests),
         };
       }
     }
@@ -289,8 +280,8 @@ async function getUserMatches(userId) {
         ],
       },
       include: {
-        user1: { select: { userId: true, username: true, fullName: true, profilePicture: true, photos: true, dateOfBirth: true } },
-        user2: { select: { userId: true, username: true, fullName: true, profilePicture: true, photos: true, dateOfBirth: true } },
+        user1: { select: { userId: true, username: true, fullName: true, profilePicture: true, photos: true, dateOfBirth: true, height: true, location: true, bio: true, interests: true } },
+        user2: { select: { userId: true, username: true, fullName: true, profilePicture: true, photos: true, dateOfBirth: true, height: true, location: true, bio: true, interests: true } },
       },
     });
 
@@ -301,7 +292,12 @@ async function getUserMatches(userId) {
         id: partner.userId,
         name: partner.fullName || partner.username,
         age: calculateAge(partner.dateOfBirth),
+        height: partner.height || null,
+        location: partner.location ? `${partner.location} • 3 km` : 'TP. Hồ Chí Minh • 3 km',
+        bio: partner.bio || '',
         photo: photosList[0] || partner.profilePicture || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=600',
+        photos: photosList.length > 0 ? photosList : [partner.profilePicture],
+        tags: parseJsonField(partner.interests),
         matchedAt: m.createdAt,
       };
     });
@@ -310,8 +306,44 @@ async function getUserMatches(userId) {
   }
 }
 
+async function unmatchUser(currentUserId, targetId) {
+  const userId = Number(currentUserId);
+  const targetUserId = Number(targetId);
+
+  if (targetUserId < 0) {
+    return { success: true };
+  }
+
+  try {
+    // 1. Delete match from Match table
+    await prisma.match.deleteMany({
+      where: {
+        OR: [
+          { user1Id: userId, user2Id: targetUserId },
+          { user1Id: targetUserId, user2Id: userId },
+        ],
+      },
+    });
+
+    // 2. Delete swipes from Swipe table
+    await prisma.swipe.deleteMany({
+      where: {
+        OR: [
+          { swiperId: userId, targetId: targetUserId },
+          { swiperId: targetUserId, targetId: userId },
+        ],
+      },
+    });
+  } catch (err) {
+    /* ignore */
+  }
+
+  return { success: true };
+}
+
 module.exports = {
   getCandidates,
   handleSwipe,
   getUserMatches,
+  unmatchUser,
 };

@@ -28,7 +28,7 @@ export default function OnboardingWizard() {
     height: '',
     location: '',
     interests: [],
-    photos: ['', '', '', '', ''],
+    photos: ['', '', '', ''], // 4 photo slots (2x2 grid)
   });
 
   useEffect(() => {
@@ -42,7 +42,7 @@ export default function OnboardingWizard() {
       const p = res.data.data.profile;
       if (p) {
         const existingPhotos = Array.isArray(p.photos) ? p.photos : [];
-        const photosArray = [0, 1, 2, 3, 4].map(i => existingPhotos[i] || '');
+        const photosArray = [0, 1, 2, 3].map(i => existingPhotos[i] || (i === 0 ? p.profilePicture || '' : ''));
         setForm({
           fullName: p.fullName || '',
           phoneNumber: p.phoneNumber || '',
@@ -93,6 +93,43 @@ export default function OnboardingWizard() {
       updatedPhotos[index] = value;
       return { ...prev, photos: updatedPhotos };
     });
+  };
+
+  const handleFileUpload = (index, e) => {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (uploadEvent) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const MAX_SIZE = 600;
+        let width = img.width;
+        let height = img.height;
+
+        if (width > height) {
+          if (width > MAX_SIZE) {
+            height *= MAX_SIZE / width;
+            width = MAX_SIZE;
+          }
+        } else {
+          if (height > MAX_SIZE) {
+            width *= MAX_SIZE / height;
+            height = MAX_SIZE;
+          }
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+
+        const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.7);
+        handlePhotoChange(index, compressedDataUrl);
+      };
+      img.src = uploadEvent.target.result;
+    };
+    reader.readAsDataURL(file);
   };
 
   const saveProfileData = async (isFinal = false) => {
@@ -277,7 +314,7 @@ export default function OnboardingWizard() {
             </div>
           )}
 
-          {/* ── STEP 2: SỞ THÍCH & TIỂU SỬ ── */}
+          {/* ── STEP 2: SỞ THÍCH CÁ NHÂN & TIỂU SỬ ── */}
           {step === 2 && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem' }}>
               <h2 style={{ fontSize: '1.4rem', fontWeight: 700, marginBottom: '0.2rem' }}>
@@ -351,44 +388,71 @@ export default function OnboardingWizard() {
             </div>
           )}
 
-          {/* ── STEP 3: BỘ SƯU TẬP ẢNH ── */}
+          {/* ── STEP 3: BỘ SƯU TẬP ẢNH CÁ NHÂN (GRID 2x2 CÂN ĐỐI - TỐI ĐA 4 ẢNH) ── */}
           {step === 3 && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem' }}>
               <h2 style={{ fontSize: '1.4rem', fontWeight: 700, marginBottom: '0.2rem' }}>
                 Bộ sưu tập Ảnh cá nhân
               </h2>
               <p style={{ fontSize: '0.88rem', color: 'rgba(255,255,255,0.6)', marginBottom: '0.6rem' }}>
-                Thêm đường dẫn hình ảnh để hồ sơ của bạn thêm cuốn hút đối phương.
+                Click vào ô bất kỳ để tải ảnh trực tiếp từ máy tính của bạn (tối đa 4 tấm ảnh).
               </p>
 
-              {/* Photo Preview Strip */}
-              <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.5rem' }}>
+              {/* 2x2 Balanced Photo Slots Grid */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1rem', marginBottom: '1rem' }}>
                 {form.photos.map((url, idx) => (
-                  <div key={idx} style={{
-                    flex: 1, height: '70px', borderRadius: '10px', overflow: 'hidden', background: 'rgba(255,255,255,0.05)',
-                    border: url ? '2px solid #FF2D55' : '1px dashed rgba(255,255,255,0.15)',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center'
+                  <label key={idx} htmlFor={`wiz-file-upload-${idx}`} className="photo-slot-card" style={{
+                    position: 'relative', height: '175px', borderRadius: '16px', overflow: 'hidden',
+                    background: 'rgba(255,255,255,0.05)',
+                    border: url ? '2px solid #FF2D55' : '2px dashed rgba(255,255,255,0.2)',
+                    display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+                    cursor: 'pointer', transition: 'all 0.25s ease'
                   }}>
+                    <input
+                      id={`wiz-file-upload-${idx}`}
+                      type="file"
+                      accept="image/*"
+                      style={{ display: 'none' }}
+                      onChange={(e) => handleFileUpload(idx, e)}
+                    />
+
                     {url ? (
-                      <img src={url} alt={`Preview ${idx + 1}`} onError={(e) => { e.target.src = defaultAvatar; }} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      <>
+                        <img src={url} alt={`Photo ${idx + 1}`} onError={(e) => { e.target.src = defaultAvatar; }} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        <div className="photo-slot-overlay">
+                          📷 Đổi ảnh
+                        </div>
+                        {idx === 0 && (
+                          <span style={{ position: 'absolute', top: '8px', left: '8px', background: '#FF2D55', color: '#fff', fontSize: '10px', fontWeight: 800, padding: '3px 8px', borderRadius: '6px' }}>
+                            CHÍNH
+                          </span>
+                        )}
+                        <button
+                          type="button"
+                          onClick={(e) => { e.preventDefault(); e.stopPropagation(); handlePhotoChange(idx, ''); }}
+                          style={{
+                            position: 'absolute', top: '8px', right: '8px', background: 'rgba(0,0,0,0.75)',
+                            color: '#fff', border: 'none', borderRadius: '50%', width: '24px', height: '24px',
+                            cursor: 'pointer', fontSize: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center'
+                          }}
+                        >
+                          ✕
+                        </button>
+                      </>
                     ) : (
-                      <span style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.3)' }}>#{idx + 1}</span>
+                      <div style={{ textAlign: 'center', color: 'rgba(255,255,255,0.5)', padding: '0.6rem' }}>
+                        <div style={{ fontSize: '1.8rem', marginBottom: '4px' }}>📷</div>
+                        <div style={{ fontSize: '0.85rem', fontWeight: 700, color: 'rgba(255,255,255,0.8)' }}>
+                          {idx === 0 ? 'Ảnh đại diện chính' : `Tải ảnh phụ #${idx + 1}`}
+                        </div>
+                        <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.4)', marginTop: '2px' }}>
+                          Click để tải từ máy
+                        </div>
+                      </div>
                     )}
-                  </div>
+                  </label>
                 ))}
               </div>
-
-              {form.photos.map((url, idx) => (
-                <Field
-                  key={idx}
-                  label={idx === 0 ? 'Ảnh đại diện chính' : `Ảnh phụ #${idx + 1}`}
-                  id={`wiz-photo-${idx}`}
-                  type="text"
-                  placeholder={`Dán đường dẫn URL ảnh #${idx + 1}`}
-                  value={url}
-                  onChange={(e) => handlePhotoChange(idx, e.target.value)}
-                />
-              ))}
 
               <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '1.5rem' }}>
                 <button type="button" className="btn btn-ghost" onClick={() => setStep(2)}>

@@ -273,20 +273,31 @@ input.error { border-color: var(--error); box-shadow: 0 0 0 3px rgba(248,113,113
   transform: scale(1.06) translateY(-2px) !important;
 }
 
-.tinder-btn-action {
-  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease, background-color 0.3s ease !important;
+/* ── Photo Slot Upload Styling ── */
+.photo-slot-card:hover {
+  border-color: #FF2D55 !important;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(255, 45, 85, 0.25);
 }
-.tinder-btn-action:hover {
-  transform: scale(1.22) !important;
+.photo-slot-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.65);
+  opacity: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 0.78rem;
+  font-weight: 700;
+  transition: opacity 0.2s ease;
+  backdrop-filter: blur(2px);
 }
-.tinder-btn-pass:hover {
-  background: rgba(255, 68, 88, 0.15) !important;
-  box-shadow: 0 12px 35px rgba(255, 68, 88, 0.5) !important;
+.photo-slot-card:hover .photo-slot-overlay {
+  opacity: 1;
 }
-.tinder-btn-like:hover {
-  background: rgba(52, 211, 153, 0.15) !important;
-  box-shadow: 0 12px 35px rgba(52, 211, 153, 0.5) !important;
-}
+
+/* ── Tinder Action Buttons Hover Animations ── */
 
 /* ── Tinder Action Buttons Hover Animations ── */
 .tinder-btn-action {

@@ -31,6 +31,7 @@ export const matchingApi = {
   getCandidates: () => api.get('/matching/candidates'),
   swipe: (targetId, action) => api.post('/matching/swipe', { targetId, action }),
   getMatches: () => api.get('/matching/matches'),
+  unmatch: (targetId) => api.post('/matching/unmatch', { targetId }),
 };
 
 export const adminApi = {

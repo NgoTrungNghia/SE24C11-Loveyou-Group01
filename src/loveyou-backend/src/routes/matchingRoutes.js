@@ -10,5 +10,6 @@ router.use(authMiddleware);
 router.get('/candidates', controller.getCandidates);
 router.post('/swipe', validate(schemas.swipeSchema), controller.swipe);
 router.get('/matches', controller.getMatches);
+router.post('/unmatch', controller.unmatch);
 
 module.exports = router;

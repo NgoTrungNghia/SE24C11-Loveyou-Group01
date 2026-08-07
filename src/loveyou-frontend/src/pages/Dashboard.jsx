@@ -9,8 +9,13 @@ const FALLBACK_CANDIDATES = [
     name: 'Mai Phương',
     age: 22,
     location: 'TP. Hồ Chí Minh • 3 km',
-    bio: 'Yêu âm nhạc, thích đi cafe chill cuối tuần và chụp ảnh phim 📸✨',
+    height: 165,
+    bio: 'Yêu âm nhạc, thích đi cafe chill cuối tuần và chụp ảnh phim 📸✨. Đang tìm kiếm một tâm hồn đồng điệu để cùng đi xem hòa nhạc!',
     photo: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=600',
+    photos: [
+      'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=600',
+      'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&q=80&w=600',
+    ],
     tags: ['🎵 Music', '☕ Coffee', '📸 Photography'],
   },
   {
@@ -18,8 +23,13 @@ const FALLBACK_CANDIDATES = [
     name: 'Thanh Hằng',
     age: 24,
     location: 'Hà Nội • 5 km',
+    height: 168,
     bio: 'Gym, yoga và lối sống lành mạnh. Đang tìm một người cùng tập luyện 🏋️‍♀️🧘‍♀️',
     photo: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&q=80&w=600',
+    photos: [
+      'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&q=80&w=600',
+      'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&q=80&w=600',
+    ],
     tags: ['🏋️ Gym', '🧘 Yoga', '✈️ Travel'],
   },
   {
@@ -27,8 +37,13 @@ const FALLBACK_CANDIDATES = [
     name: 'Bảo Ngọc',
     age: 23,
     location: 'Đà Nẵng • 2 km',
+    height: 162,
     bio: 'Đam mê du lịch và ẩm thực. Thích nuôi mèo 🐱 và nấu ăn 🍳',
     photo: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&q=80&w=600',
+    photos: [
+      'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&q=80&w=600',
+      'https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?auto=format&fit=crop&q=80&w=600',
+    ],
     tags: ['✈️ Travel', '🐱 Pets', '🍳 Cooking'],
   },
   {
@@ -36,8 +51,13 @@ const FALLBACK_CANDIDATES = [
     name: 'Minh Anh',
     age: 25,
     location: 'TP. Hồ Chí Minh • 7 km',
+    height: 170,
     bio: 'Software engineer 💻 thích chơi game 🎮 và xem phim chiếu rạp 🎬',
     photo: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=600',
+    photos: [
+      'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=600',
+      'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=600',
+    ],
     tags: ['💻 Coding', '🎮 Gaming', '🎬 Movies'],
   },
   {
@@ -45,59 +65,19 @@ const FALLBACK_CANDIDATES = [
     name: 'Hoàng Nam',
     age: 26,
     location: 'TP. Hồ Chí Minh • 4 km',
+    height: 178,
     bio: 'Nhiếp ảnh tự do 📸 yêu cắm trại và khám phá những vùng đất mới 🏕️',
     photo: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=600',
+    photos: [
+      'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=600',
+      'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=600',
+    ],
     tags: ['📸 Photography', '✈️ Travel', '☕ Coffee'],
-  },
-  {
-    id: -6,
-    name: 'Thu Thảo',
-    age: 21,
-    location: 'TP. Hồ Chí Minh • 2 km',
-    bio: 'Sinh viên Mỹ thuật 🎨 yêu vẽ tranh, hòa mình vào thiên nhiên 🌿',
-    photo: 'https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?auto=format&fit=crop&q=80&w=600',
-    tags: ['🎨 Art', '📚 Books', '☕ Coffee'],
-  },
-  {
-    id: -7,
-    name: 'Đức Minh',
-    age: 27,
-    location: 'Hà Nội • 6 km',
-    bio: 'Kiến trúc sư 📐 đam mê thiết kế không gian và đánh đàn guitar 🎸',
-    photo: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=600',
-    tags: ['🎨 Art', '🎵 Music', '☕ Coffee'],
-  },
-  {
-    id: -8,
-    name: 'Khánh Linh',
-    age: 23,
-    location: 'Cần Thơ • 8 km',
-    bio: 'Fashion designer 👗 đam mê thời trang đương đại và phim chiếu rạp 🎬',
-    photo: 'https://images.unsplash.com/photo-1488426862026-3ee34a7d66df?auto=format&fit=crop&q=80&w=600',
-    tags: ['🎬 Movies', '🎨 Art', '✈️ Travel'],
-  },
-  {
-    id: -9,
-    name: 'Gia Huy',
-    age: 25,
-    location: 'Đà Nẵng • 3 km',
-    bio: 'HLV Fitness 🏋️‍♂️ yêu các môn thể thao outdoor và leo núi 🏔️',
-    photo: 'https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?auto=format&fit=crop&q=80&w=600',
-    tags: ['🏋️ Gym', '⚽ Sports', '✈️ Travel'],
-  },
-  {
-    id: -10,
-    name: 'Phương Thảo',
-    age: 24,
-    location: 'TP. Hồ Chí Minh • 5 km',
-    bio: 'Marketing executive 💼 thích du lịch biển và làm bánh pastry 🍰',
-    photo: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=600',
-    tags: ['🍳 Cooking', '✈️ Travel', '☕ Coffee'],
   },
 ];
 
 export default function Dashboard() {
-  const { user, logout, isAdmin } = useAuth();
+  const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [profile, setProfile] = useState(null);
   const [candidates, setCandidates] = useState([]);
@@ -111,9 +91,31 @@ export default function Dashboard() {
   const [adminError, setAdminError] = useState('');
   const [adminLoading, setAdminLoading] = useState(false);
 
+  // Detail Modal Profile View State
+  const [selectedProfile, setSelectedProfile] = useState(null);
+  const [activePhotoIdx, setActivePhotoIdx] = useState(0);
+  const [unmatchedNotice, setUnmatchedNotice] = useState(null);
+
   useEffect(() => {
     checkProfileAndLoadData();
   }, []);
+
+  const handleUnmatch = async (targetId, name) => {
+    try {
+      await matchingApi.unmatch(targetId);
+    } catch {
+      /* ignore */
+    } finally {
+      setMatches(prev => prev.filter(m => m.id !== targetId));
+      if (selectedProfile && selectedProfile.id === targetId) {
+        setSelectedProfile(null);
+      }
+      setLikedPartner(null);
+      setMatchedPartner(null);
+      setUnmatchedNotice(`💔 Đã hủy ghép đôi với ${name}`);
+      setTimeout(() => setUnmatchedNotice(null), 3000);
+    }
+  };
 
   const checkProfileAndLoadData = async () => {
     setLoadingDeck(true);
@@ -155,23 +157,23 @@ export default function Dashboard() {
     }
   };
 
-  const handleSwipe = async (action) => {
+  const handleSwipe = async (action, targetCandidate = null) => {
     const currentList = candidates.length > 0 ? candidates : FALLBACK_CANDIDATES;
-    const currentCandidate = currentList[candidateIdx % currentList.length];
+    const candidateToSwipe = targetCandidate || currentList[candidateIdx];
     
-    if (!currentCandidate) return;
+    if (!candidateToSwipe) return;
 
     setLikedPartner(null);
     setMatchedPartner(null);
 
     // Call backend swipe API
     try {
-      const swipeRes = await matchingApi.swipe(currentCandidate.id, action);
+      const swipeRes = await matchingApi.swipe(candidateToSwipe.id, action);
       const resData = swipeRes.data.data;
       
       if (resData && resData.isMatch) {
         // 🎉 MUTUAL MATCH SUCCESS!
-        const partner = resData.matchedUser || currentCandidate;
+        const partner = resData.matchedUser || candidateToSwipe;
         setMatchedPartner(partner);
         setMatches(prev => {
           const exists = prev.some(m => m.id === partner.id);
@@ -180,28 +182,31 @@ export default function Dashboard() {
         setTimeout(() => setMatchedPartner(null), 3500);
       } else if (action === 'LIKE' || action === 'SUPER_LIKE') {
         // 💖 STANDARD LIKE SENT
-        const partner = resData?.likedUser || currentCandidate;
+        const partner = resData?.likedUser || candidateToSwipe;
         setLikedPartner(partner);
         setTimeout(() => setLikedPartner(null), 2500);
       }
     } catch {
       // Fallback local simulation (1-2 random matches)
       if (action === 'LIKE' || action === 'SUPER_LIKE') {
-        const isRandomMatch = (currentCandidate.id === -1 || currentCandidate.id === -3);
+        const isRandomMatch = (candidateToSwipe.id === -1 || candidateToSwipe.id === -3 || candidateToSwipe.id === -7);
         if (isRandomMatch) {
-          setMatchedPartner(currentCandidate);
+          setMatchedPartner(candidateToSwipe);
           setMatches(prev => {
-            const exists = prev.some(m => m.id === currentCandidate.id);
-            return exists ? prev : [currentCandidate, ...prev];
+            const exists = prev.some(m => m.id === candidateToSwipe.id);
+            return exists ? prev : [candidateToSwipe, ...prev];
           });
           setTimeout(() => setMatchedPartner(null), 3500);
         } else {
-          setLikedPartner(currentCandidate);
+          setLikedPartner(candidateToSwipe);
           setTimeout(() => setLikedPartner(null), 2500);
         }
       }
     }
 
+    if (selectedProfile) {
+      setSelectedProfile(null);
+    }
     setCandidateIdx(prev => prev + 1);
   };
 
@@ -220,12 +225,17 @@ export default function Dashboard() {
     } finally { setAdminLoading(false); }
   };
 
+  const openDetailProfile = (person) => {
+    setSelectedProfile(person);
+    setActivePhotoIdx(0);
+  };
+
   const currentList = candidates.length > 0 ? candidates : FALLBACK_CANDIDATES;
   const currentCandidate = currentList[candidateIdx];
   const defaultAvatar = 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=400';
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', background: '#0f1115', color: '#fff', fontFamily: 'Inter, sans-serif' }}>
+    <div className="dashboard-layout" style={{ display: 'flex', minHeight: '100vh', background: '#0f1115', color: '#fff', fontFamily: 'Inter, sans-serif' }}>
       
       {/* ── TINDER LEFT SIDEBAR ── */}
       <aside style={{
@@ -296,12 +306,33 @@ export default function Dashboard() {
             matches.length > 0 ? (
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0.8rem' }}>
                 {matches.map((m, i) => (
-                  <div key={i} style={{
-                    position: 'relative', height: '140px', borderRadius: '12px', overflow: 'hidden',
-                    border: '1px solid rgba(255,255,255,0.1)', background: '#000'
-                  }}>
+                  <div
+                    key={i}
+                    onClick={() => openDetailProfile(m)}
+                    style={{
+                      position: 'relative', height: '140px', borderRadius: '12px', overflow: 'hidden',
+                      border: '1px solid rgba(255,255,255,0.1)', background: '#000', cursor: 'pointer',
+                      transition: 'transform 0.2s ease'
+                    }}
+                  >
                     <img src={m.photo} alt={m.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                     <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.8), transparent)' }} />
+                    
+                    {/* Unmatch Quick Button */}
+                    <button
+                      onClick={(e) => { e.stopPropagation(); handleUnmatch(m.id, m.name); }}
+                      title="Hủy ghép đôi (Unmatch)"
+                      style={{
+                        position: 'absolute', top: '6px', right: '6px', zIndex: 10,
+                        background: 'rgba(0,0,0,0.7)', border: '1px solid rgba(255,68,88,0.4)',
+                        color: '#ff4458', borderRadius: '50%', width: '26px', height: '26px',
+                        cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        fontSize: '0.78rem'
+                      }}
+                    >
+                      💔
+                    </button>
+
                     <div style={{ position: 'absolute', bottom: '8px', left: '8px', fontWeight: 700, fontSize: '0.85rem' }}>
                       {m.name}, {m.age}
                     </div>
@@ -365,6 +396,19 @@ export default function Dashboard() {
           </div>
         )}
 
+        {/* 💔 3. UNMATCHED NOTICE BANNER */}
+        {unmatchedNotice && (
+          <div style={{
+            position: 'absolute', top: '2rem', zIndex: 100,
+            background: 'rgba(255, 68, 88, 0.15)', backdropFilter: 'blur(16px)',
+            border: '1px solid rgba(255, 68, 88, 0.4)', color: '#ff4458',
+            padding: '0.8rem 1.8rem', borderRadius: '24px', fontWeight: 700, fontSize: '1rem',
+            boxShadow: '0 8px 24px rgba(255, 68, 88, 0.3)'
+          }}>
+            {unmatchedNotice}
+          </div>
+        )}
+
         {/* TINDER SWIPE CARD OR EXHAUSTED DECK NOTICE */}
         {loadingDeck ? (
           <div style={{ textAlign: 'center' }}>
@@ -406,11 +450,16 @@ export default function Dashboard() {
           </div>
         ) : (
           <>
-            <div style={{
-              width: '380px', height: '560px', borderRadius: '16px', overflow: 'hidden',
-              position: 'relative', background: '#000', boxShadow: '0 25px 60px rgba(0,0,0,0.7)',
-              border: '1px solid rgba(255,255,255,0.1)', transition: 'transform 0.3s ease'
-            }}>
+            {/* Candidate Card (Click to open full profile) */}
+            <div
+              onClick={() => openDetailProfile(currentCandidate)}
+              title="Click để xem Hồ sơ chi tiết"
+              style={{
+                width: '380px', height: '560px', borderRadius: '16px', overflow: 'hidden',
+                position: 'relative', background: '#000', boxShadow: '0 25px 60px rgba(0,0,0,0.7)',
+                border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer', transition: 'transform 0.3s ease'
+              }}
+            >
               <img
                 src={currentCandidate.photo}
                 alt={currentCandidate.name}
@@ -423,6 +472,16 @@ export default function Dashboard() {
                 background: 'linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.3) 40%, transparent 100%)',
                 pointerEvents: 'none'
               }} />
+
+              {/* Click Info Hint Badge */}
+              <div style={{
+                position: 'absolute', top: '1rem', right: '1rem',
+                background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(8px)', color: '#fff',
+                padding: '0.3rem 0.8rem', borderRadius: '20px', fontSize: '0.78rem', fontWeight: 600,
+                border: '1px solid rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center', gap: '0.3rem'
+              }}>
+                ℹ️ Xem chi tiết
+              </div>
 
               {/* Candidate Info Overlay */}
               <div style={{ position: 'absolute', bottom: '1.5rem', left: '1.5rem', right: '1.5rem', zIndex: 10 }}>
@@ -455,7 +514,7 @@ export default function Dashboard() {
               </div>
             </div>
 
-            {/* ACTION CONTROL BUTTONS BAR (2 EQUAL-SIZED HOVER-SCALING CIRCULAR BUTTONS) */}
+            {/* ACTION CONTROL BUTTONS BAR (2 EQUAL-SIZED CIRCULAR BUTTONS) */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '2.5rem', marginTop: '1.8rem' }}>
               
               {/* Pass (Quẹt trái - ❌) */}
@@ -495,6 +554,200 @@ export default function Dashboard() {
         )}
 
       </main>
+
+      {/* ── 🌟 DETAILED FULL-SCREEN / MODAL CANDIDATE PROFILE VIEW ── */}
+      {selectedProfile && (
+        <div style={{
+          position: 'fixed', inset: 0, zIndex: 1000,
+          background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(16px)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1.5rem',
+          animation: 'fadeIn 0.25s ease'
+        }}>
+          <div style={{
+            width: '100%', maxWidth: '480px', maxHeight: '90vh', overflowY: 'auto',
+            background: '#181c22', borderRadius: '24px', border: '1px solid rgba(255,255,255,0.15)',
+            boxShadow: '0 25px 70px rgba(0,0,0,0.8)', position: 'relative', display: 'flex', flexDirection: 'column'
+          }}>
+            
+            {/* Top Bar with Return / Close Button */}
+            <div style={{
+              position: 'sticky', top: 0, zIndex: 30, background: 'rgba(24, 28, 34, 0.95)',
+              backdropFilter: 'blur(10px)', padding: '1rem 1.2rem', display: 'flex',
+              alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid rgba(255,255,255,0.08)'
+            }}>
+              <button
+                onClick={() => setSelectedProfile(null)}
+                className="btn btn-ghost"
+                style={{ width: 'auto', padding: '0.4rem 1rem', borderRadius: '20px', fontSize: '0.88rem' }}
+              >
+                ← Quay lại
+              </button>
+              <span style={{ fontWeight: 700, fontSize: '0.95rem', color: '#fff' }}>Hồ sơ của {selectedProfile.name}</span>
+              <button
+                onClick={() => setSelectedProfile(null)}
+                style={{
+                  background: 'rgba(255,255,255,0.1)', color: '#fff', border: 'none',
+                  borderRadius: '50%', width: '32px', height: '32px', cursor: 'pointer',
+                  fontSize: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'center'
+                }}
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Photo Gallery Viewer */}
+            <div style={{ position: 'relative', width: '100%', height: '420px', background: '#000' }}>
+              <img
+                src={
+                  Array.isArray(selectedProfile.photos) && selectedProfile.photos.length > 0
+                    ? selectedProfile.photos[activePhotoIdx] || selectedProfile.photo
+                    : selectedProfile.photo
+                }
+                alt={selectedProfile.name}
+                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+              />
+
+              {/* Photo Navigation Indicators / Dots */}
+              {Array.isArray(selectedProfile.photos) && selectedProfile.photos.length > 1 && (
+                <div style={{
+                  position: 'absolute', top: '1rem', left: '1rem', right: '1rem',
+                  display: 'flex', gap: '6px', zIndex: 10
+                }}>
+                  {selectedProfile.photos.map((_, pIdx) => (
+                    <div
+                      key={pIdx}
+                      onClick={() => setActivePhotoIdx(pIdx)}
+                      style={{
+                        flex: 1, height: '4px', borderRadius: '2px', cursor: 'pointer',
+                        background: activePhotoIdx === pIdx ? '#FF2D55' : 'rgba(255,255,255,0.3)',
+                        transition: 'all 0.3s ease'
+                      }}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Thumbnail Selection Strip */}
+            {Array.isArray(selectedProfile.photos) && selectedProfile.photos.length > 1 && (
+              <div style={{ display: 'flex', gap: '0.5rem', padding: '0.8rem 1.2rem', background: '#12151a' }}>
+                {selectedProfile.photos.map((pUrl, pIdx) => (
+                  <img
+                    key={pIdx}
+                    src={pUrl}
+                    alt="Thumb"
+                    onClick={() => setActivePhotoIdx(pIdx)}
+                    style={{
+                      width: '55px', height: '55px', borderRadius: '8px', objectFit: 'cover', cursor: 'pointer',
+                      border: activePhotoIdx === pIdx ? '2px solid #FF2D55' : '1px solid rgba(255,255,255,0.1)',
+                      opacity: activePhotoIdx === pIdx ? 1 : 0.6, transition: 'all 0.2s ease'
+                    }}
+                  />
+                ))}
+              </div>
+            )}
+
+            {/* Detailed Profile Info Section */}
+            <div style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1.2rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                    <h2 style={{ fontSize: '1.8rem', fontWeight: 800, margin: 0 }}>{selectedProfile.name}</h2>
+                    <span style={{ fontSize: '1.5rem', fontWeight: 400 }}>{selectedProfile.age}</span>
+                    <span style={{ color: '#20d5ec', fontSize: '1.2rem' }}>✓</span>
+                  </div>
+                  <div style={{ fontSize: '0.9rem', color: 'rgba(255,255,255,0.7)', marginTop: '0.3rem' }}>
+                    📍 {selectedProfile.location}
+                  </div>
+                </div>
+                {selectedProfile.height && (
+                  <div style={{
+                    background: 'rgba(255,255,255,0.06)', padding: '0.4rem 0.9rem', borderRadius: '12px',
+                    fontSize: '0.88rem', fontWeight: 700, color: '#34D399', border: '1px solid rgba(52, 211, 153, 0.2)'
+                  }}>
+                    📏 {selectedProfile.height} cm
+                  </div>
+                )}
+              </div>
+
+              {/* Bio Section */}
+              <div style={{ background: 'rgba(255,255,255,0.03)', padding: '1rem', borderRadius: '14px', border: '1px solid rgba(255,255,255,0.06)' }}>
+                <div style={{ fontSize: '0.82rem', fontWeight: 700, color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase', marginBottom: '0.4rem' }}>
+                  Giới thiệu bản thân
+                </div>
+                <p style={{ fontSize: '0.92rem', color: 'rgba(255,255,255,0.9)', lineHeight: '1.6', margin: 0 }}>
+                  {selectedProfile.bio || 'Chưa thêm bài giới thiệu bản thân.'}
+                </p>
+              </div>
+
+              {/* Interest Tags */}
+              {Array.isArray(selectedProfile.tags) && selectedProfile.tags.length > 0 && (
+                <div>
+                  <div style={{ fontSize: '0.82rem', fontWeight: 700, color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase', marginBottom: '0.6rem' }}>
+                    Sở thích cá nhân
+                  </div>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+                    {selectedProfile.tags.map((tag, i) => (
+                      <span key={i} style={{
+                        background: 'rgba(253, 38, 125, 0.15)', color: '#FF2D55', border: '1px solid rgba(253, 38, 125, 0.3)',
+                        borderRadius: '20px', padding: '0.35rem 0.85rem', fontSize: '0.82rem', fontWeight: 600
+                      }}>
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* If already matched, show Unmatch button */}
+              {matches.some(m => m.id === selectedProfile.id) ? (
+                <button
+                  onClick={() => handleUnmatch(selectedProfile.id, selectedProfile.name)}
+                  className="btn btn-ghost"
+                  style={{
+                    width: '100%', marginTop: '0.5rem', color: '#ff4458', borderColor: 'rgba(255,68,88,0.4)',
+                    background: 'rgba(255,68,88,0.08)', fontWeight: 700, padding: '0.8rem'
+                  }}
+                >
+                  💔 Hủy ghép đôi với {selectedProfile.name}
+                </button>
+              ) : (
+                /* Swiping Action Controls inside Modal */
+                <div style={{ display: 'flex', justifyContent: 'center', gap: '2rem', marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid rgba(255,255,255,0.08)' }}>
+                  <button
+                    onClick={() => handleSwipe('PASS', selectedProfile)}
+                    title="Bỏ qua (Pass)"
+                    className="tinder-btn-action tinder-btn-pass"
+                    style={{
+                      width: '64px', height: '64px', borderRadius: '50%', background: '#181c22',
+                      border: '2px solid #ff4458', color: '#ff4458', fontSize: '1.8rem', cursor: 'pointer',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      boxShadow: '0 8px 25px rgba(255, 68, 88, 0.25)',
+                    }}
+                  >
+                    ✕
+                  </button>
+                  <button
+                    onClick={() => handleSwipe('LIKE', selectedProfile)}
+                    title="Thích (Like)"
+                    className="tinder-btn-action tinder-btn-like"
+                    style={{
+                      width: '64px', height: '64px', borderRadius: '50%', background: '#181c22',
+                      border: '2px solid #34D399', color: '#34D399', fontSize: '1.8rem', cursor: 'pointer',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      boxShadow: '0 8px 25px rgba(52, 211, 153, 0.25)',
+                    }}
+                  >
+                    💖
+                  </button>
+                </div>
+              )}
+
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }

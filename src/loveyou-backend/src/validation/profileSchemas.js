@@ -5,7 +5,7 @@ const updateProfileSchema = z.object({
   phoneNumber: z.string().max(20, 'Phone number cannot exceed 20 characters').optional().nullable(),
   gender: z.string().max(10, 'Gender cannot exceed 10 characters').optional().nullable(),
   dateOfBirth: z.string().optional().nullable(),
-  profilePicture: z.string().max(255, 'Image URL cannot exceed 255 characters').optional().nullable(),
+  profilePicture: z.string().optional().nullable(),
   bio: z.string().optional().nullable(),
   height: z.number().min(100).max(250).optional().nullable(),
   location: z.string().max(100).optional().nullable(),
