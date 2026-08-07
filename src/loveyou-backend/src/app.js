@@ -2,6 +2,8 @@ const express = require('express');
 const cors = require('cors');
 const authRoutes = require('./routes/authRoutes');
 const adminRoutes = require('./routes/adminRoutes');
+const userRoutes = require('./routes/userRoutes');
+const matchingRoutes = require('./routes/matchingRoutes');
 const errorHandler = require('./middlewares/errorHandler');
 
 const app = express();
@@ -19,6 +21,8 @@ app.get('/api/health', (req, res) => {
 
 app.use('/api/auth', authRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/users', userRoutes);
+app.use('/api/matching', matchingRoutes);
 
 app.use(errorHandler);
 

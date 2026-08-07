@@ -212,7 +212,7 @@ input.error { border-color: var(--error); box-shadow: 0 0 0 3px rgba(248,113,113
   font-size: 0.9rem;
   font-weight: 600;
   cursor: pointer;
-  transition: var(--transition);
+  transition: transform 0.28s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.28s ease, background 0.28s ease, opacity 0.2s ease;
   letter-spacing: 0.02em;
 }
 .btn-primary {
@@ -237,7 +237,51 @@ input.error { border-color: var(--error); box-shadow: 0 0 0 3px rgba(248,113,113
   border: 1px solid var(--glass-border);
   width: 100%;
 }
-.btn-ghost:hover { background: var(--glass); color: var(--text-primary); }
+.btn-ghost:hover:not(:disabled) {
+  background: var(--glass);
+  color: var(--text-primary);
+}
+
+/* ── Hover Zoom Scale Animations — STRICTLY FOR LOGGED-IN USERS (Dashboard & Onboarding) ── */
+.dashboard-layout .btn:hover:not(:disabled),
+.onboarding-wizard-container .btn:hover:not(:disabled),
+.tinder-btn-action:hover {
+  transform: scale(1.06) translateY(-2px) !important;
+}
+
+.tinder-btn-action {
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease, background-color 0.3s ease !important;
+}
+.tinder-btn-action:hover {
+  transform: scale(1.22) !important;
+}
+.tinder-btn-pass:hover {
+  background: rgba(255, 68, 88, 0.15) !important;
+  box-shadow: 0 12px 35px rgba(255, 68, 88, 0.5) !important;
+}
+.tinder-btn-like:hover {
+  background: rgba(52, 211, 153, 0.15) !important;
+  box-shadow: 0 12px 35px rgba(52, 211, 153, 0.5) !important;
+}
+
+/* ── Tinder Action Buttons Hover Animations ── */
+.tinder-btn-action {
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease, background-color 0.3s ease !important;
+}
+.tinder-btn-action:hover {
+  transform: scale(1.22) !important;
+}
+.tinder-btn-pass:hover {
+  background: rgba(255, 68, 88, 0.15) !important;
+  box-shadow: 0 12px 35px rgba(255, 68, 88, 0.5) !important;
+}
+.tinder-btn-like:hover {
+  background: rgba(52, 211, 153, 0.15) !important;
+  box-shadow: 0 12px 35px rgba(52, 211, 153, 0.5) !important;
+}
+.tinder-btn-action:active {
+  transform: scale(0.92) !important;
+}
 
 /* ── Spinner ── */
 .spinner {
