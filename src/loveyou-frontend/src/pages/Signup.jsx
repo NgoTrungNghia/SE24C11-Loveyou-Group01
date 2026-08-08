@@ -79,7 +79,6 @@ export default function Signup() {
           value={form.username}
           onChange={set('username')}
           error={errors.username}
-          icon="👤"
         />
 
         <Field
@@ -91,7 +90,6 @@ export default function Signup() {
           value={form.email}
           onChange={set('email')}
           error={errors.email}
-          icon="✉"
         />
 
         <Field
@@ -103,7 +101,6 @@ export default function Signup() {
           value={form.password}
           onChange={set('password')}
           error={errors.password}
-          icon="🔒"
         />
 
         <Field
@@ -114,7 +111,6 @@ export default function Signup() {
           autoComplete="tel"
           value={form.phone}
           onChange={set('phone')}
-          icon="📱"
         />
 
         <button className="btn btn-primary" type="submit" disabled={loading} id="signup-btn">
