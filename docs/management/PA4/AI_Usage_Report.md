@@ -1,7 +1,8 @@
 # BÁO CÁO KÊ KHAI SỬ DỤNG AI (AI USAGE REPORT) - PA4
-> **Dự án:** Ứng dụng Hẹn hò LoveYou
-> **Sinh viên thực hiện:** Nguyễn Minh Hoàng 
-> **Nhánh Git:** `Hoang---Tan`  
+
+- **Dự án:** Ứng dụng Hẹn hò LoveYou
+- **Sinh viên thực hiện:** Nguyễn Minh Hoàng
+- **Nhánh Git:** `Hoang---Tan`
 
 ---
 
