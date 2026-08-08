@@ -41,8 +41,8 @@ All AI tool usages during **Project Activity 4 (PA4)** are transparently declare
   > *"At the photo upload section, I want users to be able to upload photos directly from their local computer when clicking on any photo slot... adjust to max 4 photos in a balanced 2x2 grid... add date of birth constraints preventing future dates and enforcing age between 18 and 100 years old."*
 - **AI-Generated Content:** Sample canvas code using `canvas.toDataURL('image/jpeg', 0.7)` downscaling to 600px width and age calculation logic.
 - **Student Independent Work & Validation:**
-  - Customized CSS `.photo-slot-card` styling in [index.css](file:///c:/Users/Admin/OneDrive%20-%20VNU-HCMUS/Desktop/SE24C11-Loveyou-Group01/src/loveyou-frontend/src/index.css).
-  - Integrated 18–100 age Zod schema validation in backend [profileSchemas.js](file:///c:/Users/Admin/OneDrive%20-%20VNU-HCMUS/Desktop/SE24C11-Loveyou-Group01/src/loveyou-backend/src/validation/profileSchemas.js).
+  - Customized CSS `.photo-slot-card` styling in `src/loveyou-frontend/src/index.css`.
+  - Integrated 18–100 age Zod schema validation in backend `src/loveyou-backend/src/validation/profileSchemas.js`.
 
 ---
 
@@ -52,7 +52,7 @@ All AI tool usages during **Project Activity 4 (PA4)** are transparently declare
   > *"Set default bot candidates to 5 while real registered users can still meet each other... add unmatch feature... when unmatching, database must also delete the records of matching between both users."*
 - **AI-Generated Content:** 5 bot candidate definitions, `unmatchUser` function deleting records from PostgreSQL `Match` and `Swipe` tables.
 - **Student Independent Work & Validation:**
-  - Rewrote `handleSwipe` and `handleUnmatch` handler logic in [Dashboard.jsx](file:///c:/Users/Admin/OneDrive%20-%20VNU-HCMUS/Desktop/SE24C11-Loveyou-Group01/src/loveyou-frontend/src/pages/Dashboard.jsx).
+  - Rewrote `handleSwipe` and `handleUnmatch` handler logic in `src/loveyou-frontend/src/pages/Dashboard.jsx`.
   - Verified database deletion using `npx prisma studio`.
 
 ---
@@ -71,7 +71,7 @@ All AI tool usages during **Project Activity 4 (PA4)** are transparently declare
 - **Purpose of AI Use:** Suggested Mermaid `C4Component` syntax for React SPA component architecture.
 - **AI-Generated Content:** Mermaid diagram syntax representing component relationships.
 - **Student Independent Work & Validation:**
-  - Authored complete architecture document in [FrontendComponentC4.md](file:///c:/Users/Admin/OneDrive%20-%20VNU-HCMUS/Desktop/SE24C11-Loveyou-Group01/docs/management/PA4/FrontendComponentC4.md).
+  - Authored complete architecture document in `docs/management/PA4/FrontendComponentC4.md`.
 
 ---
 
