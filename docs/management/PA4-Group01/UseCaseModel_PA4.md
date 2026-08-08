@@ -18,7 +18,6 @@ A User is a registered and authenticated person who uses LoveYou to manage a pro
 
 An Admin is an authorized platform administrator who manages users, monitors platform statistics, and manages the interest-tag catalogue.
 
-> **Modeling note:** Use-case IDs (`UC01`–`UC56`) are shown directly in the diagrams so that every diagram can be traced unambiguously to `UseCaseSpecification.md`.
 
 ## 2. Account, Profile, and Onboarding
 
