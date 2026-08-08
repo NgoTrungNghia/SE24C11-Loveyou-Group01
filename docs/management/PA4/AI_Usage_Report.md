@@ -1,9 +1,6 @@
 # BÁO CÁO KÊ KHAI SỬ DỤNG AI (AI USAGE REPORT) - PA4
-
-> **Môn học:** SE24C11 / CS10014 - Nhập môn Công nghệ Thông tin & Tư duy Máy tính  
-> **Trường:** Đại học Khoa học Tự nhiên, ĐHQG-HCM (FIT VNU-HCM)  
-> **Dự án:** Ứng dụng Hẹn hò LoveYou (PA4)  
-> **Sinh viên thực hiện:** Thành viên 5 (Frontend Developer & Spec Kit Lead Frontend)  
+> **Dự án:** Ứng dụng Hẹn hò LoveYou
+> **Sinh viên thực hiện:** Nguyễn Minh Hoàng 
 > **Nhánh Git:** `Hoang---Tan`  
 
 ---
@@ -52,7 +49,7 @@ Tất cả việc sử dụng các công cụ AI trong giai đoạn **PA4 (Proje
 #### Task 2: Giao diện Quẹt Thẻ Hẹn Hò & Quản lý Match (Feature 004 - Matching & Swiping Deck)
 - **Mục đích sử dụng AI:** Hỗ trợ viết logic gợi ý người dùng (Candidate Pool), hiệu ứng hover phóng to 2 nút Tinder và modal xem chi tiết hồ sơ đối phương.
 - **Prompt chính:**  
-  > *"giới hạn bot mặc định ở giao diện match xuống 5, còn những tài khoản đã tạo hồ sơ vẫn có thể gặp nhau... thêm chức năng hủy match... khi đã hủy match rồi thì trên database cx phải xóa việc tôi và họ đax match nhau."*
+  > *"giới hạn bot mặc định ở giao diện match xuống 5, còn những tài khoản đã tạo hồ sơ vẫn có thể gặp nhau... thêm chức năng hủy match... khi đã hủy match rồi thì trên database cx phải xóa việc tôi và họ đã match nhau."*
 - **Nội dung AI tạo ra:** Cấu hình 5 Bot candidate mẫu, hàm `unmatchUser` xóa bản ghi `Match` và `Swipe` trong PostgreSQL.
 - **Phần sinh viên tự thực hiện & Kiểm thử:**
   - Viết lại hàm `handleSwipe` và `handleUnmatch` trong [Dashboard.jsx](file:///c:/Users/Admin/OneDrive%20-%20VNU-HCMUS/Desktop/SE24C11-Loveyou-Group01/src/loveyou-frontend/src/pages/Dashboard.jsx).
@@ -92,7 +89,3 @@ Tất cả việc sử dụng các công cụ AI trong giai đoạn **PA4 (Proje
 ## 5. Cam Kết Liêm Chính Học Thuật (Declaration)
 
 > **Cam kết:** *"Tôi xin cam đoan toàn bộ nội dung mã nguồn và báo cáo trong giai đoạn PA4 đã được tôi kiểm tra, thử nghiệm và thấu hiểu hoàn toàn. Việc sử dụng công cụ AI trợ giúp chỉ dừng lại ở mức gợi ý cấu trúc mã và tối ưu hóa giao diện, không thay thế quá trình học tập và tư duy độc lập của bản thân."*
-
-**Ký tên:**  
-*Thành viên 5 (Frontend Developer & Spec Kit Lead Frontend)*  
-*Ngày 08 tháng 08 năm 2026*
