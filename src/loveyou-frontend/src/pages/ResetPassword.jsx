@@ -100,7 +100,6 @@ export default function ResetPassword() {
             value={form.newPassword}
             onChange={set('newPassword')}
             error={errors.newPassword}
-            icon="🔒"
           />
 
           <Field
@@ -112,7 +111,6 @@ export default function ResetPassword() {
             value={form.confirm}
             onChange={set('confirm')}
             error={errors.confirm}
-            icon="✅"
           />
 
           <button

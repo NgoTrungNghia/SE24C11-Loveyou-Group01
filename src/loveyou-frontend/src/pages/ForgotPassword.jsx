@@ -80,7 +80,6 @@ export default function ForgotPassword() {
             autoComplete="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            icon="✉"
           />
 
           <button className="btn btn-primary" type="submit" disabled={loading} id="forgot-btn">
@@ -113,7 +112,6 @@ export default function ForgotPassword() {
             autoComplete="one-time-code"
             value={otp}
             onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
-            icon="🔑"
           />
 
           <button className="btn btn-primary" type="submit" disabled={loading} id="verify-otp-btn">

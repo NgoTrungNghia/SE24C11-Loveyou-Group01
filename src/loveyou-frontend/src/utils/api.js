@@ -22,6 +22,18 @@ export const authApi = {
     api.post('/auth/reset-password', { resetToken, newPassword }),
 };
 
+export const userApi = {
+  getProfile: () => api.get('/users/me'),
+  updateProfile: (data) => api.put('/users/me', data),
+};
+
+export const matchingApi = {
+  getCandidates: () => api.get('/matching/candidates'),
+  swipe: (targetId, action) => api.post('/matching/swipe', { targetId, action }),
+  getMatches: () => api.get('/matching/matches'),
+  unmatch: (targetId) => api.post('/matching/unmatch', { targetId }),
+};
+
 export const adminApi = {
   stats: () => api.get('/admin/stats'),
 };
