@@ -219,7 +219,6 @@ flowchart LR
     end
     Admin --> UC46
     Admin --> UC48
-    Admin --> UC54
     UC46 -.->|«include»| UC47
     UC49 -.->|«extend»| UC48
     UC50 -.->|«extend»| UC48
