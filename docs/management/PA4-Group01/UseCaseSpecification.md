@@ -90,7 +90,7 @@
 * **Special Requirements:**
   * JWT tokens must satisfy `SEC-02` (access token 15 min TTL, refresh token 7 days TTL).
   * Enforce lockout after 5 failures (`SEC-03`).
-* **UI Prototype Reference:** `![Log In Screen](prototypes/uc02_log_in.png)`
+* **UI Prototype Reference:** ![Log In Screen](analys-and-design/prototypes/uc02_log_in.png)`
 
 ---
 
