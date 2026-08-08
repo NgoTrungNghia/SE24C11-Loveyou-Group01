@@ -1184,7 +1184,7 @@ This document specifies the 56 use cases of the PA4 Use-Case Model. The specific
 * **Postconditions:** The requested receive message notification operation is completed successfully, or the system remains in a safe and recoverable state after an alternative flow.
 * **UI Prototype References:**
   - Main Flow: `prototypes/uc41_message_notification.png`
-  - AF41.1: `prototypes/uc41_af1_notification_delivery_unavailable.png`
+  - AF41.1: `prototypes/uc40_af1_notification_delivery_unavailable.png`
 
 ---
 
