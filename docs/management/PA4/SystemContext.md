@@ -1,8 +1,8 @@
 # C4 Model Level 1 - System Context Diagram
 
 > **Author:** Tuong Huy  
-> **Reviewer:** ____________________  
-> **Editor:** ____________________
+> **Reviewer:** Cong Chien 
+> **Editor:** Trung Nghia
 
 ## System Context Diagram
 

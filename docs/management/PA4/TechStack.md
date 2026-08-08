@@ -1,8 +1,8 @@
 # Tech Stack
 
 > **Author:** Tuong Huy  
-> **Reviewer:** ____________________  
-> **Editor:** ____________________
+> **Reviewer:** Cong Chien
+> **Editor:** Trung Nghia
 
 ## Overview
 

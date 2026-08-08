@@ -1,8 +1,8 @@
 # Deployment Diagram
 
 > **Author:** Tuong Huy  
-> **Reviewer:** ____________________  
-> **Editor:** ____________________
+> **Reviewer:** Cong Chien
+> **Editor:** Trung Nghia
 
 ## Deployment Diagram
 
