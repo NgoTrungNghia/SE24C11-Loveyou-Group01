@@ -1,92 +1,92 @@
-# BÁO CÁO KÊ KHAI SỬ DỤNG AI (AI USAGE REPORT) - PA4
+# AI USAGE REPORT - PA4
 
-- **Dự án:** Ứng dụng Hẹn hò LoveYou
-- **Sinh viên thực hiện:** Nguyễn Minh Hoàng
-- **Nhánh Git:** `Hoang---Tan`
-
----
-
-## 1. Mục Đích & Phạm Vi Áp Dụng (Objectives & Scope)
-
-Báo cáo này tuân thủ **Quy định Sử dụng Trí tuệ Nhân tạo (AI Usage Guidelines)** của Khoa Công nghệ Thông tin - Trường ĐH Khoa học Tự nhiên, ĐHQG-HCM.  
-
-Tất cả việc sử dụng các công cụ AI trong giai đoạn **PA4 (Project Activity 4)** được kê khai minh bạch, minh chứng học thuật rõ ràng, đảm bảo sinh viên hiểu rõ 100% mã nguồn và kiến trúc hệ thống đã triển khai.
+- **Project:** LoveYou Dating Application
+- **Student Name:** Nguyen Minh Hoang
+- **Git Branch:** `Hoang---Tan`
 
 ---
 
-## 2. Nguyên Tắc Cốt Lõi (Core Principles Checklist)
+## 1. Objectives & Scope of Application
 
-| Nguyên tắc | Mô tả tuân thủ | Trạng thái |
+This report strictly complies with the **AI Usage Guidelines** established by the Faculty of Information Technology, University of Science, VNU-HCM (Course CS10014 / SE24C11).
+
+All AI tool usages during **Project Activity 4 (PA4)** are transparently declared with verifiable academic evidence, ensuring that the student fully understands and takes complete responsibility for 100% of the implemented source code and architectural designs.
+
+---
+
+## 2. Core Principles Checklist
+
+| Principle | Compliance Description | Status |
 | :--- | :--- | :---: |
-| **Transparency (Minh bạch)** | Kê khai đầy đủ công cụ AI, mốc thời gian, prompt và các phần code/tài liệu được hỗ trợ. | **ĐÃ TUÂN THỦ** |
-| **Understanding (Thấu hiểu)** | Sinh viên trực tiếp kiểm thử, hiểu rõ và có khả năng giải trình 100% logic mã nguồn. | **ĐÃ TUÂN THỦ** |
-| **No Blind Copying (Không sao chép mù)** | Không copy nguyên bản code AI; tất cả logic được tùy chỉnh theo đúng thiết kế của dự án. | **ĐÃ TUÂN THỦ** |
-| **Academic Integrity (Liêm chính)** | Kiểm chứng dữ liệu thực tế bằng unit test, lệnh `npm run dev`, `npx prisma db push` và kiểm tra DB. | **ĐÃ TUÂN THỦ** |
+| **Transparency** | Fully declared AI tools, access timestamps, prompts, and AI-assisted code/documentation modules. | **COMPLIED** |
+| **Understanding** | The student independently tested, understood, and is capable of explaining 100% of the business logic. | **COMPLIED** |
+| **No Blind Copying** | No unvalidated AI code copying; all code was customized to match project design specifications. | **COMPLIED** |
+| **Academic Integrity** | Information was verified through unit tests, runtime environment (`npm run dev`), and database inspection. | **COMPLIED** |
 
 ---
 
-## 3. Kê Khai Chi Tiết Sử Dụng AI (AI Usage Notes)
+## 3. AI Usage Notes
 
-### 3.1. Thông Tin Công Cụ (Tool Information)
-- **Tên công cụ AI:** Gemini Antigravity Agent (Google DeepMind).
-- **Nền tảng & Phiên bản:** Antigravity IDE / VS Code Agent Environment.
-- **Thời gian truy cập:** Ngày 07 - 08 tháng 08 năm 2026.
-
----
-
-### 3.2. Bảng Tóm Tắt Nhiệm Vụ & Nhật Ký Prompt (Prompt Log & Tasks)
-
-#### Task 1: Thiết lập Wizard Hồ sơ người dùng 3 Bước (Feature 003 - Onboarding Profile Wizard)
-- **Mục đích sử dụng AI:** Gợi ý cấu trúc nén ảnh trực tiếp trên trình duyệt bằng HTML5 Canvas và xây dựng Form 3 bước chuẩn Tinder.
-- **Prompt chính:**  
-  > *"ngay chỗ thêm ảnh tôi muốn các cái ô chứa ảnh khi tôi click vô ô chứa ảnh đều có thể thêm trực tiếp ảnh vô từ máy... sửa thành tối đa 4 tấm ảnh cho cân đối (1 hàng 2 ảnh, tổng 2 hàng)... thêm ràng buộc ngày sinh không thuộc tương lai và từ 18 đến 100 tuổi."*
-- **Nội dung AI tạo ra:** Đoạn mã mẫu sử dụng `canvas.toDataURL('image/jpeg', 0.7)` để nén ảnh xuống 600px và logic tính tuổi.
-- **Phần sinh viên tự thực hiện & Kiểm thử:**
-  - Tùy chỉnh CSS `photo-slot-card` khớp với Design System trong [index.css](file:///c:/Users/Admin/OneDrive%20-%20VNU-HCMUS/Desktop/SE24C11-Loveyou-Group01/src/loveyou-frontend/src/index.css).
-  - Tích hợp Zod Schema kiểm tra độ tuổi 18–100 tại Backend [profileSchemas.js](file:///c:/Users/Admin/OneDrive%20-%20VNU-HCMUS/Desktop/SE24C11-Loveyou-Group01/src/loveyou-backend/src/validation/profileSchemas.js).
+### 3.1. Tool & Platform Details
+- **AI Tool Name:** Gemini Antigravity Agent (Google DeepMind).
+- **Platform & Version:** Antigravity IDE / VS Code Agent Environment.
+- **Access Time:** August 07 – August 08, 2026.
 
 ---
 
-#### Task 2: Giao diện Quẹt Thẻ Hẹn Hò & Quản lý Match (Feature 004 - Matching & Swiping Deck)
-- **Mục đích sử dụng AI:** Hỗ trợ viết logic gợi ý người dùng (Candidate Pool), hiệu ứng hover phóng to 2 nút Tinder và modal xem chi tiết hồ sơ đối phương.
-- **Prompt chính:**  
-  > *"giới hạn bot mặc định ở giao diện match xuống 5, còn những tài khoản đã tạo hồ sơ vẫn có thể gặp nhau... thêm chức năng hủy match... khi đã hủy match rồi thì trên database cx phải xóa việc tôi và họ đã match nhau."*
-- **Nội dung AI tạo ra:** Cấu hình 5 Bot candidate mẫu, hàm `unmatchUser` xóa bản ghi `Match` và `Swipe` trong PostgreSQL.
-- **Phần sinh viên tự thực hiện & Kiểm thử:**
-  - Viết lại hàm `handleSwipe` và `handleUnmatch` trong [Dashboard.jsx](file:///c:/Users/Admin/OneDrive%20-%20VNU-HCMUS/Desktop/SE24C11-Loveyou-Group01/src/loveyou-frontend/src/pages/Dashboard.jsx).
-  - Chạy `npx prisma studio` để xác nhận xóa bản ghi thành công trong PostgreSQL Database.
+### 3.2. Task Summary & Prompt Log
+
+#### Task 1: 3-Step Profile Setup Wizard (Feature 003 - Onboarding Profile Wizard)
+- **Purpose of AI Use:** Assisted in structuring browser-side image compression using HTML5 Canvas and designing a 3-step Tinder-style wizard layout.
+- **Key Prompt:**  
+  > *"At the photo upload section, I want users to be able to upload photos directly from their local computer when clicking on any photo slot... adjust to max 4 photos in a balanced 2x2 grid... add date of birth constraints preventing future dates and enforcing age between 18 and 100 years old."*
+- **AI-Generated Content:** Sample canvas code using `canvas.toDataURL('image/jpeg', 0.7)` downscaling to 600px width and age calculation logic.
+- **Student Independent Work & Validation:**
+  - Customized CSS `.photo-slot-card` styling in [index.css](file:///c:/Users/Admin/OneDrive%20-%20VNU-HCMUS/Desktop/SE24C11-Loveyou-Group01/src/loveyou-frontend/src/index.css).
+  - Integrated 18–100 age Zod schema validation in backend [profileSchemas.js](file:///c:/Users/Admin/OneDrive%20-%20VNU-HCMUS/Desktop/SE24C11-Loveyou-Group01/src/loveyou-backend/src/validation/profileSchemas.js).
 
 ---
 
-#### Task 3: Tinh chỉnh Giao diện Đăng nhập Tối giản (Minimalist Auth Forms)
-- **Mục đích sử dụng AI:** Loại bỏ các icon không cần thiết ở ô nhập liệu giao diện Đăng nhập / Đăng ký.
-- **Prompt chính:**  
-  > *"ở giao diện đăng nhập xóa các icon ổ khóa, hình con người..."*
-- **Nội dung AI tạo ra:** Loại bỏ các prop `icon` trong các trang `Login.jsx`, `Signup.jsx`, `ForgotPassword.jsx`, `ResetPassword.jsx`.
-- **Phần sinh viên tự thực hiện & Kiểm thử:**
-  - Kiểm tra căn chỉnh layout và padding chuẩn `padding: 0 1rem` trong CSS.
+#### Task 2: Dating Swiping Deck & Match Management (Feature 004 - Matching & Swiping Deck)
+- **Purpose of AI Use:** Assisted in candidate pool recommendation logic, Tinder action button hover scale animations, candidate profile detail modal, and unmatch database purge logic.
+- **Key Prompt:**  
+  > *"Set default bot candidates to 5 while real registered users can still meet each other... add unmatch feature... when unmatching, database must also delete the records of matching between both users."*
+- **AI-Generated Content:** 5 bot candidate definitions, `unmatchUser` function deleting records from PostgreSQL `Match` and `Swipe` tables.
+- **Student Independent Work & Validation:**
+  - Rewrote `handleSwipe` and `handleUnmatch` handler logic in [Dashboard.jsx](file:///c:/Users/Admin/OneDrive%20-%20VNU-HCMUS/Desktop/SE24C11-Loveyou-Group01/src/loveyou-frontend/src/pages/Dashboard.jsx).
+  - Verified database deletion using `npx prisma studio`.
 
 ---
 
-#### Task 4: Xây dựng Sơ đồ Kiến trúc C4 Level 3 Frontend
-- **Mục đích sử dụng AI:** Gợi ý cú pháp Mermaid C4Component cho mô hình thành phần Frontend SPA.
-- **Nội dung AI tạo ra:** Cấu trúc Mermaid C4Component thể hiện luồng dữ liệu từ React Router -> AuthContext -> Axios API -> Express Backend.
-- **Phần sinh viên tự thực hiện & Kiểm thử:**
-  - Biên tập hoàn chỉnh file [FrontendComponentC4.md](file:///c:/Users/Admin/OneDrive%20-%20VNU-HCMUS/Desktop/SE24C11-Loveyou-Group01/docs/management/PA4/FrontendComponentC4.md).
+#### Task 3: Minimalist Authentication Forms
+- **Purpose of AI Use:** Removed input field icons (lock, user, envelope icons) across auth pages.
+- **Key Prompt:**  
+  > *"In the login page, remove lock icons, human icons..."*
+- **AI-Generated Content:** Removed `icon` props from `Field` components across `Login.jsx`, `Signup.jsx`, `ForgotPassword.jsx`, and `ResetPassword.jsx`.
+- **Student Independent Work & Validation:**
+  - Verified component alignment and CSS `padding: 0 1rem`.
 
 ---
 
-## 4. Kết Quả Kiểm Thử & Xác Nhận (Validation Results)
+#### Task 4: C4 Level 3 Frontend Component Architecture Diagram
+- **Purpose of AI Use:** Suggested Mermaid `C4Component` syntax for React SPA component architecture.
+- **AI-Generated Content:** Mermaid diagram syntax representing component relationships.
+- **Student Independent Work & Validation:**
+  - Authored complete architecture document in [FrontendComponentC4.md](file:///c:/Users/Admin/OneDrive%20-%20VNU-HCMUS/Desktop/SE24C11-Loveyou-Group01/docs/management/PA4/FrontendComponentC4.md).
 
-| Hạng mục kiểm thử | Phương pháp kiểm thử | Kết quả |
+---
+
+## 4. Verification & Validation Results
+
+| Test Category | Testing Method | Result |
 | :--- | :--- | :---: |
-| **Nén ảnh & Tải ảnh** | Tải ảnh 10MB từ máy tính ➔ Kiểm tra chuỗi Canvas Base64. | **Thành công (~60KB/ảnh)** |
-| **Độ tuổi Ngày sinh** | Thử chọn ngày tương lai & năm sinh 2010 (dưới 18 tuổi). | **Báo lỗi chính xác** |
-| **Hủy Ghép đôi (Unmatch)** | Bấm Hủy Match ➔ Mở Prisma Studio kiểm tra bảng `Match` & `Swipe`. | **Xóa sạch bản ghi 100%** |
-| **Git Push** | Đẩy mã nguồn lên nhánh `Hoang---Tan`. | **Commit thành công** |
+| **Image Compression** | Uploaded 10MB image files ➔ Checked Canvas Base64 payload. | **Passed (~60KB/photo)** |
+| **DOB Validation** | Attempted selecting future dates & birth year 2010 (<18 years old). | **Passed (Correct Error Messages)** |
+| **Unmatch Purge** | Triggered Unmatch ➔ Inspected `Match` & `Swipe` tables in Prisma Studio. | **Passed (100% Records Deleted)** |
+| **Git Synchronization** | Pushed commits to `Hoang---Tan` remote branch. | **Passed** |
 
 ---
 
-## 5. Cam Kết Liêm Chính Học Thuật (Declaration)
+## 5. Academic Integrity Declaration
 
-> **Cam kết:** *"Tôi xin cam đoan toàn bộ nội dung mã nguồn và báo cáo trong giai đoạn PA4 đã được tôi kiểm tra, thử nghiệm và thấu hiểu hoàn toàn. Việc sử dụng công cụ AI trợ giúp chỉ dừng lại ở mức gợi ý cấu trúc mã và tối ưu hóa giao diện, không thay thế quá trình học tập và tư duy độc lập của bản thân."*
+> **Declaration:** *"I hereby declare that all source code and documentation produced for PA4 have been reviewed, tested, and fully understood by me. The use of AI assistance was strictly limited to code structure suggestions, refactoring, and UI optimizations, and in no way replaced my independent learning and analytical thinking."*
