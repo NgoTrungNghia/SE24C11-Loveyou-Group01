@@ -1,123 +1,79 @@
-# Deployment Diagram
+# PA4 – Deployment Diagram
 
-> **Author:** Tuong Huy  
-> **Reviewer:** Cong Chien
-> **Editor:** Trung Nghia
+## 1. Purpose
 
-## Deployment Diagram
+The Deployment Diagram describes where the main software components of the LoveYou system are executed and how they communicate.
+
+The diagram focuses on deployment nodes and runtime communication rather than internal source-code structure.
+
+---
+
+## 2. Deployment Architecture
 
 ```mermaid
-graph TD
+flowchart TB
+    USER["User Device<br/>Web Browser"]
 
-Client["Client Browser"]
+    subgraph CLIENT["Client Environment"]
+        FE["LoveYou Frontend<br/>React + Vite + TypeScript"]
+    end
 
-Frontend["Frontend Application
-React + Vite"]
+    subgraph SERVER["Application Server"]
+        BE["LoveYou Backend API<br/>Node.js + Express.js"]
+    end
 
-Backend["Backend Server
-Node.js + Express"]
+    subgraph DATA["Data Layer"]
+        DB["PostgreSQL Database"]
+    end
 
-Database[(PostgreSQL)]
+    EMAIL["Email Service<br/>Nodemailer / SMTP"]
 
-Mail["Email Service
-Nodemailer"]
-
-Client -->|HTTPS| Frontend
-
-Frontend -->|HTTPS REST API| Backend
-
-Backend -->|Prisma| Database
-
-Backend -->|SMTP| Mail
+    USER -->|"HTTPS"| FE
+    FE -->|"HTTP / REST API"| BE
+    BE -->|"Prisma / DB Connection"| DB
+    BE -->|"SMTP / Email"| EMAIL
 ```
 
 ---
 
-# Deployment Description
+## 3. Deployment Nodes
 
-## Client Browser
-
-The client accesses the application through a modern web browser.
-
----
-
-## Frontend
-
-Technology:
-
-- React
-- Vite
-- TypeScript
-
-Responsibilities:
-
-- Display user interface
-- Handle routing
-- Send HTTP requests
-- Receive API responses
-
-Communication:
-
-- HTTPS
+| Node | Deployed Component | Responsibility |
+|---|---|---|
+| User Device | Web Browser | Runs and displays the LoveYou frontend |
+| Client Environment | React/Vite frontend | Provides the web interface |
+| Application Server | Node.js/Express backend | Runs REST APIs and application logic |
+| Data Layer | PostgreSQL | Stores persistent application data |
+| Email Service | Nodemailer/SMTP | Handles outgoing emails |
 
 ---
 
-## Backend
+## 4. Communication
 
-Technology:
-
-- Node.js
-- Express
-
-Responsibilities:
-
-- Authentication
-- Business logic
-- Authorization
-- REST APIs
-
-Communication:
-
-- HTTPS with frontend
-- Prisma database connection
-- SMTP email service
+| From | To | Protocol / Mechanism |
+|---|---|---|
+| Web Browser | Frontend | HTTPS |
+| Frontend | Backend API | HTTP/REST |
+| Backend API | PostgreSQL | Database connection through Prisma |
+| Backend API | Email Service | SMTP / Email |
 
 ---
 
-## Database
+## 5. Runtime Flow
 
-Technology:
+```text
+User
+  │
+  │ HTTPS
+  ▼
+Frontend
+  │
+  │ REST API
+  ▼
+Backend API
+  ├──────────────► PostgreSQL
+  │
+  └──────────────► Email Service
+```
 
-- PostgreSQL
-
-Responsibilities:
-
-- Store all persistent application data
-
-Communication:
-
-- Prisma ORM
-
----
-
-## Email Service
-
-Technology:
-
-- Nodemailer
-
-Responsibilities:
-
-- Send application emails
-
-Communication:
-
-- SMTP
-
----
-
-# Deployment Notes
-
-At the current development stage, the system runs on a local development environment.
-
-Each component is represented as an independent logical deployment node, following the PA4 requirements.
+The Deployment Diagram is kept separate from the C4 diagrams: C4 describes the logical architecture, while this diagram describes the runtime/deployment environment.

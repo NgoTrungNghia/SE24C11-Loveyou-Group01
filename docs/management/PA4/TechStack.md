@@ -1,129 +1,53 @@
-# Tech Stack
+# PA4 – Tech Stack
 
-> **Author:** Tuong Huy  
-> **Reviewer:** Cong Chien
-> **Editor:** Trung Nghia
+## 1. Overview
 
-## Overview
+The LoveYou system uses a web-based client–server architecture. The technology stack is kept concise and grouped by responsibility.
 
-LoveYou is a full-stack web application following a client-server architecture.
-The system consists of a React frontend, an Express backend, and a PostgreSQL database.
+| Layer | Technology | Purpose |
+|---|---|---|
+| Frontend | React, Vite, TypeScript | Build the user interface and client-side application |
+| Frontend Communication | Axios | Communicate with Backend REST APIs |
+| Frontend Routing | React Router | Handle client-side navigation |
+| Backend | Node.js, Express.js | Provide REST APIs and application logic |
+| Database | PostgreSQL | Store users, profiles, matching and application data |
+| ORM | Prisma | Access and manage PostgreSQL data |
+| Authentication | JWT, bcrypt | Authentication, authorization and password hashing |
+| Validation | Zod | Validate request and application data |
+| Email | Nodemailer | Send application emails/notifications |
+| Version Control | Git, GitHub | Source-code management and team collaboration |
 
----
+## 2. Architecture Summary
 
-# Frontend
+```text
+┌──────────────────────┐
+│      Frontend        │
+│ React + Vite + TS    │
+│ Axios + React Router │
+└──────────┬───────────┘
+           │ HTTP / REST API
+           ▼
+┌──────────────────────┐
+│       Backend        │
+│ Node.js + Express    │
+│ JWT + bcrypt + Zod   │
+└──────────┬───────────┘
+           │ Prisma
+           ▼
+┌──────────────────────┐
+│      PostgreSQL      │
+└──────────────────────┘
 
-| Technology | Purpose |
-|------------|---------|
-| React | Build reusable user interfaces |
-| Vite | Fast frontend development and build tool |
-| TypeScript | Static type checking |
-| Axios | HTTP communication with backend APIs |
-| React Router DOM | Client-side routing |
+Backend ───────────────► Nodemailer / SMTP
+```
 
-### Responsibility
+## 3. Technology Selection Rationale
 
-The frontend provides the graphical user interface for users, including:
-
-- Authentication
-- Profile management
-- Matching
-- Messaging
-- Other dating features
-
----
-
-# Backend
-
-| Technology | Purpose |
-|------------|---------|
-| Node.js | JavaScript runtime |
-| Express.js | REST API framework |
-
-### Responsibility
-
-The backend handles:
-
-- Business logic
-- Authentication
-- Authorization
-- User management
-- API endpoints
-- Database access
-
----
-
-# Database
-
-| Technology | Purpose |
-|------------|---------|
-| PostgreSQL | Relational database |
-| Prisma ORM | Database modeling and querying |
-
-### Responsibility
-
-Store:
-
-- Users
-- Profiles
-- Matches
-- Messages
-- Other application data
-
----
-
-# Authentication
-
-| Technology | Purpose |
-|------------|---------|
-| JWT | User authentication |
-| bcrypt | Password hashing |
-
-Passwords are securely hashed before storage.
-
----
-
-# Email Service
-
-| Technology | Purpose |
-|------------|---------|
-| Nodemailer | Sending emails |
-
-Used for email-related features such as account verification or notifications.
-
----
-
-# Validation
-
-| Technology | Purpose |
-|------------|---------|
-| Zod | Request validation |
-
-Ensures incoming API requests satisfy predefined schemas.
-
----
-
-# Version Control
-
-| Technology | Purpose |
-|------------|---------|
-| Git | Version control |
-| GitHub | Source code hosting and collaboration |
-
----
-
-# Architecture Style
-
-The project follows a typical three-tier architecture.
-
-Presentation Layer
-
-- React
-
-Business Layer
-
-- Express API
-
-Data Layer
-
-- PostgreSQL + Prisma
+- **React + TypeScript**: component-based frontend with type safety.
+- **Vite**: fast development and build tooling.
+- **Node.js + Express**: lightweight REST API backend.
+- **PostgreSQL + Prisma**: relational database with convenient type-safe data access.
+- **JWT + bcrypt**: authentication and secure password handling.
+- **Zod**: request/data validation.
+- **Nodemailer**: email delivery.
+- **Git + GitHub**: version control and collaboration.
