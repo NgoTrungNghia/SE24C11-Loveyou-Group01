@@ -35,9 +35,23 @@ export default function ChatPanel({ match, currentUserId, onClose, onInviteGame 
     const handleNewMessage = ({ message, conversationId }) => {
       if (Number(conversationId) === conversation.id) {
         setMessages(prev => {
-          const exists = prev.some(m => m.id === message.id);
-          return exists ? prev : [...prev, message];
+          // 1. If message with exact DB ID already exists, ignore
+          if (prev.some(m => m.id === message.id)) return prev;
+
+          // 2. If this is our own sent message returning from socket server, replace optimistic message
+          if (message.senderId === currentUserId) {
+            const optIndex = prev.findIndex(m => m._optimistic && m.content === message.content);
+            if (optIndex !== -1) {
+              const updated = [...prev];
+              updated[optIndex] = message;
+              return updated;
+            }
+          }
+
+          // 3. Otherwise append new message
+          return [...prev, message];
         });
+
         // Mark as read if partner sent it
         if (message.senderId !== currentUserId) {
           socket.emit('mark_read', { conversationId: conversation.id });
@@ -112,7 +126,7 @@ export default function ChatPanel({ match, currentUserId, onClose, onInviteGame 
         socket.emit('send_message', { conversationId: conversation.id, content });
         // Optimistically add message
         const optimisticMsg = {
-          id: Date.now(),
+          id: `temp_${Date.now()}`,
           content,
           senderId: currentUserId,
           type: 'TEXT',
