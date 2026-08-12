@@ -18,31 +18,54 @@ enum Status {
   DELETED
 }
 
+enum MessageType {
+  TEXT
+  IMAGE
+  GAME_INVITE
+  GAME_RESULT
+}
+
+enum ReportStatus {
+  PENDING
+  REVIEWED
+  RESOLVED
+}
+
 model User {
-  userId         Int       @id @default(autoincrement()) @map("user_id")
-  username       String    @unique @db.VarChar(50)
-  email          String    @unique @db.VarChar(100)
-  passwordHash   String    @map("password_hash") @db.VarChar(255)
-  phoneNumber    String?   @map("phone_number") @db.VarChar(20)
-  fullName       String?   @map("full_name") @db.VarChar(100)
-  gender         String?   @db.VarChar(10)
-  dateOfBirth    DateTime? @map("date_of_birth") @db.Date
+  userId            Int       @id @default(autoincrement()) @map("user_id")
+  username          String    @unique @db.VarChar(50)
+  email             String    @unique @db.VarChar(100)
+  passwordHash      String    @map("password_hash") @db.VarChar(255)
+  phoneNumber       String?   @map("phone_number") @db.VarChar(20)
+  fullName          String?   @map("full_name") @db.VarChar(100)
+  gender            String?   @db.VarChar(10)
+  dateOfBirth       DateTime? @map("date_of_birth") @db.Date
   profilePicture    String?   @map("profile_picture") @db.Text
   bio               String?
   height            Int?      @db.Integer
   location          String?   @db.VarChar(100)
+  latitude          Float?
+  longitude         Float?
   interests         String?   @db.Text
   photos            String?   @db.Text
   isProfileComplete Boolean   @default(false) @map("is_profile_complete")
+  lastActiveAt      DateTime? @map("last_active_at")
   role              Role      @default(USER)
-  status         Status    @default(ACTIVE)
-  createdAt      DateTime  @default(now()) @map("created_at")
-  updatedAt      DateTime  @updatedAt @map("updated_at")
-  resetTokens    PasswordResetToken[]
-  swipesSent     Swipe[]   @relation("SwiperUser")
-  swipesReceived Swipe[]   @relation("TargetUser")
-  matches1       Match[]   @relation("MatchUser1")
-  matches2       Match[]   @relation("MatchUser2")
+  status            Status    @default(ACTIVE)
+  createdAt         DateTime  @default(now()) @map("created_at")
+  updatedAt         DateTime  @updatedAt @map("updated_at")
+
+  resetTokens         PasswordResetToken[]
+  swipesSent          Swipe[]              @relation("SwiperUser")
+  swipesReceived      Swipe[]              @relation("TargetUser")
+  matches1            Match[]              @relation("MatchUser1")
+  matches2            Match[]              @relation("MatchUser2")
+  messagesSent        Message[]            @relation("MessageSender")
+  preferences         UserPreferences?
+  reportsGiven        Report[]             @relation("ReporterUser")
+  reportsReceived     Report[]             @relation("ReportedUser")
+  blocksGiven         UserBlock[]          @relation("BlockerUser")
+  blocksReceived      UserBlock[]          @relation("BlockedUser")
 
   @@map("users")
 }
@@ -60,6 +83,18 @@ model PasswordResetToken {
   createdAt    DateTime  @default(now()) @map("created_at")
 
   @@map("password_reset_tokens")
+}
+
+model UserPreferences {
+  id                Int     @id @default(autoincrement())
+  userId            Int     @unique @map("user_id")
+  user              User    @relation(fields: [userId], references: [userId], onDelete: Cascade)
+  genderPreference  String? @map("gender_preference") @db.VarChar(20)
+  minAge            Int?    @default(18) @map("min_age")
+  maxAge            Int?    @default(45) @map("max_age")
+  maxDistance       Int?    @default(50) @map("max_distance")
+
+  @@map("user_preferences")
 }
 
 model Swipe {
@@ -82,9 +117,61 @@ model Match {
   user2Id   Int      @map("user2_id")
   createdAt DateTime @default(now()) @map("created_at")
 
-  user1 User @relation("MatchUser1", fields: [user1Id], references: [userId], onDelete: Cascade)
-  user2 User @relation("MatchUser2", fields: [user2Id], references: [userId], onDelete: Cascade)
+  user1        User          @relation("MatchUser1", fields: [user1Id], references: [userId], onDelete: Cascade)
+  user2        User          @relation("MatchUser2", fields: [user2Id], references: [userId], onDelete: Cascade)
+  conversation Conversation?
 
   @@unique([user1Id, user2Id])
   @@map("matches")
+}
+
+model Conversation {
+  id        Int       @id @default(autoincrement())
+  matchId   Int       @unique @map("match_id")
+  match     Match     @relation(fields: [matchId], references: [matchId], onDelete: Cascade)
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+
+  messages  Message[]
+
+  @@map("conversations")
+}
+
+model Message {
+  id             Int         @id @default(autoincrement())
+  conversationId Int         @map("conversation_id")
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  senderId       Int         @map("sender_id")
+  sender         User        @relation("MessageSender", fields: [senderId], references: [userId], onDelete: Cascade)
+  content        String      @db.Text
+  type           MessageType @default(TEXT)
+  readAt         DateTime?   @map("read_at")
+  createdAt      DateTime    @default(now()) @map("created_at")
+
+  @@map("messages")
+}
+
+model Report {
+  id         Int          @id @default(autoincrement())
+  reporterId Int          @map("reporter_id")
+  reporter   User         @relation("ReporterUser", fields: [reporterId], references: [userId], onDelete: Cascade)
+  reportedId Int          @map("reported_id")
+  reported   User         @relation("ReportedUser", fields: [reportedId], references: [userId], onDelete: Cascade)
+  reason     String       @db.VarChar(500)
+  status     ReportStatus @default(PENDING)
+  createdAt  DateTime     @default(now()) @map("created_at")
+
+  @@map("reports")
+}
+
+model UserBlock {
+  id        Int      @id @default(autoincrement())
+  blockerId Int      @map("blocker_id")
+  blocker   User     @relation("BlockerUser", fields: [blockerId], references: [userId], onDelete: Cascade)
+  blockedId Int      @map("blocked_id")
+  blocked   User     @relation("BlockedUser", fields: [blockedId], references: [userId], onDelete: Cascade)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@unique([blockerId, blockedId])
+  @@map("user_blocks")
 }
