@@ -558,9 +558,8 @@ export default function Dashboard() {
             </div>
 
             {/* Action Buttons */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '2.5rem', marginTop: '1.8rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '2.5rem', marginTop: '1.8rem', justifyContent: 'center' }}>
               <button onClick={() => handleSwipe('PASS')} style={{ width: '72px', height: '72px', borderRadius: '50%', background: '#181c22', border: '2px solid #ff4458', color: '#ff4458', fontSize: '2rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 8px 25px rgba(255,68,88,0.25)', transition: 'all 0.3s ease' }}>✕</button>
-              <button onClick={() => handleSwipe('SUPER_LIKE')} style={{ width: '56px', height: '56px', borderRadius: '50%', background: '#181c22', border: '2px solid #4169e1', color: '#4169e1', fontSize: '1.5rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 8px 25px rgba(65,105,225,0.25)', transition: 'all 0.3s ease' }}>⭐</button>
               <button onClick={() => handleSwipe('LIKE')} style={{ width: '72px', height: '72px', borderRadius: '50%', background: '#181c22', border: '2px solid #34D399', color: '#34D399', fontSize: '2rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 8px 25px rgba(52,211,153,0.25)', transition: 'all 0.3s ease' }}>💖</button>
             </div>
           </>
