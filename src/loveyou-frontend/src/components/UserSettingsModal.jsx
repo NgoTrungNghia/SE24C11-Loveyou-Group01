@@ -2,9 +2,9 @@ import { useState, useEffect } from 'react';
 import { userApi, authApi } from '../utils/api';
 import { useNavigate } from 'react-router-dom';
 
-export default function UserSettingsModal({ profile, onProfileUpdated, onLogout, onClose, setToast }) {
+export default function UserSettingsModal({ profile, onProfileUpdated, onClose, setToast }) {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState('PROFILE'); // 'PROFILE', 'BLOCKED', 'PASSWORD', 'LOGOUT'
+  const [activeTab, setActiveTab] = useState('PROFILE'); // 'PROFILE', 'BLOCKED', 'PASSWORD'
 
   // Profile Form state
   const [fullName, setFullName] = useState(profile?.fullName || '');
@@ -62,6 +62,43 @@ export default function UserSettingsModal({ profile, onProfileUpdated, onLogout,
     }
   };
 
+  const handleAvatarFileUpload = (e) => {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (uploadEvent) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const MAX_SIZE = 600;
+        let width = img.width;
+        let height = img.height;
+
+        if (width > height) {
+          if (width > MAX_SIZE) {
+            height *= MAX_SIZE / width;
+            width = MAX_SIZE;
+          }
+        } else {
+          if (height > MAX_SIZE) {
+            width *= MAX_SIZE / height;
+            height = MAX_SIZE;
+          }
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+
+        const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.75);
+        setProfilePicture(compressedDataUrl);
+      };
+      img.src = uploadEvent.target.result;
+    };
+    reader.readAsDataURL(file);
+  };
+
   const handleSaveProfile = async (e) => {
     e.preventDefault();
     setUpdatingProfile(true);
@@ -115,6 +152,8 @@ export default function UserSettingsModal({ profile, onProfileUpdated, onLogout,
     }
   };
 
+  const defaultAvatar = 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=400';
+
   return (
     <div style={styles.overlay} onClick={onClose}>
       <div style={styles.modalBody} onClick={e => e.stopPropagation()}>
@@ -124,7 +163,7 @@ export default function UserSettingsModal({ profile, onProfileUpdated, onLogout,
           <button style={styles.closeBtn} onClick={onClose}>✕</button>
         </div>
 
-        {/* 4 Navigation Buttons */}
+        {/* 3 Main Navigation Buttons */}
         <div style={styles.tabsGrid}>
           <button
             onClick={() => setActiveTab('PROFILE')}
@@ -161,23 +200,60 @@ export default function UserSettingsModal({ profile, onProfileUpdated, onLogout,
           >
             Đổi mật khẩu
           </button>
-
-          <button
-            onClick={() => setActiveTab('LOGOUT')}
-            style={{
-              ...styles.tabBtn,
-              background: activeTab === 'LOGOUT' ? 'rgba(239,68,68,0.2)' : 'rgba(255,255,255,0.06)',
-              color: activeTab === 'LOGOUT' ? '#ef4444' : '#fff',
-              border: activeTab === 'LOGOUT' ? '1px solid rgba(239,68,68,0.4)' : '1px solid transparent',
-            }}
-          >
-            Đăng xuất
-          </button>
         </div>
 
         {/* TAB 1: CHỈNH SỬA HỒ SƠ */}
         {activeTab === 'PROFILE' && (
           <form onSubmit={handleSaveProfile} style={styles.form}>
+            
+            {/* Interactive Circular Avatar Picker */}
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '0.8rem' }}>
+              <label htmlFor="user-avatar-file-input" style={{ position: 'relative', cursor: 'pointer' }}>
+                <img
+                  src={profilePicture || defaultAvatar}
+                  alt="Avatar"
+                  onError={e => { e.target.src = defaultAvatar; }}
+                  style={{
+                    width: '94px',
+                    height: '94px',
+                    borderRadius: '50%',
+                    objectFit: 'cover',
+                    border: '3px solid #fd267d',
+                    boxShadow: '0 6px 20px rgba(253,38,125,0.4)',
+                    transition: 'all 0.2s ease',
+                  }}
+                />
+                <div style={{
+                  position: 'absolute',
+                  bottom: '2px',
+                  right: '2px',
+                  background: '#fd267d',
+                  color: '#fff',
+                  borderRadius: '50%',
+                  width: '30px',
+                  height: '30px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '0.9rem',
+                  border: '2px solid #16191f',
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.5)',
+                }}>
+                  📷
+                </div>
+              </label>
+              <input
+                id="user-avatar-file-input"
+                type="file"
+                accept="image/*"
+                style={{ display: 'none' }}
+                onChange={handleAvatarFileUpload}
+              />
+              <span style={{ fontSize: '0.78rem', color: 'rgba(255,255,255,0.6)', marginTop: '0.5rem' }}>
+                Nhấp vào ảnh đại diện để chọn ảnh từ thiết bị
+              </span>
+            </div>
+
             <div style={styles.inputGroup}>
               <label style={styles.label}>Tên hiển thị</label>
               <input
@@ -200,14 +276,14 @@ export default function UserSettingsModal({ profile, onProfileUpdated, onLogout,
               />
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.8rem' }}>
               <div style={styles.inputGroup}>
                 <label style={styles.label}>Vị trí</label>
                 <input
                   type="text"
                   value={location}
                   onChange={e => setLocation(e.target.value)}
-                  placeholder="Ví dụ: TP. Hồ Chí Minh"
+                  placeholder="TP. Hồ Chí Minh"
                   style={styles.input}
                 />
               </div>
@@ -218,13 +294,11 @@ export default function UserSettingsModal({ profile, onProfileUpdated, onLogout,
                   type="number"
                   value={height}
                   onChange={e => setHeight(e.target.value)}
-                  placeholder="Ví dụ: 168"
+                  placeholder="168"
                   style={styles.input}
                 />
               </div>
-            </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
               <div style={styles.inputGroup}>
                 <label style={styles.label}>Giới tính</label>
                 <select
@@ -236,17 +310,6 @@ export default function UserSettingsModal({ profile, onProfileUpdated, onLogout,
                   <option value="Nữ" style={{ background: '#1e232a', color: '#fff' }}>Nữ</option>
                   <option value="Khác" style={{ background: '#1e232a', color: '#fff' }}>Khác</option>
                 </select>
-              </div>
-
-              <div style={styles.inputGroup}>
-                <label style={styles.label}>URL Ảnh đại diện</label>
-                <input
-                  type="text"
-                  value={profilePicture}
-                  onChange={e => setProfilePicture(e.target.value)}
-                  placeholder="https://images.unsplash.com/..."
-                  style={styles.input}
-                />
               </div>
             </div>
 
@@ -296,7 +359,7 @@ export default function UserSettingsModal({ profile, onProfileUpdated, onLogout,
                   >
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.7rem' }}>
                       <img
-                        src={b.user?.profilePicture || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=400'}
+                        src={b.user?.profilePicture || defaultAvatar}
                         alt=""
                         style={{ width: '36px', height: '36px', borderRadius: '50%', objectFit: 'cover' }}
                       />
@@ -324,7 +387,7 @@ export default function UserSettingsModal({ profile, onProfileUpdated, onLogout,
           </div>
         )}
 
-        {/* TAB 3: ĐỔI MẬT KHẨU (CÓ CON MẮT HIỂN THỊ MẬT KHẨU) */}
+        {/* TAB 3: ĐỔI MẬT KHẨU */}
         {activeTab === 'PASSWORD' && (
           <form onSubmit={handleChangePassword} style={styles.form}>
             {/* Mật khẩu cũ */}
@@ -401,27 +464,6 @@ export default function UserSettingsModal({ profile, onProfileUpdated, onLogout,
             </div>
           </form>
         )}
-
-        {/* TAB 4: ĐĂNG XUẤT */}
-        {activeTab === 'LOGOUT' && (
-          <div style={{ textAlign: 'center', padding: '2rem 0' }}>
-            <div style={{ fontSize: '1.05rem', color: 'rgba(255,255,255,0.85)', marginBottom: '1.8rem', lineHeight: '1.5' }}>
-              Bạn có chắc chắn muốn đăng xuất khỏi ứng dụng LoveYou?
-            </div>
-            <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center' }}>
-              <button onClick={onClose} style={styles.cancelBtn}>Hủy bỏ</button>
-              <button
-                onClick={() => {
-                  onClose();
-                  if (onLogout) onLogout();
-                }}
-                style={styles.logoutConfirmBtn}
-              >
-                Đăng xuất ngay
-              </button>
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );
@@ -470,7 +512,7 @@ const styles = {
   },
   tabsGrid: {
     display: 'grid',
-    gridTemplateColumns: '1fr 1fr',
+    gridTemplateColumns: '1fr 1fr 1fr',
     gap: '0.6rem',
     marginBottom: '1.5rem',
   },
@@ -559,15 +601,5 @@ const styles = {
     fontSize: '0.88rem',
     cursor: 'pointer',
     boxShadow: '0 4px 15px rgba(59,130,246,0.3)',
-  },
-  logoutConfirmBtn: {
-    padding: '0.75rem 1.4rem',
-    borderRadius: '12px',
-    background: '#ef4444',
-    border: 'none',
-    color: '#fff',
-    fontWeight: 600,
-    fontSize: '0.88rem',
-    cursor: 'pointer',
   },
 };

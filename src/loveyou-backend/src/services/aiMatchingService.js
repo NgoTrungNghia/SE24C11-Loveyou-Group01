@@ -50,7 +50,6 @@ function calculateCompatibilityScore(currentUser, candidate, preferences) {
   const minAge = preferences?.minAge || 18;
   const maxAge = preferences?.maxAge || 45;
   if (candAge >= minAge && candAge <= maxAge) {
-    // Prefer closer to middle of range
     const midAge = (minAge + maxAge) / 2;
     const ageDiff = Math.abs(candAge - midAge);
     const ageRange = (maxAge - minAge) / 2;
@@ -87,12 +86,11 @@ function calculateAge(dob) {
 }
 
 /**
- * Lấy danh sách candidates được sắp xếp theo AI score
+ * Lấy danh sách tài khoản thực được sắp xếp theo AI score
  */
 async function getAICandidates(userId) {
   const uid = Number(userId);
 
-  // Lấy thông tin currentUser
   const currentUser = await prisma.user.findUnique({
     where: { userId: uid },
     include: { preferences: true },
@@ -101,14 +99,12 @@ async function getAICandidates(userId) {
 
   const prefs = currentUser.preferences;
 
-  // Lấy danh sách đã swipe
   const swiped = await prisma.swipe.findMany({
     where: { swiperId: uid },
     select: { targetId: true },
   });
   const swipedIds = new Set([uid, ...swiped.map(s => s.targetId)]);
 
-  // Lấy blocked users
   let blockedIds = new Set();
   try {
     const blocks = await prisma.userBlock.findMany({
@@ -119,23 +115,20 @@ async function getAICandidates(userId) {
       blockedIds.add(b.blockerId);
       blockedIds.add(b.blockedId);
     });
-  } catch { /* ignore if table not ready */ }
+  } catch { /* ignore */ }
 
   const excludeIds = Array.from(new Set([uid, ...swipedIds, ...blockedIds]));
 
-  // Build where clause
   const where = {
     userId: { notIn: excludeIds },
     status: 'ACTIVE',
-    isProfileComplete: true,
   };
 
-  // Gender preference filter
   if (prefs?.genderPreference && prefs.genderPreference !== 'all') {
     where.gender = prefs.genderPreference;
   }
 
-  const candidates = await prisma.user.findMany({
+  const realCandidates = await prisma.user.findMany({
     where,
     take: 50,
     select: {
@@ -146,8 +139,7 @@ async function getAICandidates(userId) {
     },
   });
 
-  // Score và sort
-  const scored = candidates.map(c => {
+  const realScored = realCandidates.map(c => {
     const score = calculateCompatibilityScore(currentUser, c, prefs);
     const photosList = parseJson(c.photos);
     const primaryPhoto = photosList[0] || c.profilePicture || null;
@@ -170,9 +162,8 @@ async function getAICandidates(userId) {
     };
   });
 
-  // Sort by AI score descending
-  scored.sort((a, b) => b.aiScore - a.aiScore);
-  return scored;
+  realScored.sort((a, b) => b.aiScore - a.aiScore);
+  return realScored;
 }
 
 /**

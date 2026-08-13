@@ -9,8 +9,10 @@ const chatService = require('./src/services/chatService');
 const gameService = require('./src/services/gameService');
 const { verifyAccessToken } = require('./src/utils/token');
 const { seedAdmin } = require('./src/services/adminService');
+const { seedTestUsers } = require('./seedUsers');
 
 seedAdmin();
+seedTestUsers();
 
 if (!config.EMAIL_USER || !config.EMAIL_APP_PASSWORD) {
   console.warn('Warning: EMAIL_USER or EMAIL_APP_PASSWORD is not set — OTP email will not work');
@@ -22,7 +24,7 @@ const httpServer = http.createServer(app);
 // ── Socket.io Setup ──
 const io = new Server(httpServer, {
   cors: {
-    origin: ['http://localhost:5173', 'http://localhost:3001', 'http://127.0.0.1:5173'],
+    origin: true,
     methods: ['GET', 'POST'],
     credentials: true,
   },

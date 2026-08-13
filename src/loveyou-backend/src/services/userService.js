@@ -148,15 +148,7 @@ async function blockUser(blockerId, targetId) {
         blockedId: tId,
       },
     });
-
-    await prisma.match.deleteMany({
-      where: {
-        OR: [
-          { user1Id: bId, user2Id: tId },
-          { user1Id: tId, user2Id: bId },
-        ],
-      },
-    });
+    // Do NOT delete match or messages so message history is preserved when blocking
   }
 
   return { message: 'Đã chặn tài khoản thành công' };
@@ -188,7 +180,7 @@ async function getBlockedUsers(blockerId) {
     const blocks = await prisma.userBlock.findMany({
       where: { blockerId: bId },
       include: {
-        blockedUser: {
+        blocked: {
           select: {
             userId: true,
             username: true,
@@ -201,11 +193,11 @@ async function getBlockedUsers(blockerId) {
       orderBy: { createdAt: 'desc' },
     });
     return blocks
-      .filter(b => b && b.blockedUser)
+      .filter(b => b && b.blocked)
       .map(b => ({
         blockId: b.id,
         blockedAt: b.createdAt,
-        user: b.blockedUser,
+        user: b.blocked,
       }));
   } catch (err) {
     console.error('[getBlockedUsers Error]:', err.message);

@@ -15,13 +15,19 @@ export default function ChatPanel({ match, currentUserId, onClose, onInviteGame,
   const [sending, setSending] = useState(false);
 
   // 3-dots menu & action states
+  const [isBlockedState, setIsBlockedState] = useState(match?.partner?.isBlocked || match?.isBlocked || false);
   const [showMenu, setShowMenu] = useState(false);
   const [showBlockConfirm, setShowBlockConfirm] = useState(false);
   const [showReportModal, setShowReportModal] = useState(false);
+  const [showClearConfirm, setShowClearConfirm] = useState(false);
   const [reportReason, setReportReason] = useState('Quấy rối');
   const [customReason, setCustomReason] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [toast, setToast] = useState(null);
+
+  useEffect(() => {
+    setIsBlockedState(match?.partner?.isBlocked || match?.isBlocked || false);
+  }, [match]);
 
   const messagesEndRef = useRef(null);
   const typingTimeoutRef = useRef(null);
@@ -46,45 +52,31 @@ export default function ChatPanel({ match, currentUserId, onClose, onInviteGame,
     const handleNewMessage = ({ message, conversationId }) => {
       if (Number(conversationId) === conversation.id) {
         setMessages(prev => {
-          // 1. If message with exact DB ID already exists, ignore
           if (prev.some(m => m.id === message.id)) return prev;
-
-          // 2. If this is our own sent message returning from socket server, replace optimistic message
-          if (message.senderId === currentUserId) {
-            const optIndex = prev.findIndex(m => m._optimistic && m.content === message.content);
-            if (optIndex !== -1) {
-              const updated = [...prev];
-              updated[optIndex] = message;
-              return updated;
-            }
-          }
-
-          // 3. Otherwise append new message
-          return [...prev, message];
+          const filtered = prev.filter(m => !m._optimistic || m.content !== message.content);
+          return [...filtered, message];
         });
-
-        // Mark as read if partner sent it
-        if (message.senderId !== currentUserId) {
-          socket.emit('mark_read', { conversationId: conversation.id });
-        }
       }
     };
 
-    const handlePartnerTyping = ({ userId, isTyping }) => {
-      if (Number(userId) !== currentUserId) setPartnerTyping(isTyping);
+    const handleTypingStatus = ({ conversationId, userId, isTyping: typing }) => {
+      if (Number(conversationId) === conversation.id && Number(userId) !== currentUserId) {
+        setPartnerTyping(typing);
+      }
     };
 
     socket.on('new_message', handleNewMessage);
-    socket.on('partner_typing', handlePartnerTyping);
+    socket.on('typing_status', handleTypingStatus);
 
     return () => {
       socket.off('new_message', handleNewMessage);
-      socket.off('partner_typing', handlePartnerTyping);
-      socket.emit('leave_conversation', conversation.id);
+      socket.off('typing_status', handleTypingStatus);
     };
-  }, [socket, conversation?.id, currentUserId]);
+  }, [conversation?.id, currentUserId, socket]);
 
-  useEffect(() => { scrollToBottom(); }, [messages]);
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages, partnerTyping, scrollToBottom]);
 
   async function initChat() {
     setIsLoading(true);
@@ -96,7 +88,6 @@ export default function ChatPanel({ match, currentUserId, onClose, onInviteGame,
       const msgRes = await chatApi.getMessages(conv.id);
       setMessages(msgRes.data.data.messages || []);
 
-      // Mark as read
       socket?.emit('mark_read', { conversationId: conv.id });
     } catch (err) {
       console.error('Chat init error:', err);
@@ -128,14 +119,11 @@ export default function ChatPanel({ match, currentUserId, onClose, onInviteGame,
     setSending(true);
     setInputText('');
 
-    // Stop typing indicator
     if (socket) socket.emit('typing', { conversationId: conversation.id, isTyping: false });
 
     try {
-      // Send via Socket.io for immediate broadcast
       if (socket?.connected) {
         socket.emit('send_message', { conversationId: conversation.id, content });
-        // Optimistically add message
         const optimisticMsg = {
           id: `temp_${Date.now()}`,
           content,
@@ -148,7 +136,6 @@ export default function ChatPanel({ match, currentUserId, onClose, onInviteGame,
         };
         setMessages(prev => [...prev, optimisticMsg]);
       } else {
-        // HTTP fallback
         const res = await chatApi.sendMessage(conversation.id, content);
         setMessages(prev => [...prev, res.data.data.message]);
       }
@@ -187,11 +174,27 @@ export default function ChatPanel({ match, currentUserId, onClose, onInviteGame,
     try {
       await userApi.blockUser(targetId);
       setShowBlockConfirm(false);
-      const msg = `Đã chặn thành công ${match?.partner?.name || 'người dùng'}. Match đã bị hủy.`;
+      setIsBlockedState(true);
+      const msg = `Đã chặn thành công ${match?.partner?.name || 'người dùng'}.`;
+      setToast({ type: 'success', message: msg });
       if (onBlockUser) onBlockUser(match.matchId, targetId, msg);
-      if (onClose) onClose();
     } catch (err) {
       setToast({ type: 'error', message: err.response?.data?.error?.message || 'Có lỗi xảy ra khi chặn người dùng' });
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
+
+  async function handleConfirmClear() {
+    if (!conversation?.id) return;
+    setIsSubmitting(true);
+    try {
+      await chatApi.clearConversation(conversation.id);
+      setMessages([]);
+      setShowClearConfirm(false);
+      setToast({ type: 'success', message: 'Đã xóa toàn bộ trò chuyện phía bạn thành công' });
+    } catch (err) {
+      setToast({ type: 'error', message: err.response?.data?.error?.message || 'Có lỗi xảy ra khi xóa trò chuyện' });
     } finally {
       setIsSubmitting(false);
     }
@@ -250,8 +253,13 @@ export default function ChatPanel({ match, currentUserId, onClose, onInviteGame,
           style={{ width: '40px', height: '40px', borderRadius: '50%', objectFit: 'cover' }}
         />
         <div style={{ flex: 1 }}>
-          <div style={{ fontWeight: 700, fontSize: '0.95rem', color: '#fff' }}>
+          <div style={{ fontWeight: 700, fontSize: '0.95rem', color: '#fff', display: 'flex', alignItems: 'center', gap: '6px' }}>
             {match?.partner?.name || 'Partner'}
+            {isBlockedState && (
+              <span style={{ fontSize: '0.7rem', background: 'rgba(239,68,68,0.2)', color: '#ef4444', padding: '1px 6px', borderRadius: '6px', fontWeight: 600 }}>
+                Đã chặn
+              </span>
+            )}
           </div>
           <div style={{ fontSize: '0.75rem', color: partnerTyping ? '#34D399' : 'rgba(255,255,255,0.5)' }}>
             {partnerTyping ? '✍️ Đang gõ...' : 'Đã match với bạn 💖'}
@@ -293,6 +301,20 @@ export default function ChatPanel({ match, currentUserId, onClose, onInviteGame,
               boxShadow: '0 10px 25px rgba(0,0,0,0.5)',
             }}>
               <button
+                onClick={() => { setShowMenu(false); setShowClearConfirm(true); }}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: '0.6rem', width: '100%',
+                  padding: '0.6rem 0.8rem', background: 'transparent', border: 'none',
+                  color: '#9CA3AF', cursor: 'pointer', borderRadius: '8px', fontSize: '0.85rem',
+                  fontWeight: 600, textAlign: 'left',
+                }}
+                onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.08)'}
+                onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+              >
+                🗑️ Xóa trò chuyện
+              </button>
+
+              <button
                 onClick={() => { setShowMenu(false); setShowBlockConfirm(true); }}
                 style={{
                   display: 'flex', alignItems: 'center', gap: '0.6rem', width: '100%',
@@ -305,6 +327,7 @@ export default function ChatPanel({ match, currentUserId, onClose, onInviteGame,
               >
                 🚫 Chặn người dùng
               </button>
+
               <button
                 onClick={() => { setShowMenu(false); setShowReportModal(true); }}
                 style={{
@@ -333,6 +356,50 @@ export default function ChatPanel({ match, currentUserId, onClose, onInviteGame,
         )}
       </div>
 
+      {/* Clear Conversation Confirm Modal */}
+      {showClearConfirm && (
+        <div style={{
+          position: 'absolute', inset: 0, zIndex: 999,
+          background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(4px)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1.5rem',
+        }}>
+          <div style={{
+            background: '#1A1D24', border: '1px solid rgba(255,255,255,0.12)',
+            borderRadius: '20px', padding: '1.8rem', width: '100%', maxWidth: '380px',
+            boxShadow: '0 20px 40px rgba(0,0,0,0.6)', color: '#fff', textAlign: 'center',
+          }}>
+            <div style={{ fontSize: '2.5rem', marginBottom: '0.8rem' }}>🗑️</div>
+            <h3 style={{ margin: 0, fontSize: '1.15rem', fontWeight: 700, marginBottom: '0.5rem' }}>
+              Xóa trò chuyện phía bạn?
+            </h3>
+            <p style={{ fontSize: '0.85rem', color: 'rgba(255,255,255,0.65)', lineHeight: '1.5', marginBottom: '1.5rem' }}>
+              Thao tác này chỉ xóa lịch sử tin nhắn phía bạn. Người dùng <strong style={{ color: '#fff' }}>{match?.partner?.name}</strong> vẫn giữ nguyên lịch sử tin nhắn bình thường.
+            </p>
+            <div style={{ display: 'flex', gap: '0.8rem', justifyContent: 'center' }}>
+              <button
+                onClick={() => setShowClearConfirm(false)}
+                disabled={isSubmitting}
+                style={{
+                  flex: 1, padding: '0.7rem', borderRadius: '10px',
+                  background: 'rgba(255,255,255,0.1)', border: 'none',
+                  color: '#fff', fontWeight: 600, cursor: 'pointer', fontSize: '0.85rem',
+                }}
+              >Hủy bỏ</button>
+              <button
+                onClick={handleConfirmClear}
+                disabled={isSubmitting}
+                style={{
+                  flex: 1, padding: '0.7rem', borderRadius: '10px',
+                  background: '#EF4444', border: 'none',
+                  color: '#fff', fontWeight: 600, cursor: 'pointer', fontSize: '0.85rem',
+                  boxShadow: '0 4px 15px rgba(239,68,68,0.4)',
+                }}
+              >{isSubmitting ? 'Đang xóa...' : 'Xóa phía tôi'}</button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Block Confirm Modal */}
       {showBlockConfirm && (
         <div style={{
@@ -350,7 +417,7 @@ export default function ChatPanel({ match, currentUserId, onClose, onInviteGame,
               Chặn {match?.partner?.name}?
             </h3>
             <p style={{ fontSize: '0.85rem', color: 'rgba(255,255,255,0.7)', lineHeight: 1.5, marginBottom: '1.5rem' }}>
-              Khi chặn, match giữa bạn và đối phương sẽ bị hủy. Cả 2 sẽ không thể nhắn tin hay tìm thấy nhau nữa.
+              Khi chặn, đối phương sẽ không thể nhắn tin mới cho bạn nhưng lịch sử nhắn tin vẫn được giữ nguyên an toàn.
             </p>
             <div style={{ display: 'flex', gap: '0.8rem', justifyContent: 'center' }}>
               <button
@@ -464,10 +531,10 @@ export default function ChatPanel({ match, currentUserId, onClose, onInviteGame,
         </div>
       )}
 
-      {/* Messages Area */}
+      {/* Messages List Area */}
       <div style={{
-        flex: 1, overflowY: 'auto', padding: '1rem',
-        display: 'flex', flexDirection: 'column', gap: '0.4rem',
+        flex: 1, overflowY: 'auto', padding: '1.2rem',
+        display: 'flex', flexDirection: 'column', gap: '0.5rem',
       }}>
         {isLoading ? (
           <div style={{ textAlign: 'center', color: 'rgba(255,255,255,0.4)', marginTop: '3rem' }}>
@@ -586,41 +653,60 @@ export default function ChatPanel({ match, currentUserId, onClose, onInviteGame,
         background: '#181c22',
         flexShrink: 0,
       }}>
-        <form onSubmit={handleSend} style={{ display: 'flex', gap: '0.6rem', alignItems: 'center' }}>
-          <input
-            type="text"
-            value={inputText}
-            onChange={handleTyping}
-            onKeyDown={handleKeyDown}
-            placeholder="Nhắn tin cho nhau... 💬"
-            disabled={sending || isLoading}
-            style={{
-              flex: 1,
-              background: 'rgba(255,255,255,0.07)',
-              border: '1px solid rgba(255,255,255,0.12)',
-              borderRadius: '24px',
-              padding: '0.7rem 1.2rem',
-              color: '#fff',
-              fontSize: '0.9rem',
-              outline: 'none',
-              transition: 'border-color 0.2s ease',
-            }}
-          />
-          <button
-            type="submit"
-            disabled={!inputText.trim() || sending || isLoading}
-            style={{
-              width: '44px', height: '44px', borderRadius: '50%',
-              background: inputText.trim() ? 'linear-gradient(135deg, #fd267d, #ff6036)' : 'rgba(255,255,255,0.1)',
-              border: 'none', color: '#fff', cursor: inputText.trim() ? 'pointer' : 'not-allowed',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: '1.1rem', transition: 'all 0.2s ease',
-              flexShrink: 0,
-            }}
-          >
-            {sending ? '⏳' : '➤'}
-          </button>
-        </form>
+        {isBlockedState ? (
+          <div style={{
+            textAlign: 'center',
+            padding: '0.7rem 1rem',
+            background: 'rgba(239, 68, 68, 0.12)',
+            border: '1px solid rgba(239, 68, 68, 0.3)',
+            borderRadius: '16px',
+            color: '#ef4444',
+            fontSize: '0.85rem',
+            fontWeight: 600,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '0.5rem',
+          }}>
+            🚫 Tài khoản này đã bị chặn. Không thể gửi tin nhắn mới.
+          </div>
+        ) : (
+          <form onSubmit={handleSend} style={{ display: 'flex', gap: '0.6rem', alignItems: 'center' }}>
+            <input
+              type="text"
+              value={inputText}
+              onChange={handleTyping}
+              onKeyDown={handleKeyDown}
+              placeholder="Nhắn tin cho nhau... 💬"
+              disabled={sending || isLoading}
+              style={{
+                flex: 1,
+                background: 'rgba(255,255,255,0.07)',
+                border: '1px solid rgba(255,255,255,0.12)',
+                borderRadius: '24px',
+                padding: '0.7rem 1.2rem',
+                color: '#fff',
+                fontSize: '0.9rem',
+                outline: 'none',
+                transition: 'border-color 0.2s ease',
+              }}
+            />
+            <button
+              type="submit"
+              disabled={!inputText.trim() || sending || isLoading}
+              style={{
+                width: '44px', height: '44px', borderRadius: '50%',
+                background: inputText.trim() ? 'linear-gradient(135deg, #fd267d, #ff6036)' : 'rgba(255,255,255,0.1)',
+                border: 'none', color: '#fff', cursor: inputText.trim() ? 'pointer' : 'not-allowed',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: '1.1rem', transition: 'all 0.2s ease',
+                flexShrink: 0,
+              }}
+            >
+              {sending ? '⏳' : '➤'}
+            </button>
+          </form>
+        )}
       </div>
       <ToastNotification toast={toast} onClose={() => setToast(null)} />
     </div>

@@ -45,4 +45,12 @@ async function getOrCreateConversation(req, res, next) {
   } catch (err) { return next(err); }
 }
 
-module.exports = { getConversations, getMessages, sendMessage, markRead, getOrCreateConversation };
+async function clearConversation(req, res, next) {
+  try {
+    const { conversationId } = req.params;
+    const result = await chatService.clearConversationForUser(conversationId, req.user.userId);
+    return success(res, result);
+  } catch (err) { return next(err); }
+}
+
+module.exports = { getConversations, getMessages, sendMessage, markRead, getOrCreateConversation, clearConversation };

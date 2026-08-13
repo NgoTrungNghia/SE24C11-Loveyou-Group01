@@ -1,6 +1,6 @@
 const path = require('path');
 const fs = require('fs');
-const { v4: uuidv4 } = require('uuid');
+const { randomUUID: uuidv4 } = require('crypto');
 
 const UPLOAD_BASE = path.join(__dirname, '../../public/uploads');
 

@@ -9,13 +9,7 @@ import AdminModal from '../components/AdminModal';
 import UserSettingsModal from '../components/UserSettingsModal';
 import ToastNotification from '../components/ToastNotification';
 
-const FALLBACK_CANDIDATES = [
-  { id: -1, name: 'Mai Phương', age: 22, location: 'TP. Hồ Chí Minh • 3 km', height: 165, bio: 'Yêu âm nhạc, thích đi cafe chill cuối tuần và chụp ảnh phim 📸✨.', photo: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=600', photos: ['https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=600','https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&q=80&w=600'], tags: ['🎵 Music', '☕ Coffee', '📸 Photography'] },
-  { id: -2, name: 'Thanh Hằng', age: 24, location: 'Hà Nội • 5 km', height: 168, bio: 'Gym, yoga và lối sống lành mạnh. Đang tìm một người cùng tập luyện 🏋️‍♀️🧘‍♀️', photo: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&q=80&w=600', photos: ['https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&q=80&w=600','https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&q=80&w=600'], tags: ['🏋️ Gym', '🧘 Yoga', '✈️ Travel'] },
-  { id: -3, name: 'Bảo Ngọc', age: 23, location: 'Đà Nẵng • 2 km', height: 162, bio: 'Đam mê du lịch và ẩm thực. Thích nuôi mèo 🐱 và nấu ăn 🍳', photo: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&q=80&w=600', photos: ['https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&q=80&w=600','https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?auto=format&fit=crop&q=80&w=600'], tags: ['✈️ Travel', '🐱 Pets', '🍳 Cooking'] },
-  { id: -4, name: 'Minh Anh', age: 25, location: 'TP. Hồ Chí Minh • 7 km', height: 170, bio: 'Software engineer 💻 thích chơi game 🎮 và xem phim chiếu rạp 🎬', photo: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=600', photos: ['https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=600','https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=600'], tags: ['💻 Coding', '🎮 Gaming', '🎬 Movies'] },
-  { id: -5, name: 'Hoàng Nam', age: 26, location: 'TP. Hồ Chí Minh • 4 km', height: 178, bio: 'Nhiếp ảnh tự do 📸 yêu cắm trại và khám phá những vùng đất mới 🏕️', photo: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=600', photos: ['https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=600','https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=600'], tags: ['📸 Photography', '✈️ Travel', '☕ Coffee'] },
-];
+
 
 export default function Dashboard() {
   const { user, logout } = useAuth();
@@ -151,15 +145,9 @@ export default function Dashboard() {
       }
       const candRes = await matchingApi.getCandidates();
       const apiCandidates = candRes.data.data.candidates;
-      if (apiCandidates?.length > 0) { setCandidates(apiCandidates); return; }
-      setCandidates(FALLBACK_CANDIDATES);
+      setCandidates(apiCandidates || []);
     } catch {
-      try {
-        const candRes = await matchingApi.getCandidates();
-        const apiCandidates = candRes.data.data.candidates;
-        if (apiCandidates?.length > 0) { setCandidates(apiCandidates); return; }
-      } catch { /* ignore */ }
-      setCandidates(FALLBACK_CANDIDATES);
+      setCandidates([]);
     }
   };
 
@@ -173,8 +161,7 @@ export default function Dashboard() {
   };
 
   const handleSwipe = async (action, targetCandidate = null) => {
-    const currentList = candidates.length > 0 ? candidates : FALLBACK_CANDIDATES;
-    const candidateToSwipe = targetCandidate || currentList[candidateIdx];
+    const candidateToSwipe = targetCandidate || candidates[candidateIdx];
     if (!candidateToSwipe) return;
     setLikedPartner(null);
     setMatchedPartner(null);
@@ -186,7 +173,12 @@ export default function Dashboard() {
         const partner = resData.matchedUser || candidateToSwipe;
         setMatchedPartner(partner);
         setMatchNotif(partner);
-        setMatches(prev => prev.some(m => m.id === partner.id) ? prev : [partner, ...prev]);
+        try {
+          const matchRes = await matchingApi.getMatches();
+          setMatches(matchRes.data.data.matches || []);
+        } catch {
+          setMatches(prev => prev.some(m => m.id === partner.id) ? prev : [partner, ...prev]);
+        }
         setTimeout(() => { setMatchedPartner(null); setMatchNotif(null); }, 4000);
       } else if (action === 'LIKE' || action === 'SUPER_LIKE') {
         setLikedPartner(resData?.likedUser || candidateToSwipe);
@@ -194,15 +186,8 @@ export default function Dashboard() {
       }
     } catch {
       if (action === 'LIKE' || action === 'SUPER_LIKE') {
-        const isRandomMatch = (candidateToSwipe.id === -1 || candidateToSwipe.id === -3);
-        if (isRandomMatch) {
-          setMatchedPartner(candidateToSwipe);
-          setMatches(prev => prev.some(m => m.id === candidateToSwipe.id) ? prev : [candidateToSwipe, ...prev]);
-          setTimeout(() => setMatchedPartner(null), 4000);
-        } else {
-          setLikedPartner(candidateToSwipe);
-          setTimeout(() => setLikedPartner(null), 2500);
-        }
+        setLikedPartner(candidateToSwipe);
+        setTimeout(() => setLikedPartner(null), 2500);
       }
     }
     if (selectedProfile) setSelectedProfile(null);
@@ -212,9 +197,10 @@ export default function Dashboard() {
   const handleBlockUserInDashboard = (matchId, targetId, message) => {
     setMatches(prev => prev.filter(m => Number(m.id) !== Number(targetId)));
     setConversations(prev => prev.filter(c => Number(c.partner?.id) !== Number(targetId)));
-    setActiveChatMatch(null);
+    if (activeChatMatch?.partner?.id === targetId) setActiveChatMatch(null);
+    if (selectedProfile?.id === targetId) setSelectedProfile(null);
     if (message) {
-      setToast({ type: 'success', message });
+      setToast({ type: 'info', message });
     }
   };
 
@@ -251,8 +237,7 @@ export default function Dashboard() {
     setShowGame(true);
   };
 
-  const currentList = candidates.length > 0 ? candidates : FALLBACK_CANDIDATES;
-  const currentCandidate = currentList[candidateIdx];
+  const currentCandidate = candidates[candidateIdx];
   const defaultAvatar = 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=400';
 
   return (
@@ -435,7 +420,7 @@ export default function Dashboard() {
 
                       {/* Chat button */}
                       <button
-                        onClick={e => { e.stopPropagation(); openChat({ matchId: i + 1, partner: { id: m.id, name: m.name, photo: m.photo } }); }}
+                        onClick={e => { e.stopPropagation(); openChat({ matchId: m.matchId || m.id, partner: { id: m.id, name: m.name, photo: m.photo } }); }}
                         style={{
                           position: 'absolute', bottom: '28px', right: '6px', zIndex: 10,
                           background: 'rgba(253,38,125,0.85)', border: 'none',
@@ -634,7 +619,7 @@ export default function Dashboard() {
               {useAI ? '🤖 AI đang tìm người phù hợp...' : 'Đang tìm kiếm đối tượng...'}
             </p>
           </div>
-        ) : (!currentCandidate || candidateIdx >= currentList.length) ? (
+        ) : (!currentCandidate || candidateIdx >= candidates.length) ? (
           <div style={{
             width: '380px', minHeight: '460px', borderRadius: '24px', padding: '2.5rem 1.5rem',
             background: 'rgba(255,255,255,0.04)', backdropFilter: 'blur(20px)',
@@ -790,7 +775,12 @@ export default function Dashboard() {
               {matches.some(m => m.id === selectedProfile.id) ? (
                 <div style={{ display: 'flex', gap: '0.8rem' }}>
                   <button
-                    onClick={() => { openChat({ matchId: matches.findIndex(m => m.id === selectedProfile.id) + 1, partner: { id: selectedProfile.id, name: selectedProfile.name, photo: selectedProfile.photo } }); setSelectedProfile(null); setActiveTab('messages'); }}
+                    onClick={() => {
+                      const matchedObj = matches.find(m => m.id === selectedProfile.id);
+                      openChat({ matchId: matchedObj?.matchId || selectedProfile.id, partner: { id: selectedProfile.id, name: selectedProfile.name, photo: selectedProfile.photo } });
+                      setSelectedProfile(null);
+                      setActiveTab('messages');
+                    }}
                     style={{ flex: 1, padding: '0.8rem', borderRadius: '14px', background: 'linear-gradient(135deg, #fd267d, #ff6036)', border: 'none', color: '#fff', fontWeight: 700, cursor: 'pointer' }}
                   >💬 Nhắn tin</button>
                   <button

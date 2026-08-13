@@ -1,6 +1,14 @@
 import axios from 'axios';
 
-const BASE = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+const getApiBaseUrl = () => {
+  if (import.meta.env.VITE_API_URL) return import.meta.env.VITE_API_URL;
+  if (typeof window !== 'undefined' && window.location?.hostname) {
+    return `${window.location.protocol}//${window.location.hostname}:3000/api`;
+  }
+  return 'http://localhost:3000/api';
+};
+
+const BASE = getApiBaseUrl();
 
 const api = axios.create({ baseURL: BASE });
 
@@ -64,6 +72,7 @@ export const chatApi = {
   initConversation: (matchId) => api.get(`/chat/conversations/${matchId}/init`),
   getMessages: (conversationId, page = 1) => api.get(`/chat/${conversationId}/messages?page=${page}`),
   sendMessage: (conversationId, content, type = 'TEXT') => api.post(`/chat/${conversationId}/messages`, { content, type }),
+  clearConversation: (conversationId) => api.post(`/chat/${conversationId}/clear`),
   markRead: (conversationId) => api.put(`/chat/${conversationId}/read`),
 };
 
