@@ -8,6 +8,9 @@ const config = require('./src/config');
 const chatService = require('./src/services/chatService');
 const gameService = require('./src/services/gameService');
 const { verifyAccessToken } = require('./src/utils/token');
+const { seedAdmin } = require('./src/services/adminService');
+
+seedAdmin();
 
 if (!config.EMAIL_USER || !config.EMAIL_APP_PASSWORD) {
   console.warn('Warning: EMAIL_USER or EMAIL_APP_PASSWORD is not set — OTP email will not work');

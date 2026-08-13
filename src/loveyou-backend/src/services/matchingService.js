@@ -95,16 +95,30 @@ function calculateAge(dob) {
 async function getCandidates(userId) {
   const currentUserId = Number(userId);
 
-  // 1. Get list of target user IDs already swiped by current user
+  // 1. Get list of target user IDs already swiped or blocked by current user
   let swipedTargetIds = [currentUserId];
   try {
     const existingSwipes = await prisma.swipe.findMany({
       where: { swiperId: currentUserId },
       select: { targetId: true },
     });
-    swipedTargetIds = swipedTargetIds.concat(existingSwipes.map(s => s.targetId));
+    const blocksGiven = await prisma.userBlock.findMany({
+      where: { blockerId: currentUserId },
+      select: { blockedId: true },
+    });
+    const blocksReceived = await prisma.userBlock.findMany({
+      where: { blockedId: currentUserId },
+      select: { blockerId: true },
+    });
+    const excludedIds = [
+      currentUserId,
+      ...existingSwipes.map(s => s.targetId),
+      ...blocksGiven.map(b => b.blockedId),
+      ...blocksReceived.map(b => b.blockerId),
+    ];
+    swipedTargetIds = Array.from(new Set(excludedIds));
   } catch {
-    /* fallback */
+    swipedTargetIds = [currentUserId];
   }
 
   // 2. Fetch real active users from Database (excluding current user & swiped users)

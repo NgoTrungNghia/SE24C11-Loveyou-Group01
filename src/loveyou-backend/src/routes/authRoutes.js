@@ -11,5 +11,6 @@ router.post('/logout', authMiddleware, controller.logout);
 router.post('/forgot-password', validate(schemas.forgotPasswordSchema), controller.forgotPassword);
 router.post('/verify-otp', validate(schemas.verifyOtpSchema), controller.verifyOtp);
 router.post('/reset-password', validate(schemas.resetPasswordSchema), controller.resetPassword);
+router.post('/change-password', authMiddleware, controller.changePassword);
 
 module.exports = router;

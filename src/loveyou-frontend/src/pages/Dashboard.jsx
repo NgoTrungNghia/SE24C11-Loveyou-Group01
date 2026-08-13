@@ -5,6 +5,9 @@ import { adminApi, userApi, matchingApi, aiMatchingApi, chatApi } from '../utils
 import { connectSocket, disconnectSocket, getSocket } from '../utils/socket';
 import ChatPanel from '../components/ChatPanel';
 import GameModal from '../components/GameModal';
+import AdminModal from '../components/AdminModal';
+import UserSettingsModal from '../components/UserSettingsModal';
+import ToastNotification from '../components/ToastNotification';
 
 const FALLBACK_CANDIDATES = [
   { id: -1, name: 'Mai Phương', age: 22, location: 'TP. Hồ Chí Minh • 3 km', height: 165, bio: 'Yêu âm nhạc, thích đi cafe chill cuối tuần và chụp ảnh phim 📸✨.', photo: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=600', photos: ['https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=600','https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&q=80&w=600'], tags: ['🎵 Music', '☕ Coffee', '📸 Photography'] },
@@ -39,6 +42,16 @@ export default function Dashboard() {
   const [selectedProfile, setSelectedProfile] = useState(null);
   const [activePhotoIdx, setActivePhotoIdx] = useState(0);
   const [unmatchedNotice, setUnmatchedNotice] = useState(null);
+  const [showAdminModal, setShowAdminModal] = useState(false);
+  const [showSettingsModal, setShowSettingsModal] = useState(false);
+  const [isSidebarExpanded, setIsSidebarExpanded] = useState(false);
+
+  // Profile Report modal
+  const [showProfileReportModal, setShowProfileReportModal] = useState(false);
+  const [profileReportReason, setProfileReportReason] = useState('Tài khoản giả mạo');
+  const [customProfileReason, setCustomProfileReason] = useState('');
+  const [submittingProfileReport, setSubmittingProfileReport] = useState(false);
+  const [toast, setToast] = useState(null);
 
   // Online users
   const [onlineUsers, setOnlineUsers] = useState(new Set());
@@ -51,9 +64,13 @@ export default function Dashboard() {
   const [useAI, setUseAI] = useState(true);
 
   useEffect(() => {
+    if (user?.role === 'ADMIN') {
+      navigate('/admin');
+      return;
+    }
     checkProfileAndLoadData();
     return () => disconnectSocket();
-  }, []);
+  }, [user]);
 
   const setupSocket = useCallback((token) => {
     const socket = connectSocket(token);
@@ -71,6 +88,11 @@ export default function Dashboard() {
     socket.on('new_message', ({ conversationId }) => {
       // Refresh conversations to update last message
       loadConversations();
+    });
+    socket.on('account_banned', ({ message }) => {
+      alert(message || 'Tài khoản của bạn đã bị khóa, vui lòng sử dụng tài khoản khác');
+      localStorage.removeItem('ly_token');
+      window.location.href = '/login?banned=true';
     });
     socket.on('game_invite_received', ({ session, inviterName }) => {
       setGameInviteNotif({ session, inviterName });
@@ -187,6 +209,15 @@ export default function Dashboard() {
     setCandidateIdx(prev => prev + 1);
   };
 
+  const handleBlockUserInDashboard = (matchId, targetId, message) => {
+    setMatches(prev => prev.filter(m => Number(m.id) !== Number(targetId)));
+    setConversations(prev => prev.filter(c => Number(c.partner?.id) !== Number(targetId)));
+    setActiveChatMatch(null);
+    if (message) {
+      setToast({ type: 'success', message });
+    }
+  };
+
   const openChat = async (match) => {
     setActiveChatMatch(match);
     setActiveTab('messages');
@@ -195,6 +226,24 @@ export default function Dashboard() {
   const openDetailProfile = (person) => {
     setSelectedProfile(person);
     setActivePhotoIdx(0);
+  };
+
+  const handleSubmitProfileReport = async () => {
+    if (!selectedProfile?.id && !selectedProfile?.userId) return;
+    const targetId = selectedProfile.id || selectedProfile.userId;
+    const finalReason = profileReportReason === 'Khác'
+      ? customProfileReason.trim() || 'Khác'
+      : profileReportReason;
+    setSubmittingProfileReport(true);
+    try {
+      await userApi.reportUser(targetId, finalReason);
+      setShowProfileReportModal(false);
+      setToast({ type: 'success', message: 'Đã gửi báo cáo hồ sơ thành công. Cảm ơn bạn đã hỗ trợ giữ gìn cộng đồng an toàn!' });
+    } catch (err) {
+      setToast({ type: 'error', message: err.response?.data?.error?.message || 'Có lỗi xảy ra khi gửi báo cáo' });
+    } finally {
+      setSubmittingProfileReport(false);
+    }
   };
 
   const openGame = (match) => {
@@ -208,9 +257,68 @@ export default function Dashboard() {
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh', background: '#0f1115', color: '#fff', fontFamily: 'Inter, sans-serif' }}>
+      <style>{`
+        .action-btn-pass {
+          transition: transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.25s ease, background-color 0.25s ease !important;
+        }
+        .action-btn-pass:hover {
+          transform: scale(1.22) !important;
+          box-shadow: 0 12px 30px rgba(255, 68, 88, 0.5) !important;
+          background-color: rgba(255, 68, 88, 0.15) !important;
+        }
+        .action-btn-pass:active {
+          transform: scale(0.92) !important;
+        }
+
+        .action-btn-like {
+          transition: transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.25s ease, background-color 0.25s ease !important;
+        }
+        .action-btn-like:hover {
+          transform: scale(1.22) !important;
+          box-shadow: 0 12px 30px rgba(52, 211, 153, 0.5) !important;
+          background-color: rgba(52, 211, 153, 0.15) !important;
+        }
+        .action-btn-like:active {
+          transform: scale(0.92) !important;
+        }
+      `}</style>
 
       {/* ── LEFT SIDEBAR ── */}
-      <aside style={{ width: '340px', background: '#181c22', borderRight: '1px solid rgba(255,255,255,0.08)', display: 'flex', flexDirection: 'column', flexShrink: 0 }}>
+      <aside style={{
+        position: 'relative',
+        flex: isSidebarExpanded ? 2 : 'none',
+        width: isSidebarExpanded ? 'auto' : '350px',
+        transition: 'all 0.35s cubic-bezier(0.16, 1, 0.3, 1)',
+        background: '#181c22', borderRight: '1px solid rgba(255,255,255,0.08)',
+        display: 'flex', flexDirection: 'column', flexShrink: 0
+      }}>
+        {/* Divider Expand/Collapse Toggle Button */}
+        <button
+          onClick={() => setIsSidebarExpanded(prev => !prev)}
+          style={{
+            position: 'absolute',
+            right: '-14px',
+            top: '24px',
+            zIndex: 100,
+            width: '28px',
+            height: '28px',
+            borderRadius: '50%',
+            background: 'linear-gradient(135deg, #fd267d, #ff6036)',
+            border: '2px solid #0f1115',
+            color: '#fff',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            cursor: 'pointer',
+            boxShadow: '0 4px 12px rgba(0,0,0,0.45)',
+            fontSize: '0.7rem',
+            fontWeight: 800,
+            transition: 'transform 0.2s ease',
+          }}
+          title={isSidebarExpanded ? "Thu nhỏ thanh bên" : "Phóng to thanh bên (Tỷ lệ 2/3)"}
+        >
+          {isSidebarExpanded ? '◀' : '▶'}
+        </button>
 
         {/* Profile Header */}
         <div style={{ background: 'linear-gradient(135deg, #fd267d, #ff6036)', padding: '1.2rem 1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -225,11 +333,44 @@ export default function Dashboard() {
               <div style={{ position: 'absolute', bottom: '1px', right: '1px', width: '10px', height: '10px', borderRadius: '50%', background: '#34D399', border: '2px solid #fd267d' }} />
             </div>
             <div>
-              <div style={{ fontWeight: 700, fontSize: '1rem' }}>{profile?.fullName || user?.username}</div>
+              <div style={{ fontWeight: 700, fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                {profile?.fullName || user?.username}
+                {(user?.role === 'ADMIN' || profile?.role === 'ADMIN') && (
+                  <span style={{ fontSize: '0.7rem', background: '#f59e0b', color: '#000', padding: '1px 6px', borderRadius: '10px', fontWeight: '800' }}>ADMIN</span>
+                )}
+              </div>
               <div style={{ fontSize: '0.75rem', opacity: 0.85 }}>Cập nhật Hồ sơ</div>
             </div>
           </div>
-          <button className="btn btn-ghost btn-sm" onClick={logout} style={{ color: '#fff' }}>Đăng xuất</button>
+          <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+            <button
+              onClick={() => setShowSettingsModal(true)}
+              style={{
+                background: 'rgba(255,255,255,0.18)',
+                color: '#fff', border: '1px solid rgba(255,255,255,0.3)', borderRadius: '14px',
+                padding: '6px 12px', fontWeight: '700', fontSize: '0.78rem',
+                cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px',
+                transition: 'all 0.2s ease',
+              }}
+              title="Cài đặt tài khoản (Chỉnh sửa hồ sơ, Đổi mật khẩu, Đăng xuất)"
+            >
+              ⚙️ Cài đặt
+            </button>
+
+            {(user?.role === 'ADMIN' || profile?.role === 'ADMIN') && (
+              <button
+                onClick={() => setShowAdminModal(true)}
+                style={{
+                  background: 'linear-gradient(135deg, #f59e0b, #d97706)',
+                  color: '#fff', border: 'none', borderRadius: '14px',
+                  padding: '6px 12px', fontWeight: '700', fontSize: '0.78rem',
+                  cursor: 'pointer', boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+                }}
+              >
+                👑 Quản trị
+              </button>
+            )}
+          </div>
         </div>
 
         {/* Tabs */}
@@ -329,6 +470,7 @@ export default function Dashboard() {
                     currentUserId={profile?.userId || user?.userId}
                     onClose={() => setActiveChatMatch(null)}
                     onInviteGame={openGame}
+                    onBlockUser={handleBlockUserInDashboard}
                   />
                 </div>
               ) : conversations.length > 0 ? (
@@ -384,7 +526,12 @@ export default function Dashboard() {
       </aside>
 
       {/* ── MAIN SWIPING AREA ── */}
-      <main style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', position: 'relative', padding: '2rem' }}>
+      <main style={{
+        flex: isSidebarExpanded ? 3 : 1,
+        transition: 'all 0.35s cubic-bezier(0.16, 1, 0.3, 1)',
+        display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+        position: 'relative', padding: '2rem'
+      }}>
 
         {/* AI Mode Toggle */}
         <div style={{ position: 'absolute', top: '1.2rem', right: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
@@ -559,8 +706,8 @@ export default function Dashboard() {
 
             {/* Action Buttons */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '2.5rem', marginTop: '1.8rem', justifyContent: 'center' }}>
-              <button onClick={() => handleSwipe('PASS')} style={{ width: '72px', height: '72px', borderRadius: '50%', background: '#181c22', border: '2px solid #ff4458', color: '#ff4458', fontSize: '2rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 8px 25px rgba(255,68,88,0.25)', transition: 'all 0.3s ease' }}>✕</button>
-              <button onClick={() => handleSwipe('LIKE')} style={{ width: '72px', height: '72px', borderRadius: '50%', background: '#181c22', border: '2px solid #34D399', color: '#34D399', fontSize: '2rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 8px 25px rgba(52,211,153,0.25)', transition: 'all 0.3s ease' }}>💖</button>
+              <button className="action-btn-pass" onClick={() => handleSwipe('PASS')} style={{ width: '72px', height: '72px', borderRadius: '50%', background: '#181c22', border: '2px solid #ff4458', color: '#ff4458', fontSize: '2rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 8px 25px rgba(255,68,88,0.25)' }}>✕</button>
+              <button className="action-btn-like" onClick={() => handleSwipe('LIKE')} style={{ width: '72px', height: '72px', borderRadius: '50%', background: '#181c22', border: '2px solid #34D399', color: '#34D399', fontSize: '2rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 8px 25px rgba(52,211,153,0.25)' }}>💖</button>
             </div>
           </>
         )}
@@ -575,7 +722,21 @@ export default function Dashboard() {
             <div style={{ position: 'sticky', top: 0, zIndex: 30, background: 'rgba(24,28,34,0.95)', backdropFilter: 'blur(10px)', padding: '1rem 1.2rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
               <button onClick={() => setSelectedProfile(null)} className="btn btn-ghost" style={{ width: 'auto', padding: '0.4rem 1rem', borderRadius: '20px', fontSize: '0.88rem' }}>← Quay lại</button>
               <span style={{ fontWeight: 700, fontSize: '0.95rem', color: '#fff' }}>Hồ sơ của {selectedProfile.name}</span>
-              <button onClick={() => setSelectedProfile(null)} style={{ background: 'rgba(255,255,255,0.1)', color: '#fff', border: 'none', borderRadius: '50%', width: '32px', height: '32px', cursor: 'pointer', fontSize: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                <button
+                  onClick={() => setShowProfileReportModal(true)}
+                  title="Báo cáo vi phạm hồ sơ"
+                  style={{
+                    background: 'rgba(245,158,11,0.15)', border: '1px solid rgba(245,158,11,0.4)',
+                    color: '#F59E0B', borderRadius: '10px', padding: '0.35rem 0.7rem',
+                    cursor: 'pointer', fontSize: '0.78rem', fontWeight: 600,
+                    display: 'flex', alignItems: 'center', gap: '0.3rem',
+                  }}
+                >
+                  ⚠️ Báo cáo
+                </button>
+                <button onClick={() => setSelectedProfile(null)} style={{ background: 'rgba(255,255,255,0.1)', color: '#fff', border: 'none', borderRadius: '50%', width: '32px', height: '32px', cursor: 'pointer', fontSize: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
+              </div>
             </div>
 
             {/* Photos */}
@@ -656,6 +817,112 @@ export default function Dashboard() {
           onClose={() => { setShowGame(false); setGameTargetMatch(null); }}
         />
       )}
+      {/* ── ADMIN MODAL ── */}
+      {showAdminModal && (
+        <AdminModal onClose={() => setShowAdminModal(false)} />
+      )}
+
+      {/* ── PROFILE REPORT MODAL ── */}
+      {showProfileReportModal && selectedProfile && (
+        <div style={{
+          position: 'fixed', inset: 0, zIndex: 2000,
+          background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(6px)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1.5rem',
+        }}>
+          <div style={{
+            background: '#1e232a', border: '1px solid rgba(245,158,11,0.4)',
+            borderRadius: '16px', padding: '1.5rem', maxWidth: '380px', width: '100%',
+            color: '#fff', boxShadow: '0 20px 40px rgba(0,0,0,0.6)',
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+              <h3 style={{ margin: 0, fontSize: '1.1rem', color: '#fff', fontWeight: 700 }}>
+                Báo cáo hồ sơ {selectedProfile.name}
+              </h3>
+              <button
+                onClick={() => setShowProfileReportModal(false)}
+                style={{ background: 'transparent', border: 'none', color: 'rgba(255,255,255,0.5)', fontSize: '1.2rem', cursor: 'pointer' }}
+              >✕</button>
+            </div>
+
+            <div style={{ fontSize: '0.82rem', color: 'rgba(255,255,255,0.7)', marginBottom: '0.8rem' }}>
+              Chọn lý do báo cáo hồ sơ:
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginBottom: '0.8rem' }}>
+              {['Tài khoản giả mạo', 'Hình ảnh nhạy cảm', 'Khác'].map(reason => (
+                <label key={reason} style={{
+                  display: 'flex', alignItems: 'center', gap: '0.6rem',
+                  height: '42px', padding: '0 0.8rem', borderRadius: '10px',
+                  boxSizing: 'border-box',
+                  background: profileReportReason === reason ? 'rgba(245,158,11,0.15)' : 'rgba(255,255,255,0.04)',
+                  border: profileReportReason === reason ? '1px solid #F59E0B' : '1px solid rgba(255,255,255,0.08)',
+                  cursor: 'pointer', fontSize: '0.85rem', fontWeight: 500, color: '#fff',
+                  transition: 'all 0.2s ease',
+                }}>
+                  <input
+                    type="radio"
+                    name="profileReportReason"
+                    checked={profileReportReason === reason}
+                    onChange={() => setProfileReportReason(reason)}
+                    style={{ accentColor: '#F59E0B', width: '16px', height: '16px', margin: 0 }}
+                  />
+                  <span>{reason}</span>
+                </label>
+              ))}
+            </div>
+
+            {profileReportReason === 'Khác' && (
+              <textarea
+                rows={3}
+                placeholder="Mô tả thêm chi tiết vi phạm..."
+                value={customProfileReason}
+                onChange={e => setCustomProfileReason(e.target.value)}
+                style={{
+                  width: '100%', boxSizing: 'border-box', marginTop: '0.2rem', marginBottom: '0.6rem',
+                  padding: '0.7rem', borderRadius: '8px', background: '#121519',
+                  border: '1px solid rgba(255,255,255,0.15)', color: '#fff', fontSize: '0.85rem',
+                  outline: 'none', resize: 'none',
+                }}
+              />
+            )}
+
+            <div style={{ display: 'flex', gap: '0.8rem', justifyContent: 'flex-end', marginTop: '1rem' }}>
+              <button
+                onClick={() => setShowProfileReportModal(false)}
+                disabled={submittingProfileReport}
+                style={{
+                  padding: '0.6rem 1.2rem', borderRadius: '10px',
+                  background: 'rgba(255,255,255,0.1)', border: 'none',
+                  color: '#fff', fontWeight: 600, cursor: 'pointer', fontSize: '0.85rem',
+                }}
+              >Hủy</button>
+              <button
+                onClick={handleSubmitProfileReport}
+                disabled={submittingProfileReport}
+                style={{
+                  padding: '0.6rem 1.2rem', borderRadius: '10px',
+                  background: 'linear-gradient(135deg, #F59E0B, #D97706)', border: 'none',
+                  color: '#fff', fontWeight: 600, cursor: 'pointer', fontSize: '0.85rem',
+                }}
+              >{submittingProfileReport ? 'Đang gửi...' : 'Gửi báo cáo'}</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── USER SETTINGS MODAL ── */}
+      {showSettingsModal && (
+        <UserSettingsModal
+          profile={profile}
+          onProfileUpdated={(updatedProfile) => setProfile(updatedProfile)}
+          onLogout={logout}
+          onClose={() => setShowSettingsModal(false)}
+          setToast={setToast}
+        />
+      )}
+
+      {/* ── TOAST NOTIFICATION ── */}
+      <ToastNotification toast={toast} onClose={() => setToast(null)} />
     </div>
   );
 }

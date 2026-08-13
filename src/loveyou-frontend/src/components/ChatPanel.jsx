@@ -1,10 +1,11 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { chatApi } from '../utils/api';
+import { chatApi, userApi } from '../utils/api';
 import { getSocket } from '../utils/socket';
+import ToastNotification from './ToastNotification';
 
 const defaultAvatar = 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=100';
 
-export default function ChatPanel({ match, currentUserId, onClose, onInviteGame }) {
+export default function ChatPanel({ match, currentUserId, onClose, onInviteGame, onBlockUser }) {
   const [conversation, setConversation] = useState(null);
   const [messages, setMessages] = useState([]);
   const [inputText, setInputText] = useState('');
@@ -12,6 +13,16 @@ export default function ChatPanel({ match, currentUserId, onClose, onInviteGame 
   const [isTyping, setIsTyping] = useState(false);
   const [partnerTyping, setPartnerTyping] = useState(false);
   const [sending, setSending] = useState(false);
+
+  // 3-dots menu & action states
+  const [showMenu, setShowMenu] = useState(false);
+  const [showBlockConfirm, setShowBlockConfirm] = useState(false);
+  const [showReportModal, setShowReportModal] = useState(false);
+  const [reportReason, setReportReason] = useState('Quấy rối');
+  const [customReason, setCustomReason] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [toast, setToast] = useState(null);
+
   const messagesEndRef = useRef(null);
   const typingTimeoutRef = useRef(null);
   const socket = getSocket();
@@ -169,6 +180,39 @@ export default function ChatPanel({ match, currentUserId, onClose, onInviteGame 
     return d.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' });
   };
 
+  async function handleConfirmBlock() {
+    const targetId = match?.partner?.id || match?.partner?.userId;
+    if (!targetId) return;
+    setIsSubmitting(true);
+    try {
+      await userApi.blockUser(targetId);
+      setShowBlockConfirm(false);
+      const msg = `Đã chặn thành công ${match?.partner?.name || 'người dùng'}. Match đã bị hủy.`;
+      if (onBlockUser) onBlockUser(match.matchId, targetId, msg);
+      if (onClose) onClose();
+    } catch (err) {
+      setToast({ type: 'error', message: err.response?.data?.error?.message || 'Có lỗi xảy ra khi chặn người dùng' });
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
+
+  async function handleSubmitReport() {
+    const targetId = match?.partner?.id || match?.partner?.userId;
+    if (!targetId) return;
+    const finalReason = reportReason === 'Khác' ? customReason.trim() || 'Khác' : reportReason;
+    setIsSubmitting(true);
+    try {
+      await userApi.reportUser(targetId, finalReason);
+      setShowReportModal(false);
+      setToast({ type: 'success', message: 'Đã gửi báo cáo thành công. Cảm ơn bạn đã hỗ trợ giữ gìn cộng đồng an toàn!' });
+    } catch (err) {
+      setToast({ type: 'error', message: err.response?.data?.error?.message || 'Có lỗi xảy ra khi gửi báo cáo' });
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
+
   const groupMessagesByDate = (msgs) => {
     const groups = [];
     let currentDate = null;
@@ -189,6 +233,7 @@ export default function ChatPanel({ match, currentUserId, onClose, onInviteGame 
     <div style={{
       display: 'flex', flexDirection: 'column', height: '100%',
       background: '#0f1115', borderRadius: '16px', overflow: 'hidden',
+      position: 'relative',
     }}>
       {/* Header */}
       <div style={{
@@ -227,6 +272,56 @@ export default function ChatPanel({ match, currentUserId, onClose, onInviteGame 
           🎮 Chơi game
         </button>
 
+        {/* 3-dots Menu Button */}
+        <div style={{ position: 'relative' }}>
+          <button
+            onClick={() => setShowMenu(prev => !prev)}
+            title="Tùy chọn khác"
+            style={{
+              background: showMenu ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.08)',
+              border: 'none', color: '#fff',
+              borderRadius: '8px', width: '36px', height: '36px', cursor: 'pointer',
+              fontSize: '1.2rem', display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}
+          >⋮</button>
+
+          {showMenu && (
+            <div style={{
+              position: 'absolute', right: 0, top: '44px', zIndex: 100,
+              background: '#232830', border: '1px solid rgba(255,255,255,0.15)',
+              borderRadius: '12px', padding: '0.4rem', width: '190px',
+              boxShadow: '0 10px 25px rgba(0,0,0,0.5)',
+            }}>
+              <button
+                onClick={() => { setShowMenu(false); setShowBlockConfirm(true); }}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: '0.6rem', width: '100%',
+                  padding: '0.6rem 0.8rem', background: 'transparent', border: 'none',
+                  color: '#EF4444', cursor: 'pointer', borderRadius: '8px', fontSize: '0.85rem',
+                  fontWeight: 600, textAlign: 'left',
+                }}
+                onMouseEnter={e => e.currentTarget.style.background = 'rgba(239,68,68,0.12)'}
+                onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+              >
+                🚫 Chặn người dùng
+              </button>
+              <button
+                onClick={() => { setShowMenu(false); setShowReportModal(true); }}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: '0.6rem', width: '100%',
+                  padding: '0.6rem 0.8rem', background: 'transparent', border: 'none',
+                  color: '#F59E0B', cursor: 'pointer', borderRadius: '8px', fontSize: '0.85rem',
+                  fontWeight: 600, textAlign: 'left',
+                }}
+                onMouseEnter={e => e.currentTarget.style.background = 'rgba(245,158,11,0.12)'}
+                onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+              >
+                ⚠️ Báo cáo người dùng
+              </button>
+            </div>
+          )}
+        </div>
+
         {onClose && (
           <button
             onClick={onClose}
@@ -237,6 +332,137 @@ export default function ChatPanel({ match, currentUserId, onClose, onInviteGame 
           >✕</button>
         )}
       </div>
+
+      {/* Block Confirm Modal */}
+      {showBlockConfirm && (
+        <div style={{
+          position: 'absolute', inset: 0, zIndex: 999,
+          background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(4px)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1.5rem',
+        }}>
+          <div style={{
+            background: '#1e232a', border: '1px solid rgba(239,68,68,0.4)',
+            borderRadius: '16px', padding: '1.5rem', maxWidth: '380px', width: '100%',
+            color: '#fff', textAlign: 'center', boxShadow: '0 20px 40px rgba(0,0,0,0.6)',
+          }}>
+            <div style={{ fontSize: '2.5rem', marginBottom: '0.5rem' }}>🚫</div>
+            <h3 style={{ margin: '0 0 0.5rem 0', fontSize: '1.2rem', color: '#fff' }}>
+              Chặn {match?.partner?.name}?
+            </h3>
+            <p style={{ fontSize: '0.85rem', color: 'rgba(255,255,255,0.7)', lineHeight: 1.5, marginBottom: '1.5rem' }}>
+              Khi chặn, match giữa bạn và đối phương sẽ bị hủy. Cả 2 sẽ không thể nhắn tin hay tìm thấy nhau nữa.
+            </p>
+            <div style={{ display: 'flex', gap: '0.8rem', justifyContent: 'center' }}>
+              <button
+                onClick={() => setShowBlockConfirm(false)}
+                disabled={isSubmitting}
+                style={{
+                  flex: 1, padding: '0.7rem', borderRadius: '10px',
+                  background: 'rgba(255,255,255,0.1)', border: 'none',
+                  color: '#fff', fontWeight: 600, cursor: 'pointer',
+                }}
+              >Hủy</button>
+              <button
+                onClick={handleConfirmBlock}
+                disabled={isSubmitting}
+                style={{
+                  flex: 1, padding: '0.7rem', borderRadius: '10px',
+                  background: 'linear-gradient(135deg, #EF4444, #DC2626)', border: 'none',
+                  color: '#fff', fontWeight: 600, cursor: 'pointer',
+                }}
+              >{isSubmitting ? 'Đang chặn...' : 'Xác nhận Chặn'}</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Report Modal */}
+      {showReportModal && (
+        <div style={{
+          position: 'absolute', inset: 0, zIndex: 999,
+          background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(4px)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1.5rem',
+        }}>
+          <div style={{
+            background: '#1e232a', border: '1px solid rgba(245,158,11,0.4)',
+            borderRadius: '16px', padding: '1.5rem', maxWidth: '380px', width: '100%',
+            color: '#fff', boxShadow: '0 20px 40px rgba(0,0,0,0.6)',
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+              <h3 style={{ margin: 0, fontSize: '1.1rem', color: '#fff', fontWeight: 700 }}>
+                Báo cáo {match?.partner?.name}
+              </h3>
+              <button
+                onClick={() => setShowReportModal(false)}
+                style={{ background: 'transparent', border: 'none', color: 'rgba(255,255,255,0.5)', fontSize: '1.2rem', cursor: 'pointer' }}
+              >✕</button>
+            </div>
+
+            <div style={{ fontSize: '0.82rem', color: 'rgba(255,255,255,0.7)', marginBottom: '0.8rem' }}>
+              Chọn lý do báo cáo:
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginBottom: '0.8rem' }}>
+              {['Quấy rối', 'Ngôn từ khiếm nhã', 'Khác'].map(reason => (
+                <label key={reason} style={{
+                  display: 'flex', alignItems: 'center', gap: '0.6rem',
+                  height: '42px', padding: '0 0.8rem', borderRadius: '10px',
+                  boxSizing: 'border-box',
+                  background: reportReason === reason ? 'rgba(245,158,11,0.15)' : 'rgba(255,255,255,0.04)',
+                  border: reportReason === reason ? '1px solid #F59E0B' : '1px solid rgba(255,255,255,0.08)',
+                  cursor: 'pointer', fontSize: '0.85rem', fontWeight: 500, color: '#fff',
+                  transition: 'all 0.2s ease',
+                }}>
+                  <input
+                    type="radio"
+                    name="reportReason"
+                    checked={reportReason === reason}
+                    onChange={() => setReportReason(reason)}
+                    style={{ accentColor: '#F59E0B', width: '16px', height: '16px', margin: 0 }}
+                  />
+                  <span>{reason}</span>
+                </label>
+              ))}
+            </div>
+
+            {reportReason === 'Khác' && (
+              <textarea
+                rows={3}
+                placeholder="Mô tả thêm chi tiết vi phạm..."
+                value={customReason}
+                onChange={e => setCustomReason(e.target.value)}
+                style={{
+                  width: '100%', boxSizing: 'border-box', marginTop: '0.2rem', marginBottom: '0.6rem',
+                  padding: '0.7rem', borderRadius: '8px', background: '#121519',
+                  border: '1px solid rgba(255,255,255,0.15)', color: '#fff', fontSize: '0.85rem',
+                  outline: 'none', resize: 'none',
+                }}
+              />
+            )}
+
+            <div style={{ display: 'flex', gap: '0.8rem', justifyContent: 'flex-end', marginTop: '1rem' }}>
+              <button
+                onClick={() => setShowReportModal(false)}
+                disabled={isSubmitting}
+                style={{
+                  padding: '0.6rem 1.2rem', borderRadius: '10px',
+                  background: 'rgba(255,255,255,0.1)', border: 'none',
+                  color: '#fff', fontWeight: 600, cursor: 'pointer', fontSize: '0.85rem',
+                }}
+              >Hủy</button>
+              <button
+                onClick={handleSubmitReport}
+                disabled={isSubmitting}
+                style={{
+                  padding: '0.6rem 1.2rem', borderRadius: '10px',
+                  background: 'linear-gradient(135deg, #F59E0B, #D97706)', border: 'none',
+                  color: '#fff', fontWeight: 600, cursor: 'pointer', fontSize: '0.85rem',
+                }}
+              >{isSubmitting ? 'Đang gửi...' : 'Gửi báo cáo'}</button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Messages Area */}
       <div style={{
@@ -396,6 +622,7 @@ export default function ChatPanel({ match, currentUserId, onClose, onInviteGame 
           </button>
         </form>
       </div>
+      <ToastNotification toast={toast} onClose={() => setToast(null)} />
     </div>
   );
 }

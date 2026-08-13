@@ -121,11 +121,11 @@ async function getAICandidates(userId) {
     });
   } catch { /* ignore if table not ready */ }
 
-  const excludeIds = [...swipedIds, ...blockedIds].filter(id => id !== uid);
+  const excludeIds = Array.from(new Set([uid, ...swipedIds, ...blockedIds]));
 
   // Build where clause
   const where = {
-    userId: { notIn: excludeIds.length > 0 ? excludeIds : [uid] },
+    userId: { notIn: excludeIds },
     status: 'ACTIVE',
     isProfileComplete: true,
   };

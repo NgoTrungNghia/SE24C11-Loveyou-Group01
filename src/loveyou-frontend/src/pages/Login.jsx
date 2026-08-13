@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { AuthLayout, Brand, Field } from '../components/shared';
 import { useAuth } from '../context/AuthContext';
@@ -12,6 +12,13 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
 
   const [fieldErrors, setFieldErrors] = useState({});
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('banned') === 'true') {
+      setError('Tài khoản của bạn đã bị khóa, vui lòng sử dụng tài khoản khác');
+    }
+  }, []);
 
   const set = (k) => (e) => {
     setForm((f) => ({ ...f, [k]: e.target.value }));
@@ -34,7 +41,11 @@ export default function Login() {
     const result = await login(form.email, form.password);
     setLoading(false);
     if (result.ok) {
-      navigate('/dashboard');
+      if (result.role === 'ADMIN') {
+        navigate('/admin');
+      } else {
+        navigate('/dashboard');
+      }
     } else {
       // API may return field-level issues
       if (result.issues?.length) {

@@ -9,5 +9,9 @@ router.use(authMiddleware);
 
 router.get('/me', controller.getProfile);
 router.put('/me', validate(schemas.updateProfileSchema), controller.updateProfile);
+router.post('/block', controller.blockUser);
+router.get('/blocked', controller.getBlockedUsers);
+router.post('/unblock', controller.unblockUser);
+router.post('/report', controller.reportUser);
 
 module.exports = router;

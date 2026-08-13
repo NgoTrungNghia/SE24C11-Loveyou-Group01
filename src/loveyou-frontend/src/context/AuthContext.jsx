@@ -39,7 +39,7 @@ export function AuthProvider({ children }) {
       setToken(t);
       const payload = decodeToken(t);
       setUser(payload);
-      return { ok: true, expiresAt };
+      return { ok: true, expiresAt, role: payload?.role };
     } catch (err) {
       const errData = err.response?.data?.error;
       return {

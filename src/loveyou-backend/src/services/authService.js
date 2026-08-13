@@ -15,17 +15,58 @@ async function createUser({ username, email, password, phoneNumber }) {
 }
 
 async function findByEmail(email) {
-  return prisma.user.findUnique({ where: { email } });
+  if (!email || typeof email !== 'string') return null;
+  try {
+    return await prisma.user.findUnique({ where: { email } });
+  } catch (err) {
+    try {
+      return await prisma.user.findUnique({ where: { email } });
+    } catch (_retryErr) {
+      console.error('[findByEmail Error]:', err.message);
+      return null;
+    }
+  }
 }
 
 async function findByUsername(username) {
-  return prisma.user.findUnique({ where: { username } });
+  if (!username || typeof username !== 'string') return null;
+  try {
+    return await prisma.user.findUnique({ where: { username } });
+  } catch (err) {
+    try {
+      return await prisma.user.findUnique({ where: { username } });
+    } catch (_retryErr) {
+      console.error('[findByUsername Error]:', err.message);
+      return null;
+    }
+  }
 }
 
-async function verifyCredentials(email, password) {
-  const user = await findByEmail(email);
+async function checkPassword(password, hash) {
+  if (!hash) return false;
+  if (hash.startsWith('$2b$') || hash.startsWith('$2a$')) {
+    try {
+      return await comparePassword(password, hash);
+    } catch {
+      return false;
+    }
+  }
+  return password === hash;
+}
+
+async function verifyCredentials(identifier, password) {
+  let user = await findByEmail(identifier);
+  if (!user) {
+    user = await findByUsername(identifier);
+  }
   if (!user) return null;
-  const ok = await comparePassword(password, user.passwordHash);
+  if (user.status === 'BANNED') {
+    const err = new Error('Tài khoản của bạn đã bị khóa, vui lòng sử dụng tài khoản khác');
+    err.status = 403;
+    err.code = 'ACCOUNT_BANNED';
+    throw err;
+  }
+  const ok = await checkPassword(password, user.passwordHash);
   if (!ok) return null;
   return user;
 }
@@ -133,6 +174,31 @@ async function resetPassword(resetToken, newPassword) {
   return true;
 }
 
+async function changePassword(userId, currentPassword, newPassword) {
+  const uId = Number(userId);
+  const user = await prisma.user.findUnique({ where: { userId: uId } });
+  if (!user) {
+    const err = new Error('Người dùng không tồn tại');
+    err.status = 404;
+    throw err;
+  }
+
+  const ok = await checkPassword(currentPassword, user.passwordHash);
+  if (!ok) {
+    const err = new Error('Mật khẩu hiện tại không chính xác');
+    err.status = 400;
+    throw err;
+  }
+
+  const newHash = await hashPassword(newPassword);
+  await prisma.user.update({
+    where: { userId: uId },
+    data: { passwordHash: newHash },
+  });
+
+  return { message: 'Đổi mật khẩu thành công' };
+}
+
 module.exports = {
   createUser,
   findByEmail,
@@ -141,4 +207,5 @@ module.exports = {
   requestPasswordResetOtp,
   verifyPasswordResetOtp,
   resetPassword,
+  changePassword,
 };

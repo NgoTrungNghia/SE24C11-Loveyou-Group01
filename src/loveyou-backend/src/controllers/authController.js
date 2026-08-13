@@ -96,6 +96,29 @@ async function resetPassword(req, res, next) {
   }
 }
 
+async function changePassword(req, res, next) {
+  try {
+    const userId = req.user.userId;
+    const { currentPassword, newPassword } = req.body;
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({
+        success: false,
+        error: { message: 'Vui lòng nhập đầy đủ mật khẩu hiện tại và mật khẩu mới', code: 'INVALID_INPUT' },
+      });
+    }
+    if (newPassword.length < 6) {
+      return res.status(400).json({
+        success: false,
+        error: { message: 'Mật khẩu mới phải có ít nhất 6 ký tự', code: 'INVALID_INPUT' },
+      });
+    }
+    const result = await authService.changePassword(userId, currentPassword, newPassword);
+    return success(res, result);
+  } catch (err) {
+    return next(err);
+  }
+}
+
 module.exports = {
   signup,
   login,
@@ -103,4 +126,5 @@ module.exports = {
   forgotPassword,
   verifyOtp,
   resetPassword,
+  changePassword,
 };

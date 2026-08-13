@@ -11,6 +11,20 @@ api.interceptors.request.use((cfg) => {
   return cfg;
 });
 
+// Auto-handle BANNED accounts across all API responses
+api.interceptors.response.use(
+  (res) => res,
+  (err) => {
+    const errCode = err.response?.data?.error?.code;
+    const errMsg = err.response?.data?.error?.message;
+    if (errCode === 'ACCOUNT_BANNED' || (err.response?.status === 403 && errMsg?.includes('khóa'))) {
+      localStorage.removeItem('ly_token');
+      window.location.href = '/login?banned=true';
+    }
+    return Promise.reject(err);
+  }
+);
+
 // ── Auth endpoints ──
 export const authApi = {
   signup: (data) => api.post('/auth/signup', data),
@@ -20,11 +34,16 @@ export const authApi = {
   verifyOtp: (email, otp) => api.post('/auth/verify-otp', { email, otp }),
   resetPassword: (resetToken, newPassword) =>
     api.post('/auth/reset-password', { resetToken, newPassword }),
+  changePassword: (data) => api.post('/auth/change-password', data),
 };
 
 export const userApi = {
   getProfile: () => api.get('/users/me'),
   updateProfile: (data) => api.put('/users/me', data),
+  blockUser: (targetId) => api.post('/users/block', { targetId }),
+  getBlockedUsers: () => api.get('/users/blocked'),
+  unblockUser: (targetId) => api.post('/users/unblock', { targetId }),
+  reportUser: (targetId, reason) => api.post('/users/report', { targetId, reason }),
 };
 
 export const matchingApi = {
@@ -62,6 +81,11 @@ export const uploadApi = {
 
 export const adminApi = {
   stats: () => api.get('/admin/stats'),
+  getUsers: () => api.get('/admin/users'),
+  getUserById: (id) => api.get(`/admin/users/${id}`),
+  toggleBan: (id) => api.put(`/admin/users/${id}/ban`),
+  getReports: () => api.get('/admin/reports'),
+  updateReportStatus: (id, status) => api.put(`/admin/reports/${id}/status`, { status }),
 };
 
 export default api;
