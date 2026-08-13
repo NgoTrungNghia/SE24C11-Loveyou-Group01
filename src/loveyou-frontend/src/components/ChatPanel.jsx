@@ -5,7 +5,7 @@ import ToastNotification from './ToastNotification';
 
 const defaultAvatar = 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=100';
 
-export default function ChatPanel({ match, currentUserId, onClose, onInviteGame, onBlockUser }) {
+export default function ChatPanel({ match, currentUserId, isOnline, onClose, onInviteGame, onBlockUser, onUnblockUser }) {
   const [conversation, setConversation] = useState(null);
   const [messages, setMessages] = useState([]);
   const [inputText, setInputText] = useState('');
@@ -16,10 +16,16 @@ export default function ChatPanel({ match, currentUserId, onClose, onInviteGame,
 
   // 3-dots menu & action states
   const [isBlockedState, setIsBlockedState] = useState(match?.partner?.isBlocked || match?.isBlocked || false);
+  const [isBlockedByMeState, setIsBlockedByMeState] = useState(match?.partner?.isBlockedByMe || match?.isBlockedByMe || false);
+  const [isBlockedByPartnerState, setIsBlockedByPartnerState] = useState(match?.partner?.isBlockedByPartner || match?.isBlockedByPartner || false);
   const [showMenu, setShowMenu] = useState(false);
   const [showBlockConfirm, setShowBlockConfirm] = useState(false);
+  const [showUnblockConfirm, setShowUnblockConfirm] = useState(false);
   const [showReportModal, setShowReportModal] = useState(false);
   const [showClearConfirm, setShowClearConfirm] = useState(false);
+  const [showRedFlagModal, setShowRedFlagModal] = useState(false);
+  const [isAnalyzingRedFlag, setIsAnalyzingRedFlag] = useState(false);
+  const [redFlagResult, setRedFlagResult] = useState(null);
   const [reportReason, setReportReason] = useState('Quấy rối');
   const [customReason, setCustomReason] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -27,6 +33,8 @@ export default function ChatPanel({ match, currentUserId, onClose, onInviteGame,
 
   useEffect(() => {
     setIsBlockedState(match?.partner?.isBlocked || match?.isBlocked || false);
+    setIsBlockedByMeState(match?.partner?.isBlockedByMe || match?.isBlockedByMe || false);
+    setIsBlockedByPartnerState(match?.partner?.isBlockedByPartner || match?.isBlockedByPartner || false);
   }, [match]);
 
   const messagesEndRef = useRef(null);
@@ -175,11 +183,31 @@ export default function ChatPanel({ match, currentUserId, onClose, onInviteGame,
       await userApi.blockUser(targetId);
       setShowBlockConfirm(false);
       setIsBlockedState(true);
+      setIsBlockedByMeState(true);
       const msg = `Đã chặn thành công ${match?.partner?.name || 'người dùng'}.`;
       setToast({ type: 'success', message: msg });
       if (onBlockUser) onBlockUser(match.matchId, targetId, msg);
     } catch (err) {
       setToast({ type: 'error', message: err.response?.data?.error?.message || 'Có lỗi xảy ra khi chặn người dùng' });
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
+
+  async function handleConfirmUnblock() {
+    const targetId = match?.partner?.id || match?.partner?.userId;
+    if (!targetId) return;
+    setIsSubmitting(true);
+    try {
+      await userApi.unblockUser(targetId);
+      setShowUnblockConfirm(false);
+      setIsBlockedByMeState(false);
+      setIsBlockedState(isBlockedByPartnerState);
+      const msg = `Đã bỏ chặn thành công ${match?.partner?.name || 'người dùng'}.`;
+      setToast({ type: 'success', message: msg });
+      if (onUnblockUser) onUnblockUser(match.matchId, targetId, msg);
+    } catch (err) {
+      setToast({ type: 'error', message: err.response?.data?.error?.message || 'Có lỗi xảy ra khi bỏ chặn người dùng' });
     } finally {
       setIsSubmitting(false);
     }
@@ -197,6 +225,21 @@ export default function ChatPanel({ match, currentUserId, onClose, onInviteGame,
       setToast({ type: 'error', message: err.response?.data?.error?.message || 'Có lỗi xảy ra khi xóa trò chuyện' });
     } finally {
       setIsSubmitting(false);
+    }
+  }
+
+  async function handleAnalyzeRedFlags() {
+    if (!conversation?.id) return;
+    setIsAnalyzingRedFlag(true);
+    setRedFlagResult(null);
+    try {
+      const res = await chatApi.detectRedFlags(conversation.id);
+      setRedFlagResult(res.data.data.analysis);
+    } catch (err) {
+      setToast({ type: 'error', message: err.response?.data?.error?.message || 'Có lỗi xảy ra khi phân tích Red Flag bằng AI' });
+      setShowRedFlagModal(false);
+    } finally {
+      setIsAnalyzingRedFlag(false);
     }
   }
 
@@ -246,12 +289,21 @@ export default function ChatPanel({ match, currentUserId, onClose, onInviteGame,
         borderBottom: '1px solid rgba(255,255,255,0.08)',
         flexShrink: 0,
       }}>
-        <img
-          src={match?.partner?.photo || defaultAvatar}
-          alt={match?.partner?.name}
-          onError={e => { e.target.src = defaultAvatar; }}
-          style={{ width: '40px', height: '40px', borderRadius: '50%', objectFit: 'cover' }}
-        />
+        <div style={{ position: 'relative', flexShrink: 0 }}>
+          <img
+            src={match?.partner?.photo || defaultAvatar}
+            alt={match?.partner?.name}
+            onError={e => { e.target.src = defaultAvatar; }}
+            style={{ width: '40px', height: '40px', borderRadius: '50%', objectFit: 'cover' }}
+          />
+          {isOnline && (
+            <div style={{
+              position: 'absolute', bottom: '1px', right: '1px',
+              width: '10px', height: '10px', borderRadius: '50%',
+              background: '#34D399', border: '2px solid #181c22',
+            }} />
+          )}
+        </div>
         <div style={{ flex: 1 }}>
           <div style={{ fontWeight: 700, fontSize: '0.95rem', color: '#fff', display: 'flex', alignItems: 'center', gap: '6px' }}>
             {match?.partner?.name || 'Partner'}
@@ -261,8 +313,8 @@ export default function ChatPanel({ match, currentUserId, onClose, onInviteGame,
               </span>
             )}
           </div>
-          <div style={{ fontSize: '0.75rem', color: partnerTyping ? '#34D399' : 'rgba(255,255,255,0.5)' }}>
-            {partnerTyping ? '✍️ Đang gõ...' : 'Đã match với bạn 💖'}
+          <div style={{ fontSize: '0.75rem', color: (partnerTyping || isOnline) ? '#34D399' : 'rgba(255,255,255,0.5)' }}>
+            {partnerTyping ? '✍️ Đang gõ...' : isOnline ? '🟢 Đang hoạt động' : 'Đã match với bạn 💖'}
           </div>
         </div>
 
@@ -314,18 +366,48 @@ export default function ChatPanel({ match, currentUserId, onClose, onInviteGame,
                 🗑️ Xóa trò chuyện
               </button>
 
+              {isBlockedByMeState ? (
+                <button
+                  onClick={() => { setShowMenu(false); setShowUnblockConfirm(true); }}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: '0.6rem', width: '100%',
+                    padding: '0.6rem 0.8rem', background: 'transparent', border: 'none',
+                    color: '#34D399', cursor: 'pointer', borderRadius: '8px', fontSize: '0.85rem',
+                    fontWeight: 600, textAlign: 'left',
+                  }}
+                  onMouseEnter={e => e.currentTarget.style.background = 'rgba(52,211,153,0.12)'}
+                  onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                >
+                  🔓 Bỏ chặn người dùng
+                </button>
+              ) : (
+                <button
+                  onClick={() => { setShowMenu(false); setShowBlockConfirm(true); }}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: '0.6rem', width: '100%',
+                    padding: '0.6rem 0.8rem', background: 'transparent', border: 'none',
+                    color: '#EF4444', cursor: 'pointer', borderRadius: '8px', fontSize: '0.85rem',
+                    fontWeight: 600, textAlign: 'left',
+                  }}
+                  onMouseEnter={e => e.currentTarget.style.background = 'rgba(239,68,68,0.12)'}
+                  onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                >
+                  🚫 Chặn người dùng
+                </button>
+              )}
+
               <button
-                onClick={() => { setShowMenu(false); setShowBlockConfirm(true); }}
+                onClick={() => { setShowMenu(false); setShowRedFlagModal(true); }}
                 style={{
                   display: 'flex', alignItems: 'center', gap: '0.6rem', width: '100%',
                   padding: '0.6rem 0.8rem', background: 'transparent', border: 'none',
-                  color: '#EF4444', cursor: 'pointer', borderRadius: '8px', fontSize: '0.85rem',
+                  color: '#EC4899', cursor: 'pointer', borderRadius: '8px', fontSize: '0.85rem',
                   fontWeight: 600, textAlign: 'left',
                 }}
-                onMouseEnter={e => e.currentTarget.style.background = 'rgba(239,68,68,0.12)'}
+                onMouseEnter={e => e.currentTarget.style.background = 'rgba(236,72,153,0.12)'}
                 onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
               >
-                🚫 Chặn người dùng
+                🚩 Phân tích Red Flag (AI)
               </button>
 
               <button
@@ -437,7 +519,50 @@ export default function ChatPanel({ match, currentUserId, onClose, onInviteGame,
                   background: 'linear-gradient(135deg, #EF4444, #DC2626)', border: 'none',
                   color: '#fff', fontWeight: 600, cursor: 'pointer',
                 }}
-              >{isSubmitting ? 'Đang chặn...' : 'Xác nhận Chặn'}</button>
+              >{isSubmitting ? 'Đang chặn...' : 'Chặn'}</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Unblock Confirm Modal */}
+      {showUnblockConfirm && (
+        <div style={{
+          position: 'absolute', inset: 0, zIndex: 999,
+          background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(4px)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1.5rem',
+        }}>
+          <div style={{
+            background: '#1e232a', border: '1px solid rgba(52,211,153,0.4)',
+            borderRadius: '16px', padding: '1.5rem', maxWidth: '380px', width: '100%',
+            color: '#fff', textAlign: 'center', boxShadow: '0 20px 40px rgba(0,0,0,0.6)',
+          }}>
+            <div style={{ fontSize: '2.5rem', marginBottom: '0.5rem' }}>🔓</div>
+            <h3 style={{ margin: '0 0 0.5rem 0', fontSize: '1.2rem', color: '#fff' }}>
+              Bỏ chặn {match?.partner?.name}?
+            </h3>
+            <p style={{ fontSize: '0.85rem', color: 'rgba(255,255,255,0.7)', lineHeight: 1.5, marginBottom: '1.5rem' }}>
+              Bạn có chắc chắn muốn bỏ chặn người dùng này? Hai bạn sẽ có thể tiếp tục nhắn tin bình thường.
+            </p>
+            <div style={{ display: 'flex', gap: '0.8rem', justifyContent: 'center' }}>
+              <button
+                onClick={() => setShowUnblockConfirm(false)}
+                disabled={isSubmitting}
+                style={{
+                  flex: 1, padding: '0.7rem', borderRadius: '10px',
+                  background: 'rgba(255,255,255,0.1)', border: 'none',
+                  color: '#fff', fontWeight: 600, cursor: 'pointer',
+                }}
+              >Hủy</button>
+              <button
+                onClick={handleConfirmUnblock}
+                disabled={isSubmitting}
+                style={{
+                  flex: 1, padding: '0.7rem', borderRadius: '10px',
+                  background: 'linear-gradient(135deg, #10B981, #059669)', border: 'none',
+                  color: '#fff', fontWeight: 600, cursor: 'pointer',
+                }}
+              >{isSubmitting ? 'Đang bỏ chặn...' : 'Bỏ chặn'}</button>
             </div>
           </div>
         </div>
@@ -668,7 +793,9 @@ export default function ChatPanel({ match, currentUserId, onClose, onInviteGame,
             justifyContent: 'center',
             gap: '0.5rem',
           }}>
-            🚫 Tài khoản này đã bị chặn. Không thể gửi tin nhắn mới.
+            {isBlockedByMeState
+              ? '🚫 Bạn đang chặn tài khoản này. Không thể gửi tin nhắn mới.'
+              : '🚫 Đối phương đang chặn bạn. Không thể gửi tin nhắn mới.'}
           </div>
         ) : (
           <form onSubmit={handleSend} style={{ display: 'flex', gap: '0.6rem', alignItems: 'center' }}>
@@ -708,6 +835,227 @@ export default function ChatPanel({ match, currentUserId, onClose, onInviteGame,
           </form>
         )}
       </div>
+      {/* ── RED FLAG AI ANALYSIS MODAL ── */}
+      {showRedFlagModal && (
+        <div style={{
+          position: 'fixed', inset: 0, zIndex: 2200,
+          background: 'rgba(0, 0, 0, 0.85)', backdropFilter: 'blur(8px)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1.5rem',
+        }}>
+          <div style={{
+            background: 'linear-gradient(145deg, #181c24, #12151b)',
+            border: '1px solid rgba(236,72,153,0.3)',
+            borderRadius: '24px', padding: '1.8rem', width: '100%', maxWidth: '520px',
+            boxShadow: '0 25px 60px rgba(0,0,0,0.8), 0 0 30px rgba(236,72,153,0.15)',
+            color: '#fff', maxHeight: '90vh', overflowY: 'auto',
+          }}>
+            {/* Modal Title Header */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.2rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                <span style={{ fontSize: '1.6rem' }}>🚩</span>
+                <div>
+                  <h3 style={{ margin: 0, fontSize: '1.15rem', fontWeight: 800, color: '#fff' }}>
+                    Phân tích Red Flag bằng AI
+                  </h3>
+                  <span style={{ fontSize: '0.75rem', color: '#EC4899', fontWeight: 600 }}>
+                    Powered by Gemini AI 🤖
+                  </span>
+                </div>
+              </div>
+              <button
+                onClick={() => { setShowRedFlagModal(false); setRedFlagResult(null); }}
+                style={{
+                  background: 'rgba(255,255,255,0.08)', border: 'none', color: '#fff',
+                  borderRadius: '50%', width: '32px', height: '32px', cursor: 'pointer',
+                  fontSize: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                }}
+              >✕</button>
+            </div>
+
+            {/* CASE 1: INITIAL EXPLANATION & CONSENT CONFIRMATION */}
+            {!isAnalyzingRedFlag && !redFlagResult && (
+              <div>
+                <div style={{
+                  background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)',
+                  borderRadius: '16px', padding: '1.2rem', marginBottom: '1.5rem', lineHeight: '1.6',
+                }}>
+                  <p style={{ margin: '0 0 0.8rem 0', fontSize: '0.9rem', color: 'rgba(255,255,255,0.9)' }}>
+                    Tính năng này sẽ gửi <strong style={{ color: '#EC4899' }}>tối đa 100 tin nhắn gần nhất</strong> trong cuộc trò chuyện này tới Gemini AI để kiểm tra các rủi ro và dấu hiệu bất thường.
+                  </p>
+                  <div style={{ fontSize: '0.83rem', color: 'rgba(255,255,255,0.7)', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                    <div>🚨 <strong>Dấu hiệu lừa đảo & giả mạo:</strong> Yêu cầu chuyển tiền, OTP, liên kết lạ, dụ dỗ đầu tư.</div>
+                    <div>🧠 <strong>Thao túng tâm lý:</strong> Love bombing (dồn dập), gaslighting, thúc ép gặp mặt / riêng tư quá đà.</div>
+                    <div>⚠️ <strong>Thái độ độc hại:</strong> Ngôn từ thô lỗ, ghen tuông vô lý, ngắt lời hoặc đe dọa.</div>
+                  </div>
+                </div>
+
+                <div style={{
+                  background: 'rgba(236,72,153,0.1)', border: '1px solid rgba(236,72,153,0.25)',
+                  borderRadius: '12px', padding: '0.8rem 1rem', fontSize: '0.78rem', color: '#EC4899',
+                  marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem',
+                }}>
+                  🔒 Bản phân tích chỉ hiển thị duy nhất cho bạn. Chúng tôi cam kết bảo vệ quyền riêng tư của cuộc hội thoại.
+                </div>
+
+                <div style={{ display: 'flex', gap: '0.8rem', justifyContent: 'flex-end' }}>
+                  <button
+                    onClick={() => setShowRedFlagModal(false)}
+                    style={{
+                      padding: '0.7rem 1.2rem', borderRadius: '12px',
+                      background: 'rgba(255,255,255,0.08)', border: 'none',
+                      color: 'rgba(255,255,255,0.7)', fontWeight: 600, cursor: 'pointer', fontSize: '0.85rem',
+                    }}
+                  >
+                    Hủy bỏ
+                  </button>
+                  <button
+                    onClick={handleAnalyzeRedFlags}
+                    style={{
+                      padding: '0.7rem 1.4rem', borderRadius: '12px',
+                      background: 'linear-gradient(135deg, #EC4899, #8B5CF6)', border: 'none',
+                      color: '#fff', fontWeight: 700, cursor: 'pointer', fontSize: '0.85rem',
+                      boxShadow: '0 4px 15px rgba(236,72,153,0.4)',
+                    }}
+                  >
+                    🚀 Đồng ý & Phân tích ngay
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* CASE 2: LOADING STATE */}
+            {isAnalyzingRedFlag && (
+              <div style={{ textAlign: 'center', padding: '2.5rem 1rem' }}>
+                <div className="spinner" style={{ margin: '0 auto 1.2rem auto', width: '42px', height: '42px', borderColor: '#EC4899 #EC4899 transparent transparent' }} />
+                <h4 style={{ margin: '0 0 0.5rem 0', fontSize: '1.05rem', fontWeight: 700, color: '#fff' }}>
+                  Gemini AI đang phân tích 100 tin nhắn gần nhất...
+                </h4>
+                <p style={{ margin: 0, fontSize: '0.82rem', color: 'rgba(255,255,255,0.5)' }}>
+                  Vui lòng chờ trong giây lát để có báo cáo an toàn chi tiết.
+                </p>
+              </div>
+            )}
+
+            {/* CASE 3: ANALYSIS RESULT */}
+            {!isAnalyzingRedFlag && redFlagResult && (() => {
+              const { riskLevel, safetyScore, summary, redFlags, greenFlags, advice } = redFlagResult;
+              const isDanger = riskLevel === 'DANGER';
+              const isCaution = riskLevel === 'CAUTION';
+
+              const badgeColor = isDanger ? '#EF4444' : isCaution ? '#F59E0B' : '#10B981';
+              const badgeBg = isDanger ? 'rgba(239,68,68,0.15)' : isCaution ? 'rgba(245,158,11,0.15)' : 'rgba(16,185,129,0.15)';
+              const badgeBorder = isDanger ? 'rgba(239,68,68,0.4)' : isCaution ? 'rgba(245,158,11,0.4)' : 'rgba(16,185,129,0.4)';
+              const badgeText = isDanger ? '🔴 CẢNH BÁO NGUY HIỂM' : isCaution ? '🟡 CẦN CHÚ Ý' : '🟢 AN TOÀN - THÂN THIỆN';
+
+              return (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem' }}>
+                  {/* Risk Badge & Safety Score */}
+                  <div style={{
+                    background: badgeBg, border: `1px solid ${badgeBorder}`,
+                    borderRadius: '16px', padding: '1rem 1.2rem',
+                    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                  }}>
+                    <div>
+                      <div style={{ color: badgeColor, fontWeight: 800, fontSize: '0.95rem', marginBottom: '4px' }}>
+                        {badgeText}
+                      </div>
+                      <div style={{ fontSize: '0.78rem', color: 'rgba(255,255,255,0.65)' }}>
+                        Đánh giá dựa trên 100 tin nhắn gần nhất
+                      </div>
+                    </div>
+                    <div style={{ textAlign: 'center' }}>
+                      <div style={{ fontSize: '1.5rem', fontWeight: 900, color: badgeColor, lineHeight: '1' }}>
+                        {safetyScore}<span style={{ fontSize: '0.85rem' }}>/100</span>
+                      </div>
+                      <div style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.5)', marginTop: '2px' }}>
+                        Điểm An Toàn
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* AI Summary */}
+                  <div style={{ background: 'rgba(255,255,255,0.04)', borderRadius: '14px', padding: '1rem', border: '1px solid rgba(255,255,255,0.08)' }}>
+                    <div style={{ fontWeight: 700, fontSize: '0.85rem', color: '#EC4899', marginBottom: '0.4rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                      📝 Nhận xét của AI:
+                    </div>
+                    <p style={{ margin: 0, fontSize: '0.85rem', color: 'rgba(255,255,255,0.85)', lineHeight: '1.55' }}>
+                      {summary}
+                    </p>
+                  </div>
+
+                  {/* Red Flags List */}
+                  {redFlags && redFlags.length > 0 && (
+                    <div style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: '14px', padding: '1rem' }}>
+                      <div style={{ fontWeight: 700, fontSize: '0.85rem', color: '#EF4444', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                        🚩 Cảnh báo Red Flag phát hiện:
+                      </div>
+                      <ul style={{ margin: 0, paddingLeft: '1.2rem', fontSize: '0.82rem', color: 'rgba(255,255,255,0.85)', display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
+                        {redFlags.map((flag, idx) => (
+                          <li key={idx}>{flag}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  {/* Green Flags List */}
+                  {greenFlags && greenFlags.length > 0 && (
+                    <div style={{ background: 'rgba(16,185,129,0.08)', border: '1px solid rgba(16,185,129,0.2)', borderRadius: '14px', padding: '1rem' }}>
+                      <div style={{ fontWeight: 700, fontSize: '0.85rem', color: '#10B981', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                        💚 Điểm tích cực (Green Flags):
+                      </div>
+                      <ul style={{ margin: 0, paddingLeft: '1.2rem', fontSize: '0.82rem', color: 'rgba(255,255,255,0.85)', display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
+                        {greenFlags.map((gflag, idx) => (
+                          <li key={idx}>{gflag}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  {/* Advice */}
+                  <div style={{ background: 'rgba(139,92,246,0.1)', border: '1px solid rgba(139,92,246,0.3)', borderRadius: '14px', padding: '1rem' }}>
+                    <div style={{ fontWeight: 700, fontSize: '0.85rem', color: '#A78BFA', marginBottom: '0.4rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                      💡 Lời khuyên an toàn:
+                    </div>
+                    <p style={{ margin: 0, fontSize: '0.85rem', color: 'rgba(255,255,255,0.9)', lineHeight: '1.5' }}>
+                      {advice}
+                    </p>
+                  </div>
+
+                  {/* Footer Actions */}
+                  <div style={{ display: 'flex', gap: '0.8rem', justifyContent: 'flex-end', marginTop: '0.5rem' }}>
+                    {isDanger && !isBlockedByMeState && (
+                      <button
+                        onClick={() => {
+                          setShowRedFlagModal(false);
+                          setShowBlockConfirm(true);
+                        }}
+                        style={{
+                          padding: '0.65rem 1.2rem', borderRadius: '12px',
+                          background: '#EF4444', border: 'none', color: '#fff',
+                          fontWeight: 700, cursor: 'pointer', fontSize: '0.83rem',
+                        }}
+                      >
+                        🚫 Chặn ngay đối phương
+                      </button>
+                    )}
+                    <button
+                      onClick={() => { setShowRedFlagModal(false); setRedFlagResult(null); }}
+                      style={{
+                        padding: '0.65rem 1.4rem', borderRadius: '12px',
+                        background: 'rgba(255,255,255,0.1)', border: 'none', color: '#fff',
+                        fontWeight: 600, cursor: 'pointer', fontSize: '0.83rem',
+                      }}
+                    >
+                      Đóng báo cáo
+                    </button>
+                  </div>
+                </div>
+              );
+            })()}
+          </div>
+        </div>
+      )}
+
       <ToastNotification toast={toast} onClose={() => setToast(null)} />
     </div>
   );

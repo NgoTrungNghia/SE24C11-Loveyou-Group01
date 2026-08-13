@@ -27,6 +27,12 @@ async function authMiddleware(req, res, next) {
       });
     }
 
+    // Update lastActiveAt asynchronously
+    prisma.user.update({
+      where: { userId: payload.userId },
+      data: { lastActiveAt: new Date() },
+    }).catch(() => {});
+
     return next();
   } catch (err) {
     return res.status(401).json({ success: false, error: { message: 'Invalid token', code: 'UNAUTHORIZED' } });

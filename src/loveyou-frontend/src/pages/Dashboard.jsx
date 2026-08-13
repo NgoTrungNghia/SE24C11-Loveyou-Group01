@@ -31,6 +31,7 @@ export default function Dashboard() {
   // Game state
   const [showGame, setShowGame] = useState(false);
   const [gameTargetMatch, setGameTargetMatch] = useState(null);
+  const [gameInitialSession, setGameInitialSession] = useState(null);
 
   // Detail modal
   const [selectedProfile, setSelectedProfile] = useState(null);
@@ -69,13 +70,19 @@ export default function Dashboard() {
   const setupSocket = useCallback((token) => {
     const socket = connectSocket(token);
 
+    socket.on('initial_online_users', ({ userIds }) => {
+      if (Array.isArray(userIds)) {
+        setOnlineUsers(new Set(userIds.map(Number)));
+      }
+    });
+
     socket.on('user_online', ({ userId }) => {
-      setOnlineUsers(prev => new Set([...prev, userId]));
+      setOnlineUsers(prev => new Set([...prev, Number(userId)]));
     });
     socket.on('user_offline', ({ userId }) => {
       setOnlineUsers(prev => {
         const next = new Set(prev);
-        next.delete(userId);
+        next.delete(Number(userId));
         return next;
       });
     });
@@ -88,10 +95,13 @@ export default function Dashboard() {
       localStorage.removeItem('ly_token');
       window.location.href = '/login?banned=true';
     });
-    socket.on('game_invite_received', ({ session, inviterName }) => {
-      setGameInviteNotif({ session, inviterName });
-      setTimeout(() => setGameInviteNotif(null), 8000);
+    socket.on('game_invite_received', ({ session, inviterName, inviterPhoto }) => {
+      setGameInviteNotif({ session, inviterName, inviterPhoto });
+      setTimeout(() => setGameInviteNotif(null), 10000);
     });
+
+    // Explicitly ask server for current online users
+    socket.emit('get_online_users');
   }, []);
 
   const loadConversations = async () => {
@@ -108,7 +118,7 @@ export default function Dashboard() {
       const res = await userApi.getProfile();
       const p = res.data.data.profile;
       setProfile(p);
-      if (p && !p.isProfileComplete) {
+      if (p && !p.isProfileComplete && (!p.fullName || !p.fullName.trim())) {
         navigate('/onboarding');
         return;
       }
@@ -195,10 +205,41 @@ export default function Dashboard() {
   };
 
   const handleBlockUserInDashboard = (matchId, targetId, message) => {
-    setMatches(prev => prev.filter(m => Number(m.id) !== Number(targetId)));
-    setConversations(prev => prev.filter(c => Number(c.partner?.id) !== Number(targetId)));
-    if (activeChatMatch?.partner?.id === targetId) setActiveChatMatch(null);
-    if (selectedProfile?.id === targetId) setSelectedProfile(null);
+    setMatches(prev => prev.map(m => Number(m.id) === Number(targetId) ? { ...m, isBlocked: true, isBlockedByMe: true } : m));
+    setConversations(prev => prev.map(c => Number(c.partner?.id) === Number(targetId) ? { ...c, isBlocked: true, isBlockedByMe: true, partner: { ...c.partner, isBlocked: true, isBlockedByMe: true } } : c));
+    setActiveChatMatch(prev => {
+      if (!prev) return prev;
+      if (Number(prev.partner?.id || prev.id) === Number(targetId)) {
+        return {
+          ...prev,
+          isBlocked: true,
+          isBlockedByMe: true,
+          partner: { ...prev.partner, isBlocked: true, isBlockedByMe: true },
+        };
+      }
+      return prev;
+    });
+    if (message) {
+      setToast({ type: 'info', message });
+    }
+  };
+
+  const handleUnblockUserInDashboard = (matchId, targetId, message) => {
+    setMatches(prev => prev.map(m => Number(m.id) === Number(targetId) ? { ...m, isBlocked: m.isBlockedByPartner || false, isBlockedByMe: false } : m));
+    setConversations(prev => prev.map(c => Number(c.partner?.id) === Number(targetId) ? { ...c, isBlocked: c.isBlockedByPartner || false, isBlockedByMe: false, partner: { ...c.partner, isBlocked: c.isBlockedByPartner || false, isBlockedByMe: false } } : c));
+    setActiveChatMatch(prev => {
+      if (!prev) return prev;
+      if (Number(prev.partner?.id || prev.id) === Number(targetId)) {
+        const stillBlocked = prev.isBlockedByPartner || false;
+        return {
+          ...prev,
+          isBlocked: stillBlocked,
+          isBlockedByMe: false,
+          partner: { ...prev.partner, isBlocked: stillBlocked, isBlockedByMe: false },
+        };
+      }
+      return prev;
+    });
     if (message) {
       setToast({ type: 'info', message });
     }
@@ -210,7 +251,11 @@ export default function Dashboard() {
   };
 
   const openDetailProfile = (person) => {
-    setSelectedProfile(person);
+    const matchedObj = matches.find(m => Number(m.id) === Number(person.id || person.userId));
+    setSelectedProfile({
+      ...person,
+      isBlocked: matchedObj?.isBlocked || person?.isBlocked || false,
+    });
     setActivePhotoIdx(0);
   };
 
@@ -232,8 +277,9 @@ export default function Dashboard() {
     }
   };
 
-  const openGame = (match) => {
+  const openGame = (match, initialSession = null) => {
     setGameTargetMatch(match);
+    setGameInitialSession(initialSession);
     setShowGame(true);
   };
 
@@ -420,7 +466,7 @@ export default function Dashboard() {
 
                       {/* Chat button */}
                       <button
-                        onClick={e => { e.stopPropagation(); openChat({ matchId: m.matchId || m.id, partner: { id: m.id, name: m.name, photo: m.photo } }); }}
+                        onClick={e => { e.stopPropagation(); openChat({ matchId: m.matchId || m.id, isBlocked: m.isBlocked, partner: { id: m.id, name: m.name, photo: m.photo, isBlocked: m.isBlocked } }); }}
                         style={{
                           position: 'absolute', bottom: '28px', right: '6px', zIndex: 10,
                           background: 'rgba(253,38,125,0.85)', border: 'none',
@@ -453,15 +499,17 @@ export default function Dashboard() {
                   <ChatPanel
                     match={activeChatMatch}
                     currentUserId={profile?.userId || user?.userId}
+                    isOnline={onlineUsers.has(Number(activeChatMatch?.partner?.id || activeChatMatch?.id))}
                     onClose={() => setActiveChatMatch(null)}
                     onInviteGame={openGame}
                     onBlockUser={handleBlockUserInDashboard}
+                    onUnblockUser={handleUnblockUserInDashboard}
                   />
                 </div>
               ) : conversations.length > 0 ? (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                   {conversations.map((conv, i) => {
-                    const isOnline = onlineUsers.has(conv.partner?.id);
+                    const isOnline = onlineUsers.has(Number(conv.partner?.id));
                     return (
                       <div
                         key={i}
@@ -580,36 +628,85 @@ export default function Dashboard() {
         )}
 
         {/* GAME INVITE NOTIFICATION */}
-        {gameInviteNotif && (
-          <div style={{
-            position: 'absolute', top: '2rem', right: '1.5rem', zIndex: 200,
-            background: 'linear-gradient(135deg, #1a1e2e, #12151a)',
-            border: '1px solid rgba(253,38,125,0.4)',
-            borderRadius: '16px', padding: '1rem 1.2rem', maxWidth: '260px',
-            boxShadow: '0 10px 30px rgba(0,0,0,0.6)',
-            animation: 'slideIn 0.3s ease',
-          }}>
-            <div style={{ fontWeight: 700, fontSize: '0.9rem', marginBottom: '0.3rem' }}>🎮 Lời mời game!</div>
-            <div style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.7)', marginBottom: '0.8rem' }}>
-              {gameInviteNotif.inviterName} mời bạn chơi game
+        {gameInviteNotif && (() => {
+          const inviterMatch = matches.find(m => Number(m.id) === Number(gameInviteNotif.session?.initiatorId));
+          const avatarUrl = inviterMatch?.photo || gameInviteNotif.inviterPhoto || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=400';
+          const name = inviterMatch?.name || gameInviteNotif.inviterName || 'Đối phương';
+
+          return (
+            <div style={{
+              position: 'fixed', top: '1.5rem', right: '1.5rem', zIndex: 2200,
+              background: 'linear-gradient(145deg, #1f2430, #141822)',
+              border: '1px solid rgba(253,38,125,0.5)',
+              borderRadius: '20px', padding: '1.1rem 1.3rem', width: '310px',
+              boxShadow: '0 20px 50px rgba(0,0,0,0.8), 0 0 25px rgba(253,38,125,0.25)',
+              animation: 'slideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
+            }}>
+              {/* Inviter Info Header with Round Avatar & Name */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.9rem', marginBottom: '0.9rem' }}>
+                <img
+                  src={avatarUrl}
+                  alt={name}
+                  style={{
+                    width: '50px', height: '50px', borderRadius: '50%',
+                    objectFit: 'cover', border: '2px solid #fd267d',
+                    boxShadow: '0 0 12px rgba(253,38,125,0.4)', flexShrink: 0,
+                  }}
+                />
+                <div style={{ overflow: 'hidden' }}>
+                  <div style={{ fontWeight: 800, fontSize: '0.98rem', color: '#fff', lineHeight: '1.35', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {name}
+                  </div>
+                  <div style={{ fontSize: '0.78rem', color: '#fd267d', fontWeight: 600, marginTop: '2px', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                    🎮 Mời bạn cùng chơi Mini Game!
+                  </div>
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div style={{ display: 'flex', gap: '0.6rem' }}>
+                <button
+                  onClick={() => {
+                    const socket = getSocket();
+                    const { session } = gameInviteNotif;
+                    const matchForGame = inviterMatch
+                      ? { ...inviterMatch, partner: { id: inviterMatch.id, name: inviterMatch.name, photo: inviterMatch.photo } }
+                      : {
+                          matchId: session.matchId,
+                          id: session.initiatorId,
+                          name,
+                          photo: avatarUrl,
+                          partner: { id: session.initiatorId, name, photo: avatarUrl },
+                        };
+                    openGame(matchForGame, session);
+                    setGameInviteNotif(null);
+                    setTimeout(() => {
+                      if (socket) socket.emit('game_accept', { sessionId: session.sessionId });
+                    }, 100);
+                  }}
+                  style={{
+                    flex: 1, padding: '0.6rem', borderRadius: '12px',
+                    background: 'linear-gradient(135deg, #fd267d, #ff6036)',
+                    border: 'none', color: '#fff', fontWeight: 700, cursor: 'pointer',
+                    fontSize: '0.85rem', boxShadow: '0 4px 15px rgba(253,38,125,0.4)',
+                  }}
+                >
+                  ✓ Chấp nhận
+                </button>
+                <button
+                  onClick={() => setGameInviteNotif(null)}
+                  style={{
+                    padding: '0.6rem 0.9rem', borderRadius: '12px',
+                    background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.15)',
+                    color: 'rgba(255,255,255,0.7)', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 600,
+                  }}
+                >
+                  Từ chối
+                </button>
+              </div>
             </div>
-            <div style={{ display: 'flex', gap: '0.5rem' }}>
-              <button
-                onClick={() => {
-                  const socket = getSocket();
-                  if (socket) socket.emit('game_accept', { sessionId: gameInviteNotif.session.sessionId });
-                  setGameInviteNotif(null);
-                  setShowGame(true);
-                }}
-                style={{ flex: 1, padding: '0.4rem', background: '#fd267d', border: 'none', borderRadius: '8px', color: '#fff', fontWeight: 600, cursor: 'pointer', fontSize: '0.8rem' }}
-              >Chấp nhận</button>
-              <button
-                onClick={() => setGameInviteNotif(null)}
-                style={{ padding: '0.4rem 0.6rem', background: 'rgba(255,255,255,0.1)', border: 'none', borderRadius: '8px', color: '#fff', cursor: 'pointer', fontSize: '0.8rem' }}
-              >Từ chối</button>
-            </div>
-          </div>
-        )}
+          );
+        })()}
 
         {/* SWIPE DECK */}
         {loadingDeck ? (
@@ -777,7 +874,8 @@ export default function Dashboard() {
                   <button
                     onClick={() => {
                       const matchedObj = matches.find(m => m.id === selectedProfile.id);
-                      openChat({ matchId: matchedObj?.matchId || selectedProfile.id, partner: { id: selectedProfile.id, name: selectedProfile.name, photo: selectedProfile.photo } });
+                      const isBlocked = matchedObj?.isBlocked || selectedProfile?.isBlocked || false;
+                      openChat({ matchId: matchedObj?.matchId || selectedProfile.id, isBlocked, partner: { id: selectedProfile.id, name: selectedProfile.name, photo: selectedProfile.photo, isBlocked } });
                       setSelectedProfile(null);
                       setActiveTab('messages');
                     }}
@@ -804,7 +902,8 @@ export default function Dashboard() {
         <GameModal
           match={gameTargetMatch}
           currentUserId={profile?.userId || user?.userId}
-          onClose={() => { setShowGame(false); setGameTargetMatch(null); }}
+          initialSession={gameInitialSession}
+          onClose={() => { setShowGame(false); setGameTargetMatch(null); setGameInitialSession(null); }}
         />
       )}
       {/* ── ADMIN MODAL ── */}

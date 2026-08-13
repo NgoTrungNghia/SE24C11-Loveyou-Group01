@@ -7,9 +7,11 @@ const app = require('./src/app');
 const config = require('./src/config');
 const chatService = require('./src/services/chatService');
 const gameService = require('./src/services/gameService');
+const geminiService = require('./src/services/geminiService');
 const { verifyAccessToken } = require('./src/utils/token');
 const { seedAdmin } = require('./src/services/adminService');
 const { seedTestUsers } = require('./seedUsers');
+const prisma = require('./src/utils/prismaClient');
 
 seedAdmin();
 seedTestUsers();
@@ -47,8 +49,20 @@ io.use((socket, next) => {
   }
 });
 
+// Helper: emit đến tất cả sockets của một userId
+function emitToUser(userId, event, data) {
+  const sockets = onlineUsers.get(Number(userId));
+  if (sockets) sockets.forEach(sId => io.to(sId).emit(event, data));
+}
+
+// Helper: emit đến cả 2 người trong session
+function emitToBothPlayers(session, event, data) {
+  emitToUser(session.initiatorId, event, data);
+  emitToUser(session.partnerId, event, data);
+}
+
 io.on('connection', (socket) => {
-  const uid = socket.userId;
+  const uid = Number(socket.userId);
   console.log(`[Socket] User ${uid} connected (${socket.id})`);
 
   // Track online
@@ -56,8 +70,16 @@ io.on('connection', (socket) => {
   onlineUsers.get(uid).add(socket.id);
   chatService.updateLastActive(uid);
 
-  // Broadcast online status to all
+  // Send list of all currently online user IDs to the connecting user
+  const currentOnlineUserIds = Array.from(onlineUsers.keys());
+  socket.emit('initial_online_users', { userIds: currentOnlineUserIds });
+
+  // Broadcast to all other users that this user came online
   io.emit('user_online', { userId: uid });
+
+  socket.on('get_online_users', () => {
+    socket.emit('initial_online_users', { userIds: Array.from(onlineUsers.keys()) });
+  });
 
   // ── JOIN CONVERSATION ROOM ──
   socket.on('join_conversation', (conversationId) => {
@@ -93,62 +115,141 @@ io.on('connection', (socket) => {
   });
 
   // ── GAME EVENTS ──
-  socket.on('game_invite', ({ partnerId, gameType, matchId }) => {
+
+  /**
+   * A gửi lời mời chơi game đến B
+   */
+  socket.on('game_invite', async ({ partnerId, gameType, matchId }) => {
     const session = gameService.createGameSession(gameType, uid, partnerId, matchId);
-    // Notify partner
-    const partnerSockets = onlineUsers.get(Number(partnerId));
-    if (partnerSockets) {
-      partnerSockets.forEach(sId => {
-        io.to(sId).emit('game_invite_received', {
-          session,
-          inviterName: socket.user.username,
-        });
-      });
-    }
+    
+    let inviterName = socket.user?.fullName || socket.user?.username || 'Đối phương';
+    let inviterPhoto = socket.user?.photo || null;
+    try {
+      const inviterUser = await prisma.user.findUnique({ where: { userId: Number(uid) } });
+      if (inviterUser) {
+        inviterName = inviterUser.fullName || inviterUser.username || inviterName;
+        inviterPhoto = (Array.isArray(inviterUser.photos) && inviterUser.photos[0]) || inviterUser.avatar || inviterPhoto;
+      }
+    } catch { /* ignore */ }
+
+    // Thông báo cho B
+    emitToUser(partnerId, 'game_invite_received', {
+      session,
+      inviterName,
+      inviterPhoto,
+    });
     socket.emit('game_invite_sent', { session });
   });
 
-  socket.on('game_accept', ({ sessionId }) => {
+  /**
+   * B chấp nhận lời mời → sinh câu hỏi bằng AI → gửi cho cả 2
+   */
+  socket.on('game_accept', async ({ sessionId }) => {
     const session = gameService.acceptGameSession(sessionId);
     if (!session) return socket.emit('error', { message: 'Session not found' });
-    // Notify both players
-    [session.initiatorId, session.partnerId].forEach(playerId => {
-      const sockets = onlineUsers.get(playerId);
-      if (sockets) sockets.forEach(sId => io.to(sId).emit('game_started', { session }));
-    });
+
+    // Thông báo game bắt đầu (cả 2 bên thấy loading AI)
+    emitToBothPlayers(session, 'game_started', { session });
+
+    // Sinh câu hỏi bắt buộc bằng Gemini AI
+    try {
+      const aiQuestions = await geminiService.generateGameQuestions(session.gameType);
+
+      if (aiQuestions && aiQuestions.length > 0) {
+        gameService.setGameQuestions(sessionId, aiQuestions);
+        const updatedSession = gameService.getGameSession(sessionId);
+        emitToBothPlayers(session, 'game_questions_ready', { session: updatedSession });
+      } else {
+        throw new Error('Gemini API không trả về bộ câu hỏi hợp lệ');
+      }
+    } catch (err) {
+      console.error('[Game] Sinh câu hỏi Gemini AI thất bại:', err.message);
+      gameService.pauseGameSession(sessionId);
+      emitToBothPlayers(session, 'game_paused', {
+        sessionId,
+        reason: 'Không thể sinh câu hỏi bằng Gemini AI. Vui lòng kiểm tra lại cấu hình Gemini API Key của Admin.',
+      });
+    }
   });
 
+  /**
+   * Một trong 2 gửi câu trả lời
+   */
   socket.on('game_answer', ({ sessionId, questionIndex, answer }) => {
     const session = gameService.submitAnswer(sessionId, uid, questionIndex, answer);
     if (!session) return socket.emit('error', { message: 'Session not found' });
 
-    // Notify both players of answer submission
-    [session.initiatorId, session.partnerId].forEach(playerId => {
-      const sockets = onlineUsers.get(playerId);
-      if (sockets) sockets.forEach(sId => io.to(sId).emit('game_answer_received', { sessionId, userId: uid, questionIndex }));
-    });
+    // Thông báo cho cả 2 rằng user X đã trả lời câu Y
+    emitToBothPlayers(session, 'game_answer_received', { sessionId, userId: uid, questionIndex });
 
-    // Check if both answered current question
+    // Kiểm tra hoàn thành câu này
     const answers = session.gameData.answers[questionIndex] || {};
-    const bothAnswered = answers[session.initiatorId] !== undefined && answers[session.partnerId] !== undefined;
-    if (bothAnswered) {
-      [session.initiatorId, session.partnerId].forEach(playerId => {
-        const sockets = onlineUsers.get(playerId);
-        if (sockets) sockets.forEach(sId => io.to(sId).emit('game_both_answered', { sessionId, questionIndex, answers: answers }));
+    let roundFinished = false;
+    if (session.gameType === 'WOULD_YOU_RATHER') {
+      roundFinished = answers[session.initiatorId] !== undefined && answers[session.partnerId] !== undefined;
+    } else if (session.gameType === 'SPIN_THE_BOTTLE') {
+      roundFinished = Object.keys(answers).length >= 1;
+    }
+
+    if (roundFinished) {
+      emitToBothPlayers(session, 'game_both_answered', { sessionId, questionIndex, answers });
+    }
+  });
+
+  /**
+   * Kết thúc game → AI đánh giá kết quả → gửi cho cả 2
+   */
+  socket.on('game_finish', async ({ sessionId }) => {
+    const session = gameService.getGameSession(sessionId);
+    if (!session) return socket.emit('error', { message: 'Session not found' });
+
+    const basicResult = gameService.computeGameResult(sessionId);
+
+    try {
+      const p1 = await prisma.user.findUnique({ where: { userId: Number(session.initiatorId) } });
+      const p2 = await prisma.user.findUnique({ where: { userId: Number(session.partnerId) } });
+
+      const p1Name = p1?.fullName || p1?.username || 'Người chơi 1';
+      const p2Name = p2?.fullName || p2?.username || 'Người chơi 2';
+
+      const aiEvaluation = await geminiService.evaluateGameResult(
+        session.gameType,
+        session.gameData.questions || [],
+        session.gameData.answers || {},
+        { id: session.initiatorId, name: p1Name },
+        { id: session.partnerId, name: p2Name }
+      );
+
+      if (!aiEvaluation) {
+        throw new Error('Gemini API không thể đánh giá kết quả');
+      }
+
+      const finalResult = { ...basicResult, ...aiEvaluation, aiPowered: true };
+      emitToBothPlayers(session, 'game_result', { result: finalResult });
+    } catch (err) {
+      console.error('[Game] AI evaluation failed:', err.message);
+      gameService.pauseGameSession(sessionId);
+      emitToBothPlayers(session, 'game_paused', {
+        sessionId,
+        reason: 'Không thể đánh giá kết quả bằng Gemini AI. Vui lòng kiểm tra lại cấu hình Gemini API Key.',
       });
     }
   });
 
-  socket.on('game_finish', ({ sessionId }) => {
-    const result = gameService.computeGameResult(sessionId);
-    if (!result) return socket.emit('error', { message: 'Cannot compute result' });
+  /**
+   * Người chơi chủ động thoát/đóng game
+   */
+  socket.on('game_leave', ({ sessionId }) => {
+    if (!sessionId) return;
     const session = gameService.getGameSession(sessionId);
-    if (session) {
-      [session.initiatorId, session.partnerId].forEach(playerId => {
-        const sockets = onlineUsers.get(playerId);
-        if (sockets) sockets.forEach(sId => io.to(sId).emit('game_result', { result }));
-      });
-    }
+    if (!session) return;
+
+    gameService.pauseGameSession(sessionId);
+    const partnerId = session.initiatorId === uid ? session.partnerId : session.initiatorId;
+    emitToUser(partnerId, 'game_paused', {
+      sessionId: session.sessionId,
+      reason: 'Đối phương đã đóng trò chơi',
+    });
   });
 
   // ── DISCONNECT ──
@@ -159,6 +260,18 @@ io.on('connection', (socket) => {
       if (userSockets.size === 0) {
         onlineUsers.delete(uid);
         io.emit('user_offline', { userId: uid });
+
+        // Nếu user đang chơi game → thông báo cho đối phương
+        const activeSessions = gameService.getActiveSessionsForUser(uid);
+        activeSessions.forEach(session => {
+          const partnerId = session.initiatorId === uid ? session.partnerId : session.initiatorId;
+          emitToUser(partnerId, 'game_paused', {
+            sessionId: session.sessionId,
+            reason: 'Đối phương đã ngắt kết nối',
+          });
+          // Đánh dấu session là PAUSED
+          gameService.pauseGameSession(session.sessionId);
+        });
       }
     }
     chatService.updateLastActive(uid);

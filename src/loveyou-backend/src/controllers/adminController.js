@@ -12,8 +12,16 @@ async function getStats(req, res, next) {
 
 async function getAllUsers(req, res, next) {
   try {
+    const onlineUsersMap = req.app.get('onlineUsers');
+    const onlineSet = new Set(
+      onlineUsersMap ? Array.from(onlineUsersMap.keys()).map(id => Number(id)) : []
+    );
     const users = await adminService.getAllUsers();
-    return success(res, { users });
+    const usersWithOnline = users.map(u => ({
+      ...u,
+      isOnline: onlineSet.has(Number(u.userId)),
+    }));
+    return success(res, { users: usersWithOnline });
   } catch (err) {
     return next(err);
   }
@@ -83,6 +91,25 @@ async function updateReportStatus(req, res, next) {
   }
 }
 
+async function getApiKey(req, res, next) {
+  try {
+    const data = await adminService.getGeminiApiKeyForAdmin();
+    return success(res, data);
+  } catch (err) {
+    return next(err);
+  }
+}
+
+async function setApiKey(req, res, next) {
+  try {
+    const { key } = req.body;
+    const result = await adminService.setGeminiApiKeyAdmin(key);
+    return success(res, result);
+  } catch (err) {
+    return next(err);
+  }
+}
+
 module.exports = {
   getStats,
   getAllUsers,
@@ -90,5 +117,7 @@ module.exports = {
   toggleBanStatus,
   getReports,
   updateReportStatus,
+  getApiKey,
+  setApiKey,
 };
 

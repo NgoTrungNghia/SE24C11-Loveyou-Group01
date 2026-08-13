@@ -208,14 +208,16 @@ async function getUserMatches(userId) {
       where: { blockedId: currentUserId },
       select: { blockerId: true },
     });
-    const blockedUserIds = new Set([
-      ...blocksGiven.map(b => b.blockedId),
-      ...blocksReceived.map(b => b.blockerId),
-    ]);
+    const givenSet = new Set(blocksGiven.map(b => b.blockedId));
+    const receivedSet = new Set(blocksReceived.map(b => b.blockerId));
 
     return matchRecords.map(m => {
       const partner = m.user1Id === currentUserId ? m.user2 : m.user1;
       const photosList = parseJsonField(partner.photos);
+      const isBlockedByMe = givenSet.has(partner.userId);
+      const isBlockedByPartner = receivedSet.has(partner.userId);
+      const isBlocked = isBlockedByMe || isBlockedByPartner;
+
       return {
         matchId: m.matchId,
         id: partner.userId,
@@ -228,7 +230,9 @@ async function getUserMatches(userId) {
         photos: photosList.length > 0 ? photosList : [partner.profilePicture],
         tags: parseJsonField(partner.interests),
         matchedAt: m.createdAt,
-        isBlocked: blockedUserIds.has(partner.userId),
+        isBlocked,
+        isBlockedByMe,
+        isBlockedByPartner,
       };
     });
   } catch {

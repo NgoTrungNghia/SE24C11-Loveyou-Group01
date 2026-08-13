@@ -10,6 +10,7 @@ router.get('/conversations/:matchId/init', controller.getOrCreateConversation);
 router.get('/:conversationId/messages', controller.getMessages);
 router.post('/:conversationId/messages', controller.sendMessage);
 router.post('/:conversationId/clear', controller.clearConversation);
+router.post('/:conversationId/detect-red-flags', controller.detectRedFlags);
 router.put('/:conversationId/read', controller.markRead);
 
 module.exports = router;

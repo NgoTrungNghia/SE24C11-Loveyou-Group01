@@ -25,4 +25,10 @@ router.get('/reports', adminController.getReports);
 // PUT /api/admin/reports/:id/status
 router.put('/reports/:id/status', adminController.updateReportStatus);
 
+// GET /api/admin/config/api-key  — Lấy Gemini API key (masked, chỉ admin)
+router.get('/config/api-key', adminController.getApiKey);
+
+// PUT /api/admin/config/api-key  — Cập nhật Gemini API key
+router.put('/config/api-key', adminController.setApiKey);
+
 module.exports = router;

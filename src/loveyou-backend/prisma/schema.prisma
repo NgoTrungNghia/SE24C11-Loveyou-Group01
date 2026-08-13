@@ -190,3 +190,11 @@ model UserConversationClear {
   @@unique([userId, conversationId])
   @@map("user_conversation_clears")
 }
+
+model SystemConfig {
+  key       String   @id
+  value     String   @db.Text
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at")
+
+  @@map("system_configs")
+}

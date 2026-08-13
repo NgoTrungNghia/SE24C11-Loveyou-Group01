@@ -52,12 +52,22 @@ async function getStats() {
   const totalMatches = await prisma.match.count();
   const totalSwipes = await prisma.swipe.count();
 
+  const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
+  const onlineCount = await prisma.user.count({
+    where: {
+      lastActiveAt: {
+        gte: fiveMinutesAgo,
+      },
+    },
+  });
+
   return {
     totalUsers,
     activeUsers,
     bannedUsers,
     totalMatches,
     totalSwipes,
+    onlineUsers: onlineCount,
   };
 }
 
@@ -203,6 +213,23 @@ async function updateReportStatus(reportId, status) {
   return updatedReport;
 }
 
+// ── Gemini API Key Management ──
+const geminiService = require('./geminiService');
+
+async function getGeminiApiKeyForAdmin() {
+  const masked = await geminiService.getMaskedApiKey();
+  const hasKey = !!(await geminiService.getGeminiApiKey());
+  return { masked, hasKey };
+}
+
+async function setGeminiApiKeyAdmin(key) {
+  if (!key || typeof key !== 'string' || key.trim().length < 5) {
+    throw new Error('API key không hợp lệ (quá ngắn hoặc rỗng)');
+  }
+  await geminiService.setGeminiApiKey(key.trim());
+  return { success: true };
+}
+
 module.exports = {
   seedAdmin,
   getStats,
@@ -211,5 +238,6 @@ module.exports = {
   toggleBanStatus,
   getReports,
   updateReportStatus,
+  getGeminiApiKeyForAdmin,
+  setGeminiApiKeyAdmin,
 };
-

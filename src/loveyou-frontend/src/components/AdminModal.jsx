@@ -6,13 +6,19 @@ export default function AdminModal({ onClose }) {
   const [stats, setStats] = useState(null);
   const [users, setUsers] = useState([]);
   const [reports, setReports] = useState([]);
-  const [activeTab, setActiveTab] = useState('USERS'); // 'USERS' or 'REPORTS'
+  const [activeTab, setActiveTab] = useState('USERS'); // 'USERS' | 'REPORTS' | 'AI_CONFIG'
   const [loading, setLoading] = useState(true);
   const [selectedUser, setSelectedUser] = useState(null);
   const [actionLoading, setActionLoading] = useState(null);
   const [error, setError] = useState('');
   const [search, setSearch] = useState('');
   const [toast, setToast] = useState(null);
+
+  // AI Config state
+  const [apiKeyInfo, setApiKeyInfo] = useState({ masked: null, hasKey: false });
+  const [newApiKey, setNewApiKey] = useState('');
+  const [showApiKey, setShowApiKey] = useState(false);
+  const [savingApiKey, setSavingApiKey] = useState(false);
 
   useEffect(() => {
     loadAdminData();
@@ -22,14 +28,16 @@ export default function AdminModal({ onClose }) {
     setLoading(true);
     setError('');
     try {
-      const [statsRes, usersRes, reportsRes] = await Promise.all([
+      const [statsRes, usersRes, reportsRes, apiKeyRes] = await Promise.all([
         adminApi.stats(),
         adminApi.getUsers(),
         adminApi.getReports(),
+        adminApi.getApiKey().catch(() => ({ data: { data: { masked: null, hasKey: false } } })),
       ]);
       setStats(statsRes.data.data.stats);
       setUsers(usersRes.data.data.users || []);
       setReports(reportsRes.data.data.reports || []);
+      setApiKeyInfo(apiKeyRes.data.data);
     } catch (err) {
       setError(err.response?.data?.error?.message || 'Không thể tải dữ liệu quản trị');
     } finally {
@@ -83,6 +91,35 @@ export default function AdminModal({ onClose }) {
     );
   });
 
+  const handleSaveApiKey = async () => {
+    if (!newApiKey.trim()) return;
+    setSavingApiKey(true);
+    try {
+      await adminApi.setApiKey(newApiKey.trim());
+      const res = await adminApi.getApiKey();
+      setApiKeyInfo(res.data.data);
+      setNewApiKey('');
+      setShowApiKey(false);
+      setToast({ type: 'success', message: '✅ Đã lưu Gemini API key thành công!' });
+    } catch (err) {
+      setToast({ type: 'error', message: err.response?.data?.error?.message || 'Không thể lưu API key' });
+    } finally {
+      setSavingApiKey(false);
+    }
+  };
+
+  const getOnlineStatus = (u) => {
+    if (u?.isOnline) return { isOnline: true, text: 'Online' };
+    if (!u?.lastActiveAt) return { isOnline: false, text: 'Chưa online' };
+    const diffMs = Date.now() - new Date(u.lastActiveAt).getTime();
+    const diffMin = Math.floor(diffMs / 60000);
+    if (diffMin < 60) return { isOnline: false, text: `${diffMin}m trước` };
+    const diffHours = Math.floor(diffMin / 60);
+    if (diffHours < 24) return { isOnline: false, text: `${diffHours}h trước` };
+    const diffDays = Math.floor(diffHours / 24);
+    return { isOnline: false, text: `${diffDays}d trước` };
+  };
+
   const formatDate = (dateStr) => {
     if (!dateStr) return 'N/A';
     try {
@@ -127,8 +164,10 @@ export default function AdminModal({ onClose }) {
                   <div style={styles.statLabel}>Tổng tài khoản</div>
                 </div>
                 <div style={{ ...styles.statCard, borderLeft: '4px solid #10b981' }}>
-                  <div style={{ ...styles.statNumber, color: '#10b981' }}>{stats.activeUsers}</div>
-                  <div style={styles.statLabel}>Đang hoạt động</div>
+                  <div style={{ ...styles.statNumber, color: '#10b981' }}>
+                    {users.filter(u => u.isOnline).length}
+                  </div>
+                  <div style={styles.statLabel}>Tài khoản online</div>
                 </div>
                 <div style={{ ...styles.statCard, borderLeft: '4px solid #ef4444' }}>
                   <div style={{ ...styles.statNumber, color: '#ef4444' }}>{stats.bannedUsers}</div>
@@ -165,6 +204,22 @@ export default function AdminModal({ onClose }) {
               >
                 Báo cáo từ người dùng ({reports.filter(r => r.status === 'PENDING').length > 0 ? `${reports.filter(r => r.status === 'PENDING').length} mới` : reports.length})
               </button>
+              <button
+                onClick={() => setActiveTab('AI_CONFIG')}
+                style={{
+                  padding: '0.6rem 1.2rem', borderRadius: '10px', fontWeight: 700, fontSize: '0.88rem',
+                  cursor: 'pointer', border: 'none', transition: 'all 0.2s ease',
+                  background: activeTab === 'AI_CONFIG' ? '#8b5cf6' : '#e5e7eb',
+                  color: activeTab === 'AI_CONFIG' ? '#fff' : '#374151',
+                  display: 'flex', alignItems: 'center', gap: '0.4rem',
+                }}
+              >
+                🤖 Cấu hình AI
+                {apiKeyInfo.hasKey
+                  ? <span style={{ background: 'rgba(52,211,153,0.3)', color: '#34d399', borderRadius: '6px', padding: '1px 6px', fontSize: '0.7rem' }}>✓ Đã cài</span>
+                  : <span style={{ background: 'rgba(239,68,68,0.3)', color: '#ef4444', borderRadius: '6px', padding: '1px 6px', fontSize: '0.7rem' }}>! Chưa cài</span>
+                }
+              </button>
             </div>
 
             {activeTab === 'USERS' && (
@@ -191,9 +246,9 @@ export default function AdminModal({ onClose }) {
                         <th style={styles.th}>ID</th>
                         <th style={styles.th}>Người dùng</th>
                         <th style={styles.th}>Email</th>
-                        <th style={styles.th}>Thời gian tạo</th>
+                        <th style={styles.th}>Online</th>
                         <th style={styles.th}>Vai trò</th>
-                        <th style={styles.th}>Trạng thái</th>
+                        <th style={styles.th}>Trạng thái TK</th>
                         <th style={styles.th}>Thao tác</th>
                       </tr>
                     </thead>
@@ -222,7 +277,20 @@ export default function AdminModal({ onClose }) {
                               </div>
                             </td>
                             <td style={styles.td}>{u.email}</td>
-                            <td style={styles.td}>{formatDate(u.createdAt)}</td>
+                            <td style={styles.td}>
+                              {(() => {
+                                const onlineInfo = getOnlineStatus(u);
+                                return (
+                                  <span style={{
+                                    padding: '3px 8px', borderRadius: '10px', fontSize: '0.78rem', fontWeight: 600,
+                                    backgroundColor: onlineInfo.isOnline ? '#d1fae5' : '#f3f4f6',
+                                    color: onlineInfo.isOnline ? '#065f46' : '#6b7280',
+                                  }}>
+                                    {onlineInfo.isOnline ? '🟢 Online' : `⚪ ${onlineInfo.text}`}
+                                  </span>
+                                );
+                              })()}
+                            </td>
                             <td style={styles.td}>
                               <span style={{
                                 padding: '2px 8px', borderRadius: '12px', fontSize: '0.75rem', fontWeight: '600',
@@ -239,7 +307,7 @@ export default function AdminModal({ onClose }) {
                                 backgroundColor: u.status === 'BANNED' ? '#fee2e2' : '#d1fae5',
                                 color: u.status === 'BANNED' ? '#991b1b' : '#065f46'
                               }}>
-                                {u.status === 'BANNED' ? 'Đã bị khóa' : 'Đang hoạt động'}
+                                {u.status === 'BANNED' ? 'Đã bị khóa' : 'Bình thường'}
                               </span>
                             </td>
                             <td style={styles.td}>
@@ -392,6 +460,115 @@ export default function AdminModal({ onClose }) {
                     </tbody>
                   </table>
                 )}
+              </div>
+            )}
+
+            {activeTab === 'AI_CONFIG' && (
+              <div style={{ padding: '1rem 0' }}>
+                <div style={{
+                  background: '#f9fafb', borderRadius: '16px', border: '1px solid #e5e7eb',
+                  padding: '1.5rem', marginBottom: '1.5rem',
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', marginBottom: '1rem' }}>
+                    <div style={{
+                      width: '44px', height: '44px', borderRadius: '12px',
+                      background: 'linear-gradient(135deg, #8b5cf6, #ec4899)',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      fontSize: '1.5rem', color: '#fff',
+                    }}>🤖</div>
+                    <div>
+                      <h3 style={{ margin: 0, fontSize: '1.1rem', color: '#111827' }}>Gemini AI Integration</h3>
+                      <p style={{ margin: '2px 0 0 0', fontSize: '0.82rem', color: '#6b7280' }}>
+                        Tự động sinh câu hỏi mini-game & phân tích mức độ ăn ý cho cặp đôi
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Key Status */}
+                  <div style={{
+                    padding: '1rem', borderRadius: '12px', marginBottom: '1.2rem',
+                    background: apiKeyInfo.hasKey ? '#ecfdf5' : '#fffbe0',
+                    border: apiKeyInfo.hasKey ? '1px solid #a7f3d0' : '1px solid #fde68a',
+                    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                  }}>
+                    <div>
+                      <div style={{ fontWeight: 700, fontSize: '0.9rem', color: apiKeyInfo.hasKey ? '#065f46' : '#92400e' }}>
+                        {apiKeyInfo.hasKey ? '✅ Đã cài đặt Gemini API Key' : '⚠️ Chưa cài đặt API Key'}
+                      </div>
+                      <div style={{ fontSize: '0.8rem', color: apiKeyInfo.hasKey ? '#047857' : '#b45309', marginTop: '2px' }}>
+                        {apiKeyInfo.hasKey
+                          ? `API Key hiện tại: ${apiKeyInfo.masked}`
+                          : 'Hệ thống đang sử dụng bộ câu hỏi mặc định làm phương án thay thế'}
+                      </div>
+                    </div>
+                    <span style={{
+                      padding: '4px 10px', borderRadius: '20px', fontSize: '0.75rem', fontWeight: 700,
+                      background: apiKeyInfo.hasKey ? '#10b981' : '#f59e0b', color: '#fff',
+                    }}>
+                      {apiKeyInfo.hasKey ? 'AI Active' : 'Fallback Mode'}
+                    </span>
+                  </div>
+
+                  {/* Input Form */}
+                  <div style={{ background: '#fff', borderRadius: '12px', padding: '1.2rem', border: '1px solid #e5e7eb' }}>
+                    <label style={{ display: 'block', fontWeight: 600, fontSize: '0.88rem', color: '#374151', marginBottom: '0.5rem' }}>
+                      {apiKeyInfo.hasKey ? 'Cập nhật Gemini API Key mới:' : 'Nhập Gemini API Key:'}
+                    </label>
+                    <div style={{ display: 'flex', gap: '0.6rem', marginBottom: '0.6rem' }}>
+                      <div style={{ position: 'relative', flex: 1 }}>
+                        <input
+                          type={showApiKey ? 'text' : 'password'}
+                          placeholder="AQ... hoặc AIzaSy..."
+                          value={newApiKey}
+                          onChange={e => setNewApiKey(e.target.value)}
+                          style={{
+                            width: '100%', padding: '0.7rem 2.5rem 0.7rem 0.9rem',
+                            borderRadius: '10px', border: '1px solid #d1d5db',
+                            fontSize: '0.9rem', outline: 'none', boxSizing: 'border-box',
+                          }}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowApiKey(p => !p)}
+                          style={{
+                            position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)',
+                            background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.9rem', color: '#6b7280',
+                          }}
+                        >
+                          {showApiKey ? '👁️' : '🙈'}
+                        </button>
+                      </div>
+                      <button
+                        onClick={handleSaveApiKey}
+                        disabled={savingApiKey || !newApiKey.trim()}
+                        style={{
+                          padding: '0.7rem 1.5rem', borderRadius: '10px',
+                          background: savingApiKey || !newApiKey.trim() ? '#9ca3af' : '#8b5cf6',
+                          color: '#fff', fontWeight: 700, border: 'none', cursor: savingApiKey || !newApiKey.trim() ? 'not-allowed' : 'pointer',
+                          whiteSpace: 'nowrap', fontSize: '0.9rem',
+                        }}
+                      >
+                        {savingApiKey ? 'Đang lưu...' : 'Lưu Key'}
+                      </button>
+                    </div>
+
+                    <p style={{ margin: 0, fontSize: '0.78rem', color: '#6b7280', lineHeight: '1.4' }}>
+                      🔒 <strong>Bảo mật:</strong> API Key được mã hóa và lưu trực tiếp trong DB backend (`SystemConfig`), chỉ Admin có quyền truy cập. Phía Client/User hoàn toàn không nhìn thấy key.
+                    </p>
+                  </div>
+
+                  <div style={{ marginTop: '1.2rem', padding: '1rem', background: '#eff6ff', borderRadius: '12px', border: '1px solid #bfdbfe' }}>
+                    <div style={{ fontWeight: 600, fontSize: '0.85rem', color: '#1e40af', marginBottom: '0.3rem' }}>
+                      💡 Hướng dẫn lấy Gemini API Key miễn phí:
+                    </div>
+                    <ol style={{ margin: 0, paddingLeft: '1.2rem', fontSize: '0.8rem', color: '#1e3a8a', lineHeight: '1.5' }}>
+                      <li>Truy cập <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noreferrer" style={{ color: '#2563eb', fontWeight: 600 }}>Google AI Studio</a></li>
+                      <li>Đăng nhập bằng tài khoản Google</li>
+                      <li>Bấm nút <strong>Create API key</strong> và chọn một dự án</li>
+                      <li>Copy API key bắt đầu bằng <code>AQ...</code> hoặc <code>AIzaSy...</code> và dán vào ô bên trên</li>
+                    </ol>
+                  </div>
+                </div>
               </div>
             )}
           </div>

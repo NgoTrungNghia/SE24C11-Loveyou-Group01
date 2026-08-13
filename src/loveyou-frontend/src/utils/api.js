@@ -73,6 +73,7 @@ export const chatApi = {
   getMessages: (conversationId, page = 1) => api.get(`/chat/${conversationId}/messages?page=${page}`),
   sendMessage: (conversationId, content, type = 'TEXT') => api.post(`/chat/${conversationId}/messages`, { content, type }),
   clearConversation: (conversationId) => api.post(`/chat/${conversationId}/clear`),
+  detectRedFlags: (conversationId) => api.post(`/chat/${conversationId}/detect-red-flags`),
   markRead: (conversationId) => api.put(`/chat/${conversationId}/read`),
 };
 
@@ -95,6 +96,8 @@ export const adminApi = {
   toggleBan: (id) => api.put(`/admin/users/${id}/ban`),
   getReports: () => api.get('/admin/reports'),
   updateReportStatus: (id, status) => api.put(`/admin/reports/${id}/status`, { status }),
+  getApiKey: () => api.get('/admin/config/api-key'),
+  setApiKey: (key) => api.put('/admin/config/api-key', { key }),
 };
 
 export default api;

@@ -5,39 +5,6 @@
  * 3. Spin the Bottle (Câu hỏi ngẫu nhiên thú vị)
  */
 
-const WOULD_YOU_RATHER_QUESTIONS = [
-  { id: 1, optionA: '☕ Cà phê buổi sáng mỗi ngày', optionB: '🍵 Trà chiều mỗi ngày' },
-  { id: 2, optionA: '🎬 Phim hành động kịch tính', optionB: '💕 Phim tình cảm lãng mạn' },
-  { id: 3, optionA: '🏖️ Nghỉ dưỡng bãi biển', optionB: '🏔️ Khám phá núi rừng' },
-  { id: 4, optionA: '🌅 Thức dậy sớm ngắm bình minh', optionB: '🌙 Thức khuya hưởng đêm khuya' },
-  { id: 5, optionA: '🏠 Ở nhà chill xem phim cuối tuần', optionB: '🎭 Ra ngoài vui chơi với bạn bè' },
-  { id: 6, optionA: '📚 Đọc sách yêu thích', optionB: '🎵 Nghe nhạc thư giãn' },
-  { id: 7, optionA: '🍕 Pizza truyền thống', optionB: '🍣 Sushi Nhật Bản' },
-  { id: 8, optionA: '😺 Team mèo', optionB: '🐶 Team chó' },
-  { id: 9, optionA: '🌧️ Ngồi ngắm mưa trong nhà', optionB: '☀️ Ra ngoài tận hưởng nắng đẹp' },
-  { id: 10, optionA: '🎮 Chơi game video', optionB: '🎲 Chơi board game với bạn' },
-  { id: 11, optionA: '✈️ Du lịch nước ngoài xa xôi', optionB: '🗺️ Khám phá vùng quê trong nước' },
-  { id: 12, optionA: '🎤 Hát karaoke tự tin', optionB: '💃 Nhảy theo bài nhạc yêu thích' },
-];
-
-const SPIN_THE_BOTTLE_QUESTIONS = [
-  '🌟 Khoảnh khắc hạnh phúc nhất trong năm nay của bạn là gì?',
-  '💭 Điều bí mật thú vị mà ít ai biết về bạn?',
-  '🎯 Mục tiêu lớn nhất bạn muốn đạt được trong 1 năm tới?',
-  '💖 Bạn định nghĩa "tình yêu lý tưởng" như thế nào?',
-  '🎵 Bài hát nào mô tả đúng nhất cuộc đời bạn lúc này?',
-  '🌍 Nếu có thể đến bất kỳ đâu trên thế giới ngay lập tức, bạn chọn đâu?',
-  '🧠 Bạn học được gì quan trọng nhất từ mối tình trước?',
-  '😂 Kỷ niệm hài hước nhất của bạn là gì?',
-  '🌙 Điều cuối cùng bạn nghĩ đến trước khi ngủ mỗi đêm?',
-  '✨ Nếu có 3 điều ước, bạn sẽ ước điều gì?',
-  '🎭 Bạn muốn thử nghề gì ngoài công việc hiện tại?',
-  '📱 App hoặc website nào bạn mở nhiều nhất mỗi ngày?',
-  '🍽️ Nếu nấu một bữa ăn đặc biệt cho người bạn thích, bạn sẽ nấu gì?',
-  '⭐ Điều bạn trân trọng nhất trong một người bạn/người yêu?',
-  '🎁 Món quà ý nghĩa nhất bạn từng nhận được?',
-];
-
 // In-memory game sessions (production would use Redis)
 const gameSessions = new Map();
 
@@ -47,22 +14,11 @@ const gameSessions = new Map();
 function createGameSession(gameType, initiatorId, partnerId, matchId) {
   const sessionId = `game_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
-  let gameData = {};
-  if (gameType === 'WOULD_YOU_RATHER') {
-    // Pick 5 random questions
-    const shuffled = [...WOULD_YOU_RATHER_QUESTIONS].sort(() => Math.random() - 0.5);
-    gameData.questions = shuffled.slice(0, 5);
-    gameData.answers = {};
-    gameData.currentQuestionIndex = 0;
-  } else if (gameType === 'SPIN_THE_BOTTLE') {
-    const shuffled = [...SPIN_THE_BOTTLE_QUESTIONS].sort(() => Math.random() - 0.5);
-    gameData.questions = shuffled.slice(0, 5);
-    gameData.answers = {};
-    gameData.currentQuestionIndex = 0;
-  } else if (gameType === 'GUESS_INTERESTS') {
-    gameData.answers = {};
-    gameData.phase = 'WAITING_INTERESTS';
-  }
+  let gameData = {
+    questions: [],
+    answers: {},
+    currentQuestionIndex: 0,
+  };
 
   const session = {
     sessionId,
@@ -137,13 +93,7 @@ function computeGameResult(sessionId) {
       compatibilityPct,
       matches,
       total,
-      summary: compatibilityPct >= 80
-        ? '🔥 Hai bạn cực kỳ hợp nhau!'
-        : compatibilityPct >= 60
-        ? '💕 Hai bạn khá ăn ý với nhau!'
-        : compatibilityPct >= 40
-        ? '🌟 Hai bạn có sự khác biệt thú vị!'
-        : '🎭 Hai bạn rất khác nhau — điều đó thú vị đấy!',
+      summary: '',
       answers,
       questions,
     };
@@ -157,28 +107,63 @@ function computeGameResult(sessionId) {
       gameType,
       answers,
       questions,
-      summary: '✨ Cảm ơn hai bạn đã chia sẻ! Hiểu nhau hơn rồi nhé 💖',
+      summary: '',
     };
   }
 
   return null;
 }
 
-function getGameSession(sessionId) {
-  return gameSessions.get(sessionId) || null;
+/**
+ * Đặt câu hỏi AI vào session (thay thế câu hỏi mặc định)
+ */
+function setGameQuestions(sessionId, questions) {
+  const session = gameSessions.get(sessionId);
+  if (!session) return null;
+  session.gameData.questions = questions;
+  // Reset answers vì câu hỏi mới
+  session.gameData.answers = {};
+  session.gameData.currentQuestionIndex = 0;
+  return session;
 }
 
-function getRandomSpinQuestion() {
-  return SPIN_THE_BOTTLE_QUESTIONS[Math.floor(Math.random() * SPIN_THE_BOTTLE_QUESTIONS.length)];
+/**
+ * Tạm dừng game session khi 1 người ngắt kết nối
+ */
+function pauseGameSession(sessionId) {
+  const session = gameSessions.get(sessionId);
+  if (!session) return;
+  session.status = 'PAUSED';
+}
+
+/**
+ * Lấy tất cả game sessions đang ACTIVE của một user
+ */
+function getActiveSessionsForUser(userId) {
+  const uid = Number(userId);
+  const result = [];
+  gameSessions.forEach(session => {
+    if (
+      session.status === 'ACTIVE' &&
+      (session.initiatorId === uid || session.partnerId === uid)
+    ) {
+      result.push(session);
+    }
+  });
+  return result;
+}
+
+function getGameSession(sessionId) {
+  return gameSessions.get(sessionId) || null;
 }
 
 module.exports = {
   createGameSession,
   acceptGameSession,
+  setGameQuestions,
   submitAnswer,
   computeGameResult,
+  pauseGameSession,
+  getActiveSessionsForUser,
   getGameSession,
-  getRandomSpinQuestion,
-  WOULD_YOU_RATHER_QUESTIONS,
-  SPIN_THE_BOTTLE_QUESTIONS,
 };

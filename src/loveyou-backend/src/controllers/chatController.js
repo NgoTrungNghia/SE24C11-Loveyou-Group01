@@ -53,4 +53,60 @@ async function clearConversation(req, res, next) {
   } catch (err) { return next(err); }
 }
 
-module.exports = { getConversations, getMessages, sendMessage, markRead, getOrCreateConversation, clearConversation };
+async function detectRedFlags(req, res, next) {
+  try {
+    const { conversationId } = req.params;
+    const userId = req.user.userId;
+
+    const prisma = require('../utils/prismaClient');
+    const geminiService = require('../services/geminiService');
+
+    const conv = await prisma.conversation.findUnique({
+      where: { id: Number(conversationId) },
+      include: {
+        match: {
+          include: {
+            user1: { select: { userId: true, fullName: true, username: true } },
+            user2: { select: { userId: true, fullName: true, username: true } },
+          },
+        },
+      },
+    });
+
+    if (!conv) {
+      return res.status(404).json({ success: false, error: { message: 'Không tìm thấy cuộc trò chuyện' } });
+    }
+
+    const { user1, user2 } = conv.match;
+    if (userId !== user1.userId && userId !== user2.userId) {
+      return res.status(403).json({ success: false, error: { message: 'Unauthorized' } });
+    }
+
+    const currentUser = userId === user1.userId ? user1 : user2;
+    const partnerUser = userId === user1.userId ? user2 : user1;
+    const currentUserName = currentUser.fullName || currentUser.username || 'Bạn';
+    const partnerName = partnerUser.fullName || partnerUser.username || 'Đối phương';
+
+    const messages = await prisma.message.findMany({
+      where: { conversationId: Number(conversationId) },
+      orderBy: { createdAt: 'desc' },
+      take: 100,
+      include: {
+        sender: { select: { userId: true, fullName: true, username: true } },
+      },
+    });
+
+    const formattedMessages = messages.reverse().map(m => ({
+      senderName: m.senderId === userId ? currentUserName : partnerName,
+      content: m.content,
+      createdAt: m.createdAt,
+    }));
+
+    const analysis = await geminiService.detectRedFlags(formattedMessages, currentUserName, partnerName);
+    return success(res, { analysis });
+  } catch (err) {
+    return next(err);
+  }
+}
+
+module.exports = { getConversations, getMessages, sendMessage, markRead, getOrCreateConversation, clearConversation, detectRedFlags };

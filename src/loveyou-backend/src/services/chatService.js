@@ -64,10 +64,8 @@ async function getUserConversations(userId) {
     where: { blockedId: uid },
     select: { blockerId: true },
   });
-  const blockedUserIds = new Set([
-    ...blocksGiven.map(b => b.blockedId),
-    ...blocksReceived.map(b => b.blockerId),
-  ]);
+  const givenSet = new Set(blocksGiven.map(b => b.blockedId));
+  const receivedSet = new Set(blocksReceived.map(b => b.blockerId));
 
   const userClears = await prisma.userConversationClear.findMany({
     where: { userId: uid },
@@ -112,6 +110,10 @@ async function getUserConversations(userId) {
     const lastMsg = validMessages[0] || null;
 
     const photosList = parsePhotos(partner.photos);
+    const isBlockedByMe = givenSet.has(partner.userId);
+    const isBlockedByPartner = receivedSet.has(partner.userId);
+    const isBlocked = isBlockedByMe || isBlockedByPartner;
+
     return {
       matchId: m.matchId,
       conversationId: convId,
@@ -120,13 +122,17 @@ async function getUserConversations(userId) {
         name: partner.fullName || partner.username,
         photo: photosList[0] || partner.profilePicture || null,
         lastActiveAt: partner.lastActiveAt,
-        isBlocked: blockedUserIds.has(partner.userId),
+        isBlocked,
+        isBlockedByMe,
+        isBlockedByPartner,
       },
       lastMessage: lastMsg
         ? { content: lastMsg.content, type: lastMsg.type, createdAt: lastMsg.createdAt, senderId: lastMsg.senderId }
         : null,
       matchedAt: m.createdAt,
-      isBlocked: blockedUserIds.has(partner.userId),
+      isBlocked,
+      isBlockedByMe,
+      isBlockedByPartner,
     };
   });
 }

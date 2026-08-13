@@ -39,6 +39,10 @@ async function login(req, res, next) {
     }
     const token = createAccessToken({ userId: user.userId, role: user.role });
     const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
+
+    // Update lastActiveAt on login
+    authService.updateLastActive?.(user.userId).catch(() => {});
+
     return success(res, { token, expiresAt });
   } catch (err) {
     return next(err);

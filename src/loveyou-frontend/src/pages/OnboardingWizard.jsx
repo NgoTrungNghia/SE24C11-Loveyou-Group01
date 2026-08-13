@@ -181,12 +181,13 @@ export default function OnboardingWizard() {
     setError('');
     try {
       const cleanedPhotos = form.photos.filter(p => p && p.trim() !== '');
+      const hasName = Boolean(form.fullName && form.fullName.trim().length > 0);
       const payload = {
         ...form,
         height: form.height ? Number(form.height) : null,
         photos: cleanedPhotos,
         profilePicture: cleanedPhotos[0] || form.profilePicture || '',
-        isProfileComplete: isFinal ? true : false,
+        isProfileComplete: isFinal || hasName,
       };
 
       await userApi.updateProfile(payload);
@@ -272,8 +273,15 @@ export default function OnboardingWizard() {
         </div>
         <button
           className="btn btn-ghost btn-sm"
-          onClick={() => navigate('/dashboard')}
-          style={{ fontSize: '0.85rem', color: 'rgba(255,255,255,0.8)' }}
+          onClick={async () => {
+            if (form.fullName && form.fullName.trim()) {
+              try {
+                await userApi.updateProfile({ ...form, isProfileComplete: true });
+              } catch { /* ignore */ }
+            }
+            navigate('/dashboard');
+          }}
+          style={{ fontSize: '0.85rem', color: 'rgba(255,255,255,0.8)', cursor: 'pointer' }}
         >
           ← Quay lại Dashboard
         </button>
