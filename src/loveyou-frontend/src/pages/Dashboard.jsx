@@ -413,7 +413,10 @@ export default function Dashboard() {
                   <span style={{ fontSize: '0.7rem', background: '#f59e0b', color: '#000', padding: '1px 6px', borderRadius: '10px', fontWeight: '800' }}>ADMIN</span>
                 )}
               </div>
-              <div style={{ fontSize: '0.75rem', opacity: 0.85 }}>Cập nhật Hồ sơ</div>
+              <div style={{ fontSize: '0.75rem', opacity: 0.88, display: 'flex', alignItems: 'center', gap: '4px' }}>
+
+                {profile?.location && <span> {profile.location}</span>}
+              </div>
             </div>
           </div>
           <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
@@ -606,7 +609,7 @@ export default function Dashboard() {
 
           {activeTab === 'likes' && (
             <div>
-              {loadingLikes ? (
+              {loadingLikes && whoLikedMeData.isVip ? (
                 <div style={{ textAlign: 'center', color: 'rgba(255,255,255,0.5)', padding: '2rem 0' }}>
                   <div className="spinner" style={{ margin: '0 auto 0.8rem auto', width: '28px', height: '28px' }} />
                   <p style={{ fontSize: '0.8rem' }}>Đang tải danh sách người thích bạn...</p>
@@ -625,7 +628,7 @@ export default function Dashboard() {
                       >
                         <img src={c.photo} alt={c.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                         <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.85), transparent)' }} />
-                        
+
                         {/* Quick Match Button */}
                         <button
                           onClick={e => { e.stopPropagation(); handleSwipe('LIKE', c); }}
@@ -805,12 +808,12 @@ export default function Dashboard() {
                     const matchForGame = inviterMatch
                       ? { ...inviterMatch, partner: { id: inviterMatch.id, name: inviterMatch.name, photo: inviterMatch.photo } }
                       : {
-                          matchId: session.matchId,
-                          id: session.initiatorId,
-                          name,
-                          photo: avatarUrl,
-                          partner: { id: session.initiatorId, name, photo: avatarUrl },
-                        };
+                        matchId: session.matchId,
+                        id: session.initiatorId,
+                        name,
+                        photo: avatarUrl,
+                        partner: { id: session.initiatorId, name, photo: avatarUrl },
+                      };
                     openGame(matchForGame, session);
                     setGameInviteNotif(null);
                     setTimeout(() => {
