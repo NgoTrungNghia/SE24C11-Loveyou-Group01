@@ -1,10 +1,21 @@
 import { useState, useEffect } from 'react';
 import { userApi, authApi } from '../utils/api';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 
-export default function UserSettingsModal({ profile, onProfileUpdated, onClose, setToast }) {
+export default function UserSettingsModal({ profile, onProfileUpdated, onLogout, onClose, setToast }) {
   const navigate = useNavigate();
+  const { logout: authLogout } = useAuth();
   const [activeTab, setActiveTab] = useState('PROFILE'); // 'PROFILE', 'BLOCKED', 'PASSWORD'
+
+  const handleLogout = () => {
+    if (onLogout) {
+      onLogout();
+    } else if (authLogout) {
+      authLogout();
+    }
+    onClose();
+  };
 
   // Profile Form state
   const [fullName, setFullName] = useState(profile?.fullName || '');
@@ -464,6 +475,32 @@ export default function UserSettingsModal({ profile, onProfileUpdated, onClose, 
             </div>
           </form>
         )}
+
+        {/* LOGOUT BUTTON AT THE VERY BOTTOM OF SETTINGS/AVATAR MODAL */}
+        <div style={{ marginTop: '1.6rem', paddingTop: '1.2rem', borderTop: '1px solid rgba(255, 255, 255, 0.1)', textAlign: 'center' }}>
+          <button
+            type="button"
+            onClick={handleLogout}
+            style={{
+              width: '100%',
+              padding: '0.75rem 1rem',
+              borderRadius: '12px',
+              background: 'rgba(239, 68, 68, 0.12)',
+              border: '1px solid rgba(239, 68, 68, 0.3)',
+              color: '#ef4444',
+              fontWeight: 700,
+              fontSize: '0.88rem',
+              cursor: 'pointer',
+              transition: 'all 0.2s ease',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '8px',
+            }}
+          >
+            🚪 Đăng xuất khỏi tài khoản
+          </button>
+        </div>
       </div>
     </div>
   );

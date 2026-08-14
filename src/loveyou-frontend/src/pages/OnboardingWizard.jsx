@@ -597,26 +597,6 @@ export default function OnboardingWizard() {
 
         </form>
 
-        {/* Logout button moved cleanly to the bottom */}
-        <div style={{ marginTop: '1.8rem', paddingTop: '1.2rem', borderTop: '1px solid rgba(255, 255, 255, 0.08)', textAlign: 'center' }}>
-          <button
-            type="button"
-            onClick={logout}
-            style={{
-              padding: '0.65rem 1.6rem',
-              borderRadius: '12px',
-              background: 'rgba(239, 68, 68, 0.12)',
-              border: '1px solid rgba(239, 68, 68, 0.3)',
-              color: '#ef4444',
-              fontWeight: 600,
-              fontSize: '0.85rem',
-              cursor: 'pointer',
-              transition: 'all 0.2s ease',
-            }}
-          >
-            🚪 Đăng xuất khỏi tài khoản
-          </button>
-        </div>
       </div>
     </div>
   );
