@@ -3,7 +3,12 @@ const { PrismaClient } = require('@prisma/client');
 const { PrismaPg } = require('@prisma/adapter-pg');
 const { Pool } = require('pg');
 
-let connectionString = process.env.DATABASE_URL || '';
+const connectionString = (process.env.DATABASE_URL || '').trim();
+
+if (!connectionString) {
+  console.error('❌ ERROR: DATABASE_URL environment variable is missing or empty!');
+}
+
 const cleanConnectionString = connectionString.replace(/[\?&]sslmode=[^&]*/, '');
 
 const pool = new Pool({

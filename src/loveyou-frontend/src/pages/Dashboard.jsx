@@ -186,18 +186,24 @@ export default function Dashboard() {
     }
   };
 
-  const loadCandidates = async () => {
+  const loadCandidates = async (targetUseAI = useAI) => {
+    setLoadingDeck(true);
     try {
-      if (useAI) {
+      if (targetUseAI) {
         const aiRes = await aiMatchingApi.getAICandidates();
         const aiCands = aiRes.data.data.candidates;
-        if (aiCands?.length > 0) { setCandidates(aiCands); return; }
+        if (aiCands?.length > 0) {
+          setCandidates(aiCands);
+          return;
+        }
       }
       const candRes = await matchingApi.getCandidates();
       const apiCandidates = candRes.data.data.candidates;
       setCandidates(apiCandidates || []);
     } catch {
       setCandidates([]);
+    } finally {
+      setLoadingDeck(false);
     }
   };
 
@@ -708,7 +714,13 @@ export default function Dashboard() {
             {useAI ? '🤖 AI Match' : '📋 Normal'}
           </span>
           <div
-            onClick={() => { setUseAI(p => !p); setCandidateIdx(0); loadCandidates(); }}
+            onClick={() => {
+              const nextUseAI = !useAI;
+              setUseAI(nextUseAI);
+              setCandidateIdx(0);
+              loadCandidates(nextUseAI);
+            }}
+            title={useAI ? 'Tắt AI Match để xem danh sách ngẫu nhiên' : 'Bật AI Match để gợi ý đối tượng ăn ý nhất'}
             style={{
               width: '40px', height: '22px', borderRadius: '11px', cursor: 'pointer',
               background: useAI ? '#fd267d' : 'rgba(255,255,255,0.2)',

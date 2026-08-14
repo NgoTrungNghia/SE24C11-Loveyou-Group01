@@ -17,57 +17,57 @@ function haversineDistance(lat1, lon1, lat2, lon2) {
  * Tính AI Compatibility Score (0–100) giữa currentUser và candidate
  */
 function calculateCompatibilityScore(currentUser, candidate, preferences) {
-  let score = 0;
+  let score = 25; // Base minimum score
 
-  // 1. INTERESTS OVERLAP — 40 điểm
+  // 1. INTERESTS OVERLAP — Up to 35 points
   const myInterests = parseJson(currentUser.interests);
   const theirInterests = parseJson(candidate.interests);
   if (myInterests.length > 0 && theirInterests.length > 0) {
     const mySet = new Set(myInterests.map(i => i.toLowerCase().replace(/[^a-z0-9]/g, '')));
     const overlap = theirInterests.filter(i => mySet.has(i.toLowerCase().replace(/[^a-z0-9]/g, ''))).length;
     const maxPossible = Math.max(myInterests.length, theirInterests.length);
-    score += (overlap / maxPossible) * 40;
+    score += Math.round((overlap / maxPossible) * 35);
   } else {
-    score += 15; // Partial score nếu thiếu thông tin
+    score += 18; // Partial score if missing interests
   }
 
-  // 2. DISTANCE — 25 điểm
+  // 2. DISTANCE PROXIMITY — Up to 25 points
   if (currentUser.latitude && currentUser.longitude && candidate.latitude && candidate.longitude) {
     const dist = haversineDistance(
       currentUser.latitude, currentUser.longitude,
       candidate.latitude, candidate.longitude
     );
-    const maxDist = preferences?.maxDistance || 50;
-    if (dist <= maxDist) {
-      score += Math.max(0, 25 * (1 - dist / maxDist));
-    }
+    const maxDist = preferences?.maxDistance || 1500;
+    if (dist <= 10) score += 25;
+    else if (dist <= 50) score += 20;
+    else if (dist <= 300) score += 15;
+    else if (dist <= 1200) score += 10;
+    else score += 5;
   } else {
-    score += 12; // Partial nếu không có GPS
+    score += 15;
   }
 
-  // 3. AGE PREFERENCE — 20 điểm
+  // 3. AGE PREFERENCE — Up to 15 points
   const candAge = calculateAge(candidate.dateOfBirth);
   const minAge = preferences?.minAge || 18;
   const maxAge = preferences?.maxAge || 45;
   if (candAge >= minAge && candAge <= maxAge) {
-    const midAge = (minAge + maxAge) / 2;
-    const ageDiff = Math.abs(candAge - midAge);
-    const ageRange = (maxAge - minAge) / 2;
-    score += Math.max(0, 20 * (1 - ageDiff / ageRange));
+    score += 15;
+  } else {
+    score += 8;
   }
 
-  // 4. ACTIVITY RECENCY — 15 điểm
+  // 4. ACTIVITY RECENCY — Up to 10 points
   if (candidate.lastActiveAt) {
     const hoursSinceActive = (Date.now() - new Date(candidate.lastActiveAt).getTime()) / 3600000;
-    if (hoursSinceActive < 1) score += 15;
-    else if (hoursSinceActive < 24) score += 10;
-    else if (hoursSinceActive < 72) score += 5;
-    else score += 2;
+    if (hoursSinceActive < 1) score += 10;
+    else if (hoursSinceActive < 24) score += 8;
+    else score += 5;
   } else {
-    score += 5;
+    score += 7;
   }
 
-  return Math.min(100, Math.round(score));
+  return Math.min(98, Math.max(68, Math.round(score)));
 }
 
 function parseJson(val) {
@@ -124,8 +124,12 @@ async function getAICandidates(userId) {
     status: 'ACTIVE',
   };
 
-  if (prefs?.genderPreference && prefs.genderPreference !== 'all') {
-    where.gender = prefs.genderPreference;
+  if (prefs?.genderPreference) {
+    if (prefs.genderPreference !== 'all') {
+      where.gender = prefs.genderPreference;
+    }
+  } else if (currentUser.gender) {
+    where.gender = currentUser.gender === 'female' ? 'male' : 'female';
   }
 
   const realCandidates = await prisma.user.findMany({
@@ -152,7 +156,7 @@ async function getAICandidates(userId) {
       name: c.fullName || c.username,
       age: calculateAge(c.dateOfBirth),
       height: c.height || null,
-      location: dist !== null ? `${c.location || 'Gần bạn'} • ${dist} km` : (c.location || 'TP. Hồ Chí Minh'),
+      location: dist !== null && dist > 0 ? `${c.location || 'Gần bạn'} • cách ${dist} km` : (c.location || 'TP. Hồ Chí Minh'),
       bio: c.bio || 'Chưa thêm tiểu sử giới thiệu',
       photo: primaryPhoto || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=600',
       photos: photosList.length > 0 ? photosList : [primaryPhoto || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=600'],

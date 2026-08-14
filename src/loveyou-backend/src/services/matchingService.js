@@ -19,11 +19,39 @@ function calculateAge(dob) {
   return age > 0 ? age : 22;
 }
 
+function haversineDistance(lat1, lon1, lat2, lon2) {
+  if (!lat1 || !lon1 || !lat2 || !lon2) return null;
+  const R = 6371; // km
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLon = ((lon2 - lon1) * Math.PI) / 180;
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos((lat1 * Math.PI) / 180) * Math.cos((lat2 * Math.PI) / 180) * Math.sin(dLon / 2) ** 2;
+  return Math.round(R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
+}
+
+function formatLocationWithDistance(currentUser, targetUser) {
+  const loc = targetUser?.location || 'Việt Nam';
+  if (currentUser?.latitude && currentUser?.longitude && targetUser?.latitude && targetUser?.longitude) {
+    const dist = haversineDistance(currentUser.latitude, currentUser.longitude, targetUser.latitude, targetUser.longitude);
+    if (dist !== null) {
+      if (dist <= 0) return loc;
+      return `${loc} • cách ${dist} km`;
+    }
+  }
+  return loc;
+}
+
 /**
  * Lấy danh sách ứng viên (Real User Accounts trong CSDL) ngoại trừ bản thân và những người đã quẹt/bị chặn
  */
 async function getCandidates(userId) {
   const currentUserId = Number(userId);
+
+  const currentUser = await prisma.user.findUnique({
+    where: { userId: currentUserId },
+    select: { latitude: true, longitude: true },
+  });
 
   let swipedTargetIds = [currentUserId];
   try {
@@ -68,6 +96,8 @@ async function getCandidates(userId) {
         bio: true,
         height: true,
         location: true,
+        latitude: true,
+        longitude: true,
         interests: true,
         photos: true,
         isVip: true,
@@ -82,7 +112,7 @@ async function getCandidates(userId) {
         name: u.fullName || u.username,
         age: calculateAge(u.dateOfBirth),
         height: u.height || null,
-        location: u.location ? `${u.location} • 3 km` : 'TP. Hồ Chí Minh • 3 km',
+        location: formatLocationWithDistance(currentUser, u),
         bio: u.bio || 'Chưa thêm tiểu sử giới thiệu',
         photo: primaryPhoto,
         photos: photosList.length > 0 ? photosList : [primaryPhoto],
@@ -157,10 +187,17 @@ async function handleSwipe(swiperId, targetId, action) {
           dateOfBirth: true,
           height: true,
           location: true,
+          latitude: true,
+          longitude: true,
           bio: true,
           interests: true,
           isVip: true,
         },
+      });
+
+      const currentSwiperObj = await prisma.user.findUnique({
+        where: { userId: currentSwiperId },
+        select: { latitude: true, longitude: true },
       });
 
       if (targetUserObj) {
@@ -170,7 +207,7 @@ async function handleSwipe(swiperId, targetId, action) {
           name: targetUserObj.fullName || targetUserObj.username,
           age: calculateAge(targetUserObj.dateOfBirth),
           height: targetUserObj.height || null,
-          location: targetUserObj.location ? `${targetUserObj.location} • 3 km` : 'TP. Hồ Chí Minh • 3 km',
+          location: formatLocationWithDistance(currentSwiperObj, targetUserObj),
           bio: targetUserObj.bio || '',
           photo: photosList[0] || targetUserObj.profilePicture || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=600',
           photos: photosList.length > 0 ? photosList : [targetUserObj.profilePicture],
@@ -191,6 +228,11 @@ async function getUserMatches(userId) {
   const currentUserId = Number(userId);
 
   try {
+    const currentUser = await prisma.user.findUnique({
+      where: { userId: currentUserId },
+      select: { latitude: true, longitude: true },
+    });
+
     const matchRecords = await prisma.match.findMany({
       where: {
         OR: [
@@ -199,8 +241,8 @@ async function getUserMatches(userId) {
         ],
       },
       include: {
-        user1: { select: { userId: true, username: true, fullName: true, profilePicture: true, photos: true, dateOfBirth: true, height: true, location: true, bio: true, interests: true, isVip: true } },
-        user2: { select: { userId: true, username: true, fullName: true, profilePicture: true, photos: true, dateOfBirth: true, height: true, location: true, bio: true, interests: true, isVip: true } },
+        user1: { select: { userId: true, username: true, fullName: true, profilePicture: true, photos: true, dateOfBirth: true, height: true, location: true, latitude: true, longitude: true, bio: true, interests: true, isVip: true } },
+        user2: { select: { userId: true, username: true, fullName: true, profilePicture: true, photos: true, dateOfBirth: true, height: true, location: true, latitude: true, longitude: true, bio: true, interests: true, isVip: true } },
       },
     });
 
@@ -228,7 +270,7 @@ async function getUserMatches(userId) {
         name: partner.fullName || partner.username,
         age: calculateAge(partner.dateOfBirth),
         height: partner.height || null,
-        location: partner.location ? `${partner.location} • 3 km` : 'TP. Hồ Chí Minh • 3 km',
+        location: formatLocationWithDistance(currentUser, partner),
         bio: partner.bio || '',
         photo: photosList[0] || partner.profilePicture || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=600',
         photos: photosList.length > 0 ? photosList : [partner.profilePicture],
@@ -285,7 +327,7 @@ async function getWhoLikedMe(userId) {
 
   const currentUser = await prisma.user.findUnique({
     where: { userId: currentUserId },
-    select: { isVip: true },
+    select: { isVip: true, latitude: true, longitude: true },
   });
 
   const swipesReceived = await prisma.swipe.findMany({
@@ -304,6 +346,8 @@ async function getWhoLikedMe(userId) {
           photos: true,
           bio: true,
           location: true,
+          latitude: true,
+          longitude: true,
           interests: true,
           isVip: true,
         },
@@ -336,7 +380,7 @@ async function getWhoLikedMe(userId) {
       id: u.userId,
       name: u.fullName || u.username,
       age: calculateAge(u.dateOfBirth),
-      location: u.location ? `${u.location} • 3 km` : 'TP. Hồ Chí Minh • 3 km',
+      location: formatLocationWithDistance(currentUser, u),
       bio: u.bio || '',
       photo: primaryPhoto,
       photos: photosList.length > 0 ? photosList : [primaryPhoto],
