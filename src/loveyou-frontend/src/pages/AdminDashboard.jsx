@@ -110,11 +110,11 @@ export default function AdminDashboard() {
   };
 
   const getOnlineStatus = (u) => {
-    if (u?.isOnline || u?.userId === user?.userId) return { isOnline: true, text: 'Online' };
+    if (u?.isOnline || u?.userId === user?.userId || u?.role === 'ADMIN') return { isOnline: true, text: 'Online' };
     if (!u?.lastActiveAt) return { isOnline: false, text: 'Chưa online' };
     const diffMs = Date.now() - new Date(u.lastActiveAt).getTime();
     const diffMin = Math.floor(diffMs / 60000);
-    if (diffMin < 2) return { isOnline: true, text: 'Online' };
+    if (diffMin < 5) return { isOnline: true, text: 'Online' };
     if (diffMin < 60) return { isOnline: false, text: `${diffMin}m trước` };
     const diffHours = Math.floor(diffMin / 60);
     if (diffHours < 24) return { isOnline: false, text: `${diffHours}h trước` };
@@ -260,7 +260,7 @@ export default function AdminDashboard() {
               <div style={styles.statIcon}>🟢</div>
               <div>
                 <div style={{ ...styles.statNumber, color: '#10b981' }}>
-                  {users.filter(u => u.isOnline).length}
+                  {users.filter(u => getOnlineStatus(u).isOnline).length}
                 </div>
                 <div style={styles.statLabel}>Tài khoản online</div>
               </div>
@@ -435,23 +435,26 @@ export default function AdminDashboard() {
                         <td style={styles.td}>
                           {u.role === 'ADMIN' ? (
                             <span style={{
-                              padding: '4px 10px', borderRadius: '12px', fontSize: '0.75rem', fontWeight: 800,
-                              background: 'linear-gradient(135deg, #f59e0b, #d97706)', color: '#fff',
-                              boxShadow: '0 2px 6px rgba(245,158,11,0.3)', display: 'inline-flex', alignItems: 'center', gap: '4px',
+                              padding: '5px 12px', borderRadius: '12px', fontSize: '0.78rem', fontWeight: 900,
+                              background: 'linear-gradient(135deg, #FF0055, #FF5500, #FFB700)', color: '#ffffff',
+                              boxShadow: '0 3px 10px rgba(255, 0, 85, 0.45)', display: 'inline-flex', alignItems: 'center', gap: '5px',
+                              letterSpacing: '0.4px',
                             }}>
                               👑 ADMIN
                             </span>
                           ) : u.isVip ? (
-                            <span className="vip-badge-gradient" style={{
-                              padding: '4px 10px', borderRadius: '12px', fontSize: '0.75rem', fontWeight: 800,
+                            <span style={{
+                              padding: '4px 10px', borderRadius: '10px', fontSize: '0.75rem', fontWeight: 700,
+                              background: 'rgba(245, 158, 11, 0.12)', color: '#f59e0b',
+                              border: '1px solid rgba(245, 158, 11, 0.35)',
                               display: 'inline-flex', alignItems: 'center', gap: '4px',
                             }}>
-                              👑 USER VIP
+                              ✨ USER VIP
                             </span>
                           ) : (
                             <span style={{
-                              padding: '4px 10px', borderRadius: '12px', fontSize: '0.75rem', fontWeight: 600,
-                              background: 'rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.8)',
+                              padding: '4px 10px', borderRadius: '10px', fontSize: '0.75rem', fontWeight: 600,
+                              background: 'rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.7)',
                               border: '1px solid rgba(255,255,255,0.1)', display: 'inline-flex', alignItems: 'center', gap: '4px',
                             }}>
                               👤 USER
@@ -783,11 +786,18 @@ export default function AdminDashboard() {
                   <h2 style={{ margin: '0 0 4px 0', fontSize: '1.4rem', color: '#ffffff', display: 'flex', alignItems: 'center', gap: '8px' }}>
                     {selectedUser.fullName || selectedUser.username}
                     {selectedUser.role === 'ADMIN' ? (
-                      <span style={{ fontSize: '0.75rem', background: '#f59e0b', color: '#fff', padding: '2px 8px', borderRadius: '10px', fontWeight: 800 }}>👑 ADMIN</span>
+                      <span style={{
+                        fontSize: '0.78rem', background: 'linear-gradient(135deg, #FF0055, #FF5500, #FFB700)',
+                        color: '#fff', padding: '3px 10px', borderRadius: '10px', fontWeight: 900,
+                        boxShadow: '0 2px 8px rgba(255,0,85,0.4)',
+                      }}>👑 ADMIN</span>
                     ) : selectedUser.isVip ? (
-                      <span className="vip-badge-gradient" style={{ fontSize: '0.75rem', padding: '2px 8px', borderRadius: '10px', fontWeight: 800 }}>👑 USER VIP</span>
+                      <span style={{
+                        fontSize: '0.75rem', padding: '2px 8px', borderRadius: '8px', fontWeight: 700,
+                        background: 'rgba(245, 158, 11, 0.15)', color: '#f59e0b', border: '1px solid rgba(245, 158, 11, 0.35)',
+                      }}>✨ USER VIP</span>
                     ) : (
-                      <span style={{ fontSize: '0.75rem', background: 'rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.7)', padding: '2px 8px', borderRadius: '10px', fontWeight: 600 }}>👤 USER</span>
+                      <span style={{ fontSize: '0.75rem', background: 'rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.7)', padding: '2px 8px', borderRadius: '8px', fontWeight: 600 }}>👤 USER</span>
                     )}
                   </h2>
                   <div style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.9rem', marginBottom: '8px' }}>@{selectedUser.username} • {selectedUser.email}</div>
@@ -809,8 +819,46 @@ export default function AdminDashboard() {
                 <div><strong>Hoạt động gần nhất:</strong> <span style={{ color: 'rgba(255,255,255,0.85)' }}>{formatDate(selectedUser.lastActiveAt)}</span></div>
                 <div><strong>Số điện thoại:</strong> <span style={{ color: 'rgba(255,255,255,0.85)' }}>{selectedUser.phoneNumber || 'Chưa đăng ký'}</span></div>
                 <div><strong>Vai trò:</strong> <span style={{ color: 'rgba(255,255,255,0.85)' }}>{selectedUser.role === 'ADMIN' ? 'Quản trị viên (ADMIN)' : selectedUser.isVip ? 'Người dùng VIP (USER VIP)' : 'Người dùng (USER)'}</span></div>
-                <div><strong>Trạng thái hiện tại:</strong> <span style={{ color: selectedUser.status === 'BANNED' ? '#ef4444' : '#10b981' }}>{selectedUser.status === 'BANNED' ? 'Đã bị khóa' : 'Đang hoạt động'}</span></div>
-                <div><strong>Hồ sơ hoàn tất:</strong> <span style={{ color: 'rgba(255,255,255,0.85)' }}>{selectedUser.isProfileComplete ? 'Đã hoàn tất' : 'Chưa xong'}</span></div>
+                <div>
+                  <strong>Trạng thái hiện tại:</strong><br />
+                  {(() => {
+                    const onlineInfo = getOnlineStatus(selectedUser);
+                    return (
+                      <span style={{
+                        marginTop: '4px',
+                        padding: '3px 10px', borderRadius: '8px', fontSize: '0.82rem', fontWeight: 700,
+                        backgroundColor: onlineInfo.isOnline ? 'rgba(16, 185, 129, 0.2)' : 'rgba(255, 255, 255, 0.08)',
+                        color: onlineInfo.isOnline ? '#34d399' : 'rgba(255, 255, 255, 0.65)',
+                        border: onlineInfo.isOnline ? '1px solid rgba(16, 185, 129, 0.4)' : '1px solid rgba(255, 255, 255, 0.1)',
+                        display: 'inline-flex', alignItems: 'center', gap: '4px',
+                      }}>
+                        {onlineInfo.isOnline ? '🟢 Đang Online' : `⚪ Ngoại tuyến (${onlineInfo.text})`}
+                      </span>
+                    );
+                  })()}
+                </div>
+                <div>
+                  <strong>Hồ sơ hoàn tất:</strong><br />
+                  <span style={{ color: 'rgba(255,255,255,0.85)', marginTop: '4px', display: 'inline-block' }}>
+                    {selectedUser.isProfileComplete ? '✅ Đã hoàn tất' : '⚠️ Chưa hoàn tất'}
+                  </span>
+                </div>
+                <div style={{ gridColumn: '1 / -1', marginTop: '6px', paddingTop: '8px', borderTop: '1px solid rgba(255,255,255,0.08)' }}>
+                  <strong>Tình trạng tài khoản:</strong><br />
+                  <span style={{
+                    marginTop: '4px',
+                    display: 'inline-block',
+                    padding: '4px 12px',
+                    borderRadius: '8px',
+                    fontSize: '0.85rem',
+                    fontWeight: 700,
+                    backgroundColor: selectedUser.status === 'BANNED' ? 'rgba(239, 68, 68, 0.2)' : 'rgba(16, 185, 129, 0.2)',
+                    color: selectedUser.status === 'BANNED' ? '#ef4444' : '#10b981',
+                    border: selectedUser.status === 'BANNED' ? '1px solid rgba(239, 68, 68, 0.4)' : '1px solid rgba(16, 185, 129, 0.4)',
+                  }}>
+                    {selectedUser.status === 'BANNED' ? '⛔ Đã bị khóa' : '✅ Đang hoạt động'}
+                  </span>
+                </div>
               </div>
             </div>
 

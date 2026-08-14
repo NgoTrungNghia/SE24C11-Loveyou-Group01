@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
 import { adminApi } from '../utils/api';
+import { useAuth } from '../context/AuthContext';
 import ToastNotification from './ToastNotification';
 
 export default function AdminModal({ onClose }) {
+  const { user } = useAuth();
   const [stats, setStats] = useState(null);
   const [users, setUsers] = useState([]);
   const [reports, setReports] = useState([]);
@@ -117,10 +119,11 @@ export default function AdminModal({ onClose }) {
   };
 
   const getOnlineStatus = (u) => {
-    if (u?.isOnline) return { isOnline: true, text: 'Online' };
+    if (u?.isOnline || u?.userId === user?.userId || u?.role === 'ADMIN') return { isOnline: true, text: 'Online' };
     if (!u?.lastActiveAt) return { isOnline: false, text: 'Chưa online' };
     const diffMs = Date.now() - new Date(u.lastActiveAt).getTime();
     const diffMin = Math.floor(diffMs / 60000);
+    if (diffMin < 5) return { isOnline: true, text: 'Online' };
     if (diffMin < 60) return { isOnline: false, text: `${diffMin}m trước` };
     const diffHours = Math.floor(diffMin / 60);
     if (diffHours < 24) return { isOnline: false, text: `${diffHours}h trước` };
@@ -179,7 +182,7 @@ export default function AdminModal({ onClose }) {
                 </div>
                 <div style={{ ...styles.statCard, borderLeft: '4px solid #10b981' }}>
                   <div style={{ ...styles.statNumber, color: '#10b981' }}>
-                    {users.filter(u => u.isOnline).length}
+                    {users.filter(u => getOnlineStatus(u).isOnline).length}
                   </div>
                   <div style={styles.statLabel}>Tài khoản online</div>
                 </div>
@@ -318,22 +321,24 @@ export default function AdminModal({ onClose }) {
                             <td style={styles.td}>
                               {u.role === 'ADMIN' ? (
                                 <span style={{
-                                  padding: '4px 10px', borderRadius: '12px', fontSize: '0.75rem', fontWeight: 800,
-                                  background: 'linear-gradient(135deg, #f59e0b, #d97706)', color: '#fff',
-                                  boxShadow: '0 2px 6px rgba(245,158,11,0.3)', display: 'inline-flex', alignItems: 'center', gap: '4px',
+                                  padding: '5px 12px', borderRadius: '12px', fontSize: '0.78rem', fontWeight: 900,
+                                  background: 'linear-gradient(135deg, #FF0055, #FF5500, #FFB700)', color: '#fff',
+                                  boxShadow: '0 2px 8px rgba(255, 0, 85, 0.4)', display: 'inline-flex', alignItems: 'center', gap: '5px',
+                                  letterSpacing: '0.4px',
                                 }}>
                                   👑 ADMIN
                                 </span>
                               ) : u.isVip ? (
-                                <span className="vip-badge-gradient" style={{
-                                  padding: '4px 10px', borderRadius: '12px', fontSize: '0.75rem', fontWeight: 800,
+                                <span style={{
+                                  padding: '4px 10px', borderRadius: '10px', fontSize: '0.75rem', fontWeight: 700,
+                                  background: '#fef3c7', color: '#d97706', border: '1px solid #fde68a',
                                   display: 'inline-flex', alignItems: 'center', gap: '4px',
                                 }}>
-                                  👑 USER VIP
+                                  ✨ USER VIP
                                 </span>
                               ) : (
                                 <span style={{
-                                  padding: '4px 10px', borderRadius: '12px', fontSize: '0.75rem', fontWeight: 600,
+                                  padding: '4px 10px', borderRadius: '10px', fontSize: '0.75rem', fontWeight: 600,
                                   background: '#f3f4f6', color: '#4b5563', display: 'inline-flex', alignItems: 'center', gap: '4px',
                                 }}>
                                   👤 USER
@@ -633,12 +638,19 @@ export default function AdminModal({ onClose }) {
                   <h2 style={{ margin: '0 0 4px 0', fontSize: '1.3rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
                     {selectedUser.fullName || selectedUser.username}
                     {selectedUser.role === 'ADMIN' ? (
-                      <span style={{ fontSize: '0.75rem', background: '#f59e0b', color: '#fff', padding: '2px 8px', borderRadius: '10px', fontWeight: 800 }}>
+                      <span style={{
+                        fontSize: '0.78rem', background: 'linear-gradient(135deg, #FF0055, #FF5500, #FFB700)',
+                        color: '#fff', padding: '3px 10px', borderRadius: '10px', fontWeight: 900,
+                        boxShadow: '0 2px 8px rgba(255, 0, 85, 0.4)',
+                      }}>
                         👑 ADMIN
                       </span>
                     ) : selectedUser.isVip ? (
-                      <span className="vip-badge-gradient" style={{ fontSize: '0.75rem', padding: '2px 8px', borderRadius: '10px', fontWeight: 800 }}>
-                        👑 USER VIP
+                      <span style={{
+                        fontSize: '0.75rem', padding: '2px 8px', borderRadius: '8px', fontWeight: 700,
+                        background: '#fef3c7', color: '#d97706', border: '1px solid #fde68a',
+                      }}>
+                        ✨ USER VIP
                       </span>
                     ) : (
                       <span style={{ fontSize: '0.75rem', background: '#e5e7eb', color: '#4b5563', padding: '2px 8px', borderRadius: '10px', fontWeight: 600 }}>
@@ -664,8 +676,47 @@ export default function AdminModal({ onClose }) {
                 <div><strong>Ngày tạo:</strong> {formatDate(selectedUser.createdAt)}</div>
                 <div><strong>Hoạt động gần nhất:</strong> {formatDate(selectedUser.lastActiveAt)}</div>
                 <div><strong>Số điện thoại:</strong> {selectedUser.phoneNumber || 'Chưa đăng ký'}</div>
-                <div><strong>Vai trò:</strong> {selectedUser.role === 'ADMIN' ? 'Quản trị viên' : 'Người dùng'}</div>
-                <div><strong>Trạng thái:</strong> <span style={{ color: selectedUser.status === 'BANNED' ? '#ef4444' : '#10b981' }}>{selectedUser.status === 'BANNED' ? 'Đã bị khóa' : 'Đang hoạt động'}</span></div>
+                <div><strong>Vai trò:</strong> {selectedUser.role === 'ADMIN' ? 'Quản trị viên (ADMIN)' : selectedUser.isVip ? 'Người dùng VIP' : 'Người dùng'}</div>
+                <div>
+                  <strong>Trạng thái hiện tại:</strong><br />
+                  {(() => {
+                    const onlineInfo = getOnlineStatus(selectedUser);
+                    return (
+                      <span style={{
+                        marginTop: '4px',
+                        padding: '3px 10px', borderRadius: '8px', fontSize: '0.82rem', fontWeight: 700,
+                        backgroundColor: onlineInfo.isOnline ? '#d1fae5' : '#f3f4f6',
+                        color: onlineInfo.isOnline ? '#065f46' : '#6b7280',
+                        border: onlineInfo.isOnline ? '1px solid #a7f3d0' : '1px solid #e5e7eb',
+                        display: 'inline-flex', alignItems: 'center', gap: '4px',
+                      }}>
+                        {onlineInfo.isOnline ? '🟢 Đang Online' : `⚪ Ngoại tuyến (${onlineInfo.text})`}
+                      </span>
+                    );
+                  })()}
+                </div>
+                <div>
+                  <strong>Hồ sơ hoàn tất:</strong><br />
+                  <span style={{ color: '#374151', marginTop: '4px', display: 'inline-block' }}>
+                    {selectedUser.isProfileComplete ? '✅ Đã hoàn tất' : '⚠️ Chưa hoàn tất'}
+                  </span>
+                </div>
+                <div style={{ gridColumn: '1 / -1', marginTop: '6px', paddingTop: '8px', borderTop: '1px solid #e5e7eb' }}>
+                  <strong>Tình trạng tài khoản:</strong><br />
+                  <span style={{
+                    marginTop: '4px',
+                    display: 'inline-block',
+                    padding: '4px 12px',
+                    borderRadius: '8px',
+                    fontSize: '0.85rem',
+                    fontWeight: 700,
+                    backgroundColor: selectedUser.status === 'BANNED' ? '#fee2e2' : '#d1fae5',
+                    color: selectedUser.status === 'BANNED' ? '#991b1b' : '#065f46',
+                    border: selectedUser.status === 'BANNED' ? '1px solid #fecaca' : '1px solid #a7f3d0',
+                  }}>
+                    {selectedUser.status === 'BANNED' ? '⛔ Đã bị khóa' : '✅ Đang hoạt động'}
+                  </span>
+                </div>
               </div>
 
               <div style={{ marginTop: '20px', textAlign: 'right' }}>
