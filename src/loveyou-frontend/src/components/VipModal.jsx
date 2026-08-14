@@ -125,7 +125,13 @@ export default function VipModal({ isVip, onClose, onVipSuccess, setToast }) {
                   disabled={loading}
                   style={styles.payBtn}
                 >
-                  {loading ? <span className="spinner" /> : '💳 Thanh Toán Qua VietQR (3.000đ)'}
+                  {loading ? (
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+                      <span className="spinner" /> Đang tạo mã VietQR...
+                    </span>
+                  ) : (
+                    '💳 Thanh Toán Qua VietQR (3.000đ)'
+                  )}
                 </button>
               ) : (
                 <div style={{ textAlign: 'center', color: '#34D399', fontWeight: 700, fontSize: '0.9rem', padding: '0.5rem' }}>
