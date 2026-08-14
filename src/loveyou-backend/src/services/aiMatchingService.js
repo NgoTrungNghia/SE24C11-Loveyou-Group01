@@ -122,6 +122,7 @@ async function getAICandidates(userId) {
   const where = {
     userId: { notIn: excludeIds },
     status: 'ACTIVE',
+    role: { not: 'ADMIN' },
   };
 
   if (prefs?.genderPreference) {
@@ -140,6 +141,7 @@ async function getAICandidates(userId) {
       dateOfBirth: true, profilePicture: true, bio: true, height: true,
       location: true, latitude: true, longitude: true,
       interests: true, photos: true, lastActiveAt: true,
+      isVip: true,
     },
   });
 
@@ -163,6 +165,7 @@ async function getAICandidates(userId) {
       tags: parseJson(c.interests),
       aiScore: score,
       distanceKm: dist,
+      isVip: Boolean(c.isVip),
     };
   });
 

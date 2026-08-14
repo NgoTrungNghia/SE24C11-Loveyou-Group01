@@ -163,7 +163,17 @@ export default function UserSettingsModal({ profile, onProfileUpdated, onLogout,
     }
   };
 
-  const defaultAvatar = 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=400';
+  const defaultFemaleAvatar = 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=400';
+  const defaultMaleAvatar   = 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=400';
+  const defaultNeutralAvatar = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="%2394a3b8"><rect width="100" height="100" fill="%23334155"/><circle cx="50" cy="38" r="20" fill="%23cbd5e1"/><path d="M20 85c0-18 14-30 30-30s30 12 30 30" fill="%23cbd5e1"/></svg>';
+
+  const getDefaultAvatar = (gen) => {
+    const g = String(gen || '').toUpperCase();
+    if (['FEMALE', 'NỮ'].includes(g)) return defaultFemaleAvatar;
+    if (['MALE', 'NAM'].includes(g)) return defaultMaleAvatar;
+    return defaultNeutralAvatar;
+  };
+  const defaultAvatar = getDefaultAvatar(gender || profile?.gender);
 
   return (
     <div style={styles.overlay} onClick={onClose}>
@@ -221,9 +231,9 @@ export default function UserSettingsModal({ profile, onProfileUpdated, onLogout,
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '0.8rem' }}>
               <label htmlFor="user-avatar-file-input" className={profile?.isVip ? 'vip-avatar-glow' : ''} style={{ position: 'relative', cursor: 'pointer' }}>
                 <img
-                  src={profilePicture || defaultAvatar}
+                  src={profilePicture || getDefaultAvatar(gender || profile?.gender)}
                   alt="Avatar"
-                  onError={e => { e.target.src = defaultAvatar; }}
+                  onError={e => { e.target.src = getDefaultAvatar(gender || profile?.gender); }}
                   style={{
                     width: '94px',
                     height: '94px',

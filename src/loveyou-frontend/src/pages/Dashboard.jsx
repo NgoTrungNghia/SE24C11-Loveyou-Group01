@@ -150,6 +150,32 @@ export default function Dashboard() {
     }
   }, [activeTab, profile?.isVip]);
 
+  // Handle Payment Return & Iframe breakout
+  useEffect(() => {
+    if (window.self !== window.top) {
+      try {
+        window.top.location.href = window.location.href;
+        return;
+      } catch { /* ignore */ }
+    }
+
+    const params = new URLSearchParams(window.location.search);
+    const paymentStatus = params.get('payment');
+    if (paymentStatus === 'success') {
+      window.history.replaceState({}, document.title, window.location.pathname);
+      setToast({ type: 'success', message: '🎉 Chúc mừng bạn đã nâng cấp Tài Khoản VIP thành công!' });
+      setShowVipModal(false);
+      setProfile(prev => prev ? { ...prev, isVip: true } : prev);
+      userApi.getProfile().then(res => {
+        const p = res.data?.data?.profile;
+        if (p) setProfile(p);
+      }).catch(() => {});
+    } else if (paymentStatus === 'cancel') {
+      window.history.replaceState({}, document.title, window.location.pathname);
+      setToast({ type: 'info', message: 'Bạn đã hủy thanh toán nâng cấp VIP.' });
+    }
+  }, []);
+
 
   const checkProfileAndLoadData = async () => {
     setLoadingDeck(true);
@@ -180,7 +206,7 @@ export default function Dashboard() {
       await loadConversations();
 
     } catch {
-      setCandidates(FALLBACK_CANDIDATES);
+      setCandidates([]);
     } finally {
       setLoadingDeck(false);
     }
@@ -330,7 +356,17 @@ export default function Dashboard() {
   };
 
   const currentCandidate = candidates[candidateIdx];
-  const defaultAvatar = 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=400';
+  const defaultFemaleAvatar = 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=400';
+  const defaultMaleAvatar   = 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=400';
+  const defaultNeutralAvatar = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="%2394a3b8"><rect width="100" height="100" fill="%23334155"/><circle cx="50" cy="38" r="20" fill="%23cbd5e1"/><path d="M20 85c0-18 14-30 30-30s30 12 30 30" fill="%23cbd5e1"/></svg>';
+
+  const getDefaultAvatar = (gender) => {
+    const g = String(gender || '').toUpperCase();
+    if (['FEMALE', 'NỮ'].includes(g)) return defaultFemaleAvatar;
+    if (['MALE', 'NAM'].includes(g)) return defaultMaleAvatar;
+    return defaultNeutralAvatar;
+  };
+  const defaultAvatar = defaultNeutralAvatar;
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh', background: '#0f1115', color: '#fff', fontFamily: 'Inter, sans-serif' }}>
@@ -402,9 +438,9 @@ export default function Dashboard() {
           <div onClick={() => setShowSettingsModal(true)} style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', cursor: 'pointer' }}>
             <div className={profile?.isVip ? 'vip-avatar-glow' : ''} style={{ position: 'relative' }}>
               <img
-                src={profile?.profilePicture || defaultAvatar}
+                src={profile?.profilePicture || getDefaultAvatar(profile?.gender || user?.gender)}
                 alt="My Avatar"
-                onError={e => { e.target.src = defaultAvatar; }}
+                onError={e => { e.target.src = getDefaultAvatar(profile?.gender || user?.gender); }}
                 style={{ width: '42px', height: '42px', borderRadius: '50%', objectFit: 'cover', border: profile?.isVip ? 'none' : '2px solid #fff' }}
               />
               <div style={{ position: 'absolute', bottom: '1px', right: '1px', width: '10px', height: '10px', borderRadius: '50%', background: '#34D399', border: '2px solid #fd267d' }} />
@@ -581,9 +617,9 @@ export default function Dashboard() {
                       >
                         <div style={{ position: 'relative', flexShrink: 0 }}>
                           <img
-                            src={conv.partner?.photo || defaultAvatar}
+                            src={conv.partner?.photo || getDefaultAvatar(conv.partner?.gender)}
                             alt={conv.partner?.name}
-                            onError={e => { e.target.src = defaultAvatar; }}
+                            onError={e => { e.target.src = getDefaultAvatar(conv.partner?.gender); }}
                             style={{ width: '44px', height: '44px', borderRadius: '50%', objectFit: 'cover' }}
                           />
                           {isOnline && (
@@ -615,58 +651,8 @@ export default function Dashboard() {
 
           {activeTab === 'likes' && (
             <div>
-              {loadingLikes && whoLikedMeData.isVip ? (
-                <div style={{ textAlign: 'center', color: 'rgba(255,255,255,0.5)', padding: '2rem 0' }}>
-                  <div className="spinner" style={{ margin: '0 auto 0.8rem auto', width: '28px', height: '28px' }} />
-                  <p style={{ fontSize: '0.8rem' }}>Đang tải danh sách người thích bạn...</p>
-                </div>
-              ) : whoLikedMeData.isVip ? (
-                whoLikedMeData.candidates.length > 0 ? (
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0.8rem' }}>
-                    {whoLikedMeData.candidates.map((c, i) => (
-                      <div
-                        key={i}
-                        onClick={() => openDetailProfile(c)}
-                        style={{
-                          position: 'relative', height: '150px', borderRadius: '14px', overflow: 'hidden',
-                          border: '1px solid rgba(255,215,0,0.3)', background: '#000', cursor: 'pointer',
-                        }}
-                      >
-                        <img src={c.photo} alt={c.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.85), transparent)' }} />
-
-                        {/* Quick Match Button */}
-                        <button
-                          onClick={e => { e.stopPropagation(); handleSwipe('LIKE', c); }}
-                          style={{
-                            position: 'absolute', top: '8px', right: '8px', zIndex: 10,
-                            background: 'linear-gradient(135deg, #fd267d, #ff6036)', border: 'none',
-                            color: '#fff', borderRadius: '20px', padding: '4px 10px',
-                            cursor: 'pointer', fontWeight: 800, fontSize: '0.72rem',
-                            boxShadow: '0 4px 10px rgba(253,38,125,0.5)',
-                          }}
-                        >
-                          ⚡ Match Ngay
-                        </button>
-
-                        <div style={{ position: 'absolute', bottom: '8px', left: '8px', right: '8px' }}>
-                          <div style={{ fontWeight: 700, fontSize: '0.82rem', color: '#fff', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                            {c.name}, {c.age}
-                            {c.isVip && <span style={{ fontSize: '0.65rem' }}>👑</span>}
-                          </div>
-                          <div style={{ fontSize: '0.7rem', color: '#34D399', fontWeight: 600 }}>❤️ Đã thích bạn</div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div style={{ textAlign: 'center', color: 'rgba(255,255,255,0.4)', marginTop: '3rem' }}>
-                    <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>💌</div>
-                    <p style={{ fontSize: '0.85rem' }}>Chưa có ai thả tim cho bạn.<br />Hãy cập nhật profile đẹp hơn nhé!</p>
-                  </div>
-                )
-              ) : (
-                /* LOCKED VIP BANNER */
+              {!profile?.isVip ? (
+                /* LOCKED VIP BANNER (Immediately shown for Non-VIP, zero loading delay) */
                 <div style={{
                   background: 'linear-gradient(145deg, rgba(255,0,128,0.15), rgba(255,215,0,0.15))',
                   border: '1px solid rgba(255,215,0,0.3)',
@@ -693,6 +679,54 @@ export default function Dashboard() {
                   >
                     👑 Nâng Cấp VIP Ngay (3.000đ)
                   </button>
+                </div>
+              ) : loadingLikes ? (
+                <div style={{ textAlign: 'center', color: 'rgba(255,255,255,0.5)', padding: '2rem 0' }}>
+                  <div className="spinner" style={{ margin: '0 auto 0.8rem auto', width: '28px', height: '28px' }} />
+                  <p style={{ fontSize: '0.8rem' }}>Đang tải danh sách người thích bạn...</p>
+                </div>
+              ) : whoLikedMeData.candidates.length > 0 ? (
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0.8rem' }}>
+                  {whoLikedMeData.candidates.map((c, i) => (
+                    <div
+                      key={i}
+                      onClick={() => openDetailProfile(c)}
+                      style={{
+                        position: 'relative', height: '150px', borderRadius: '14px', overflow: 'hidden',
+                        border: '1px solid rgba(255,215,0,0.3)', background: '#000', cursor: 'pointer',
+                      }}
+                    >
+                      <img src={c.photo} alt={c.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.85), transparent)' }} />
+
+                      {/* Quick Match Button */}
+                      <button
+                        onClick={e => { e.stopPropagation(); handleSwipe('LIKE', c); }}
+                        style={{
+                          position: 'absolute', top: '8px', right: '8px', zIndex: 10,
+                          background: 'linear-gradient(135deg, #fd267d, #ff6036)', border: 'none',
+                          color: '#fff', borderRadius: '20px', padding: '4px 10px',
+                          cursor: 'pointer', fontWeight: 800, fontSize: '0.72rem',
+                          boxShadow: '0 4px 10px rgba(253,38,125,0.5)',
+                        }}
+                      >
+                        ⚡ Match Ngay
+                      </button>
+
+                      <div style={{ position: 'absolute', bottom: '8px', left: '8px', right: '8px' }}>
+                        <div style={{ fontWeight: 700, fontSize: '0.82rem', color: '#fff', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                          {c.name}, {c.age}
+                          {c.isVip && <span style={{ fontSize: '0.65rem' }}>👑</span>}
+                        </div>
+                        <div style={{ fontSize: '0.7rem', color: '#34D399', fontWeight: 600 }}>❤️ Đã thích bạn</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div style={{ textAlign: 'center', color: 'rgba(255,255,255,0.4)', marginTop: '3rem' }}>
+                  <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>💌</div>
+                  <p style={{ fontSize: '0.85rem' }}>Chưa có ai thả tim cho bạn.<br />Hãy cập nhật profile đẹp hơn nhé!</p>
                 </div>
               )}
             </div>
@@ -958,12 +992,26 @@ export default function Dashboard() {
       {/* ── DETAIL PROFILE MODAL ── */}
       {selectedProfile && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 1000, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(16px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1.5rem', animation: 'fadeIn 0.25s ease' }}>
-          <div style={{ width: '100%', maxWidth: '480px', maxHeight: '90vh', overflowY: 'auto', background: '#181c22', borderRadius: '24px', border: '1px solid rgba(255,255,255,0.15)', boxShadow: '0 25px 70px rgba(0,0,0,0.8)', position: 'relative', display: 'flex', flexDirection: 'column' }}>
+          <div
+            className={selectedProfile.isVip ? 'vip-profile-modal-glow' : ''}
+            style={{
+              width: '100%', maxWidth: '480px', maxHeight: '90vh', overflowY: 'auto', background: '#181c22',
+              borderRadius: '24px',
+              border: selectedProfile.isVip ? 'none' : '1px solid rgba(255,255,255,0.15)',
+              boxShadow: selectedProfile.isVip ? '0 0 40px rgba(255,215,0,0.5), 0 25px 70px rgba(0,0,0,0.9)' : '0 25px 70px rgba(0,0,0,0.8)',
+              position: 'relative', display: 'flex', flexDirection: 'column',
+            }}
+          >
 
             {/* Top bar */}
             <div style={{ position: 'sticky', top: 0, zIndex: 30, background: 'rgba(24,28,34,0.95)', backdropFilter: 'blur(10px)', padding: '1rem 1.2rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
               <button onClick={() => setSelectedProfile(null)} className="btn btn-ghost" style={{ width: 'auto', padding: '0.4rem 1rem', borderRadius: '20px', fontSize: '0.88rem' }}>← Quay lại</button>
-              <span style={{ fontWeight: 700, fontSize: '0.95rem', color: '#fff' }}>Hồ sơ của {selectedProfile.name}</span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <span style={{ fontWeight: 700, fontSize: '0.95rem', color: '#fff' }}>Hồ sơ của {selectedProfile.name}</span>
+                {selectedProfile.isVip && (
+                  <span className="vip-badge-gradient" style={{ fontSize: '0.65rem', padding: '1px 6px', borderRadius: '8px' }}>👑 VIP</span>
+                )}
+              </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
                 <button
                   onClick={() => setShowProfileReportModal(true)}
@@ -997,9 +1045,21 @@ export default function Dashboard() {
             <div style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1.2rem' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', flexWrap: 'wrap' }}>
                     <h2 style={{ fontSize: '1.8rem', fontWeight: 800, margin: 0 }}>{selectedProfile.name}</h2>
                     <span style={{ fontSize: '1.5rem', fontWeight: 400 }}>{selectedProfile.age}</span>
+                    {selectedProfile.isVip && (
+                      <span
+                        className="vip-badge-gradient"
+                        style={{
+                          fontSize: '0.8rem', padding: '3px 10px', borderRadius: '12px',
+                          fontWeight: 800, display: 'inline-flex', alignItems: 'center', gap: '4px',
+                          letterSpacing: '0.5px', textTransform: 'uppercase',
+                        }}
+                      >
+                        👑 VIP MEMBER
+                      </span>
+                    )}
                     {selectedProfile.aiScore && <span style={{ background: 'rgba(253,38,125,0.2)', color: '#fd267d', padding: '0.2rem 0.6rem', borderRadius: '12px', fontSize: '0.8rem', fontWeight: 700 }}>🤖 {selectedProfile.aiScore}%</span>}
                   </div>
                   <div style={{ fontSize: '0.9rem', color: 'rgba(255,255,255,0.7)', marginTop: '0.3rem' }}>📍 {selectedProfile.location}</div>

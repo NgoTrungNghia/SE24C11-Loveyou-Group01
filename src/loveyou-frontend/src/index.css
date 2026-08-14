@@ -592,11 +592,35 @@ input[type="text"]:focus {
   box-shadow: 0 0 25px rgba(255, 0, 128, 0.4), 0 0 45px rgba(255, 215, 0, 0.25) !important;
 }
 
+@keyframes vipSparkle {
+  0% {
+    box-shadow: 0 0 25px rgba(255, 0, 128, 0.55), 0 0 50px rgba(255, 215, 0, 0.4), inset 0 0 20px rgba(255, 215, 0, 0.15);
+    border-color: rgba(255, 215, 0, 0.8);
+  }
+  50% {
+    box-shadow: 0 0 40px rgba(255, 215, 0, 0.75), 0 0 70px rgba(0, 229, 255, 0.45), inset 0 0 30px rgba(255, 0, 128, 0.2);
+    border-color: rgba(255, 0, 128, 0.9);
+  }
+  100% {
+    box-shadow: 0 0 25px rgba(255, 0, 128, 0.55), 0 0 50px rgba(255, 215, 0, 0.4), inset 0 0 20px rgba(255, 215, 0, 0.15);
+    border-color: rgba(255, 215, 0, 0.8);
+  }
+}
+
+.vip-profile-modal-glow {
+  border: 2.5px solid transparent !important;
+  background-image: linear-gradient(#181c22, #181c22), linear-gradient(135deg, #ff007f, #ffd700, #00e5ff, #ff007f, #ffd700) !important;
+  background-origin: border-box !important;
+  background-clip: padding-box, border-box !important;
+  background-size: 300% 300% !important;
+  animation: vipGlow 3.5s ease infinite, vipSparkle 3s ease-in-out infinite !important;
+}
+
 .vip-badge-gradient {
   background: linear-gradient(135deg, #FFD700, #FF8C00, #FF007F) !important;
   color: #000 !important;
   font-weight: 800 !important;
-  box-shadow: 0 2px 10px rgba(255, 215, 0, 0.5) !important;
+  box-shadow: 0 2px 12px rgba(255, 215, 0, 0.6) !important;
 }
 
 /* ── Spinner Loader ── */

@@ -84,6 +84,7 @@ async function getCandidates(userId) {
       where: {
         userId: { notIn: swipedTargetIds },
         status: 'ACTIVE',
+        role: { not: 'ADMIN' },
       },
       take: 30,
       select: {
