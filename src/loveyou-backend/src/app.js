@@ -9,6 +9,7 @@ const chatRoutes = require('./routes/chatRoutes');
 const gameRoutes = require('./routes/gameRoutes');
 const aiMatchingRoutes = require('./routes/aiMatchingRoutes');
 const uploadRoutes = require('./routes/uploadRoutes');
+const paymentRoutes = require('./routes/paymentRoutes');
 const errorHandler = require('./middlewares/errorHandler');
 
 const app = express();
@@ -36,6 +37,8 @@ app.use('/api/ai', aiMatchingRoutes);
 app.use('/api/chat', chatRoutes);
 app.use('/api/games', gameRoutes);
 app.use('/api/upload', uploadRoutes);
+app.use('/api/payment', paymentRoutes);
+
 
 app.use(errorHandler);
 

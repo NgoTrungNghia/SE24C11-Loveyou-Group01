@@ -1,12 +1,13 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { adminApi, userApi, matchingApi, aiMatchingApi, chatApi } from '../utils/api';
+import { adminApi, userApi, matchingApi, aiMatchingApi, chatApi, paymentApi } from '../utils/api';
 import { connectSocket, disconnectSocket, getSocket } from '../utils/socket';
 import ChatPanel from '../components/ChatPanel';
 import GameModal from '../components/GameModal';
 import AdminModal from '../components/AdminModal';
 import UserSettingsModal from '../components/UserSettingsModal';
+import VipModal from '../components/VipModal';
 import ToastNotification from '../components/ToastNotification';
 
 
@@ -24,6 +25,12 @@ export default function Dashboard() {
   const [conversations, setConversations] = useState([]);
   const [activeTab, setActiveTab] = useState('matches');
   const [loadingDeck, setLoadingDeck] = useState(true);
+
+  // VIP state
+  const [showVipModal, setShowVipModal] = useState(false);
+  const [whoLikedMeData, setWhoLikedMeData] = useState({ isVip: false, totalCount: 0, candidates: [] });
+  const [loadingLikes, setLoadingLikes] = useState(false);
+
 
   // Chat state
   const [activeChatMatch, setActiveChatMatch] = useState(null);
@@ -63,6 +70,17 @@ export default function Dashboard() {
       navigate('/admin');
       return;
     }
+
+    // Check payment URL query params
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('payment') === 'success') {
+      setToast({ type: 'success', message: '🎉 Thanh toán PayOS thành công! Tài khoản VIP của bạn đã được kích hoạt.' });
+      window.history.replaceState({}, document.title, window.location.pathname);
+    } else if (params.get('payment') === 'cancel') {
+      setToast({ type: 'info', message: 'Giao dịch thanh toán PayOS đã bị hủy.' });
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+
     checkProfileAndLoadData();
     return () => disconnectSocket();
   }, [user]);
@@ -100,6 +118,12 @@ export default function Dashboard() {
       setTimeout(() => setGameInviteNotif(null), 10000);
     });
 
+    socket.on('vip_upgraded', ({ isVip, message }) => {
+      setProfile(prev => prev ? { ...prev, isVip: true } : prev);
+      setToast({ type: 'success', message: message || '🎉 Bạn đã kích hoạt Tài Khoản VIP thành công!' });
+      loadWhoLikedMe();
+    });
+
     // Explicitly ask server for current online users
     socket.emit('get_online_users');
   }, []);
@@ -110,6 +134,22 @@ export default function Dashboard() {
       setConversations(res.data.data.conversations || []);
     } catch { /* ignore */ }
   };
+
+  const loadWhoLikedMe = async () => {
+    setLoadingLikes(true);
+    try {
+      const res = await matchingApi.getWhoLikedMe();
+      setWhoLikedMeData(res.data.data);
+    } catch { /* ignore */ }
+    finally { setLoadingLikes(false); }
+  };
+
+  useEffect(() => {
+    if (activeTab === 'likes') {
+      loadWhoLikedMe();
+    }
+  }, [activeTab, profile?.isVip]);
+
 
   const checkProfileAndLoadData = async () => {
     setLoadingDeck(true);
@@ -353,19 +393,22 @@ export default function Dashboard() {
 
         {/* Profile Header */}
         <div style={{ background: 'linear-gradient(135deg, #fd267d, #ff6036)', padding: '1.2rem 1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <div onClick={() => navigate('/onboarding')} style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', cursor: 'pointer' }}>
-            <div style={{ position: 'relative' }}>
+          <div onClick={() => setShowSettingsModal(true)} style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', cursor: 'pointer' }}>
+            <div className={profile?.isVip ? 'vip-avatar-glow' : ''} style={{ position: 'relative' }}>
               <img
                 src={profile?.profilePicture || defaultAvatar}
                 alt="My Avatar"
                 onError={e => { e.target.src = defaultAvatar; }}
-                style={{ width: '42px', height: '42px', borderRadius: '50%', objectFit: 'cover', border: '2px solid #fff' }}
+                style={{ width: '42px', height: '42px', borderRadius: '50%', objectFit: 'cover', border: profile?.isVip ? 'none' : '2px solid #fff' }}
               />
               <div style={{ position: 'absolute', bottom: '1px', right: '1px', width: '10px', height: '10px', borderRadius: '50%', background: '#34D399', border: '2px solid #fd267d' }} />
             </div>
             <div>
               <div style={{ fontWeight: 700, fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '6px' }}>
                 {profile?.fullName || user?.username}
+                {profile?.isVip && (
+                  <span className="vip-badge-gradient" style={{ fontSize: '0.68rem', padding: '1px 6px', borderRadius: '10px' }}>👑 VIP</span>
+                )}
                 {(user?.role === 'ADMIN' || profile?.role === 'ADMIN') && (
                   <span style={{ fontSize: '0.7rem', background: '#f59e0b', color: '#000', padding: '1px 6px', borderRadius: '10px', fontWeight: '800' }}>ADMIN</span>
                 )}
@@ -379,13 +422,13 @@ export default function Dashboard() {
               style={{
                 background: 'rgba(255,255,255,0.18)',
                 color: '#fff', border: '1px solid rgba(255,255,255,0.3)', borderRadius: '14px',
-                padding: '6px 12px', fontWeight: '700', fontSize: '0.78rem',
+                padding: '6px 10px', fontWeight: '700', fontSize: '0.78rem',
                 cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px',
                 transition: 'all 0.2s ease',
               }}
-              title="Cài đặt tài khoản (Chỉnh sửa hồ sơ, Đổi mật khẩu, Đăng xuất)"
+              title="Cài đặt tài khoản"
             >
-              ⚙️ Cài đặt
+              ⚙️
             </button>
 
             {(user?.role === 'ADMIN' || profile?.role === 'ADMIN') && (
@@ -394,11 +437,11 @@ export default function Dashboard() {
                 style={{
                   background: 'linear-gradient(135deg, #f59e0b, #d97706)',
                   color: '#fff', border: 'none', borderRadius: '14px',
-                  padding: '6px 12px', fontWeight: '700', fontSize: '0.78rem',
+                  padding: '6px 10px', fontWeight: '700', fontSize: '0.78rem',
                   cursor: 'pointer', boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
                 }}
               >
-                👑 Quản trị
+                👑
               </button>
             )}
           </div>
@@ -406,18 +449,23 @@ export default function Dashboard() {
 
         {/* Tabs */}
         <div style={{ display: 'flex', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
-          {['matches', 'messages'].map(tab => (
+          {[
+            { id: 'matches', label: `Matches (${matches.length})` },
+            { id: 'messages', label: `💬 Tin nhắn` },
+            { id: 'likes', label: `❤️ Ai Thích Tôi` },
+          ].map(t => (
             <button
-              key={tab}
-              onClick={() => setActiveTab(tab)}
+              key={t.id}
+              onClick={() => setActiveTab(t.id)}
               style={{
-                flex: 1, padding: '0.9rem', background: 'transparent', border: 'none',
-                color: activeTab === tab ? '#fd267d' : 'rgba(255,255,255,0.6)',
-                borderBottom: activeTab === tab ? '2px solid #fd267d' : 'none',
-                fontWeight: 700, fontSize: '0.85rem', cursor: 'pointer',
+                flex: 1, padding: '0.85rem 0.4rem', background: 'transparent', border: 'none',
+                color: activeTab === t.id ? '#fd267d' : 'rgba(255,255,255,0.6)',
+                borderBottom: activeTab === t.id ? '2px solid #fd267d' : 'none',
+                fontWeight: 700, fontSize: '0.8rem', cursor: 'pointer',
+                whiteSpace: 'nowrap',
               }}
             >
-              {tab === 'matches' ? `Matches (${matches.length})` : `💬 Tin nhắn`}
+              {t.label}
             </button>
           ))}
         </div>
@@ -551,6 +599,91 @@ export default function Dashboard() {
                 <div style={{ textAlign: 'center', color: 'rgba(255,255,255,0.4)', marginTop: '3rem' }}>
                   <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>💬</div>
                   <p style={{ fontSize: '0.85rem' }}>Chọn một Match để bắt đầu nhắn tin!</p>
+                </div>
+              )}
+            </div>
+          )}
+
+          {activeTab === 'likes' && (
+            <div>
+              {loadingLikes ? (
+                <div style={{ textAlign: 'center', color: 'rgba(255,255,255,0.5)', padding: '2rem 0' }}>
+                  <div className="spinner" style={{ margin: '0 auto 0.8rem auto', width: '28px', height: '28px' }} />
+                  <p style={{ fontSize: '0.8rem' }}>Đang tải danh sách người thích bạn...</p>
+                </div>
+              ) : whoLikedMeData.isVip ? (
+                whoLikedMeData.candidates.length > 0 ? (
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0.8rem' }}>
+                    {whoLikedMeData.candidates.map((c, i) => (
+                      <div
+                        key={i}
+                        onClick={() => openDetailProfile(c)}
+                        style={{
+                          position: 'relative', height: '150px', borderRadius: '14px', overflow: 'hidden',
+                          border: '1px solid rgba(255,215,0,0.3)', background: '#000', cursor: 'pointer',
+                        }}
+                      >
+                        <img src={c.photo} alt={c.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.85), transparent)' }} />
+                        
+                        {/* Quick Match Button */}
+                        <button
+                          onClick={e => { e.stopPropagation(); handleSwipe('LIKE', c); }}
+                          style={{
+                            position: 'absolute', top: '8px', right: '8px', zIndex: 10,
+                            background: 'linear-gradient(135deg, #fd267d, #ff6036)', border: 'none',
+                            color: '#fff', borderRadius: '20px', padding: '4px 10px',
+                            cursor: 'pointer', fontWeight: 800, fontSize: '0.72rem',
+                            boxShadow: '0 4px 10px rgba(253,38,125,0.5)',
+                          }}
+                        >
+                          ⚡ Match Ngay
+                        </button>
+
+                        <div style={{ position: 'absolute', bottom: '8px', left: '8px', right: '8px' }}>
+                          <div style={{ fontWeight: 700, fontSize: '0.82rem', color: '#fff', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                            {c.name}, {c.age}
+                            {c.isVip && <span style={{ fontSize: '0.65rem' }}>👑</span>}
+                          </div>
+                          <div style={{ fontSize: '0.7rem', color: '#34D399', fontWeight: 600 }}>❤️ Đã thích bạn</div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div style={{ textAlign: 'center', color: 'rgba(255,255,255,0.4)', marginTop: '3rem' }}>
+                    <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>💌</div>
+                    <p style={{ fontSize: '0.85rem' }}>Chưa có ai thả tim cho bạn.<br />Hãy cập nhật profile đẹp hơn nhé!</p>
+                  </div>
+                )
+              ) : (
+                /* LOCKED VIP BANNER */
+                <div style={{
+                  background: 'linear-gradient(145deg, rgba(255,0,128,0.15), rgba(255,215,0,0.15))',
+                  border: '1px solid rgba(255,215,0,0.3)',
+                  borderRadius: '20px', padding: '1.5rem 1rem', textAlign: 'center',
+                  boxShadow: '0 8px 30px rgba(0,0,0,0.4)',
+                }}>
+                  <div style={{ fontSize: '2.5rem', marginBottom: '0.5rem' }}>🔒👑</div>
+                  <h3 style={{ fontSize: '1.1rem', color: '#FFD700', fontWeight: 800, marginBottom: '0.4rem' }}>
+                    {whoLikedMeData.totalCount > 0 ? `Có ${whoLikedMeData.totalCount} người đã thả tim cho bạn!` : 'Mở Khóa Tính Năng VIP'}
+                  </h3>
+                  <p style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.75)', lineHeight: 1.5, marginBottom: '1.2rem' }}>
+                    Nâng cấp Tài Khoản VIP chỉ <b>3.000 VNĐ</b> để xem ngay danh sách những ai đã thích bạn và quẹt match tức thì!
+                  </p>
+
+                  <button
+                    onClick={() => setShowVipModal(true)}
+                    style={{
+                      background: 'linear-gradient(135deg, #FF007F, #FF8C00, #FFD700)',
+                      color: '#000', border: 'none', borderRadius: '16px',
+                      padding: '0.75rem 1.4rem', fontWeight: 800, fontSize: '0.9rem',
+                      cursor: 'pointer', boxShadow: '0 6px 20px rgba(255,0,128,0.5)',
+                      width: '100%',
+                    }}
+                  >
+                    👑 Nâng Cấp VIP Ngay (3.000đ)
+                  </button>
                 </div>
               )}
             </div>
@@ -742,10 +875,11 @@ export default function Dashboard() {
             {/* Candidate Card */}
             <div
               onClick={() => openDetailProfile(currentCandidate)}
+              className={currentCandidate.isVip ? 'vip-card-glow' : ''}
               style={{
                 width: '380px', height: '560px', borderRadius: '16px', overflow: 'hidden',
                 position: 'relative', background: '#000', boxShadow: '0 25px 60px rgba(0,0,0,0.7)',
-                border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer', transition: 'transform 0.3s ease',
+                border: currentCandidate.isVip ? 'none' : '1px solid rgba(255,255,255,0.1)', cursor: 'pointer', transition: 'transform 0.3s ease',
               }}
             >
               <img src={currentCandidate.photo} alt={currentCandidate.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
@@ -761,6 +895,17 @@ export default function Dashboard() {
                   boxShadow: '0 4px 15px rgba(253,38,125,0.4)',
                 }}>
                   🤖 {currentCandidate.aiScore}% ăn ý
+                </div>
+              )}
+
+              {/* VIP Badge on card */}
+              {currentCandidate.isVip && (
+                <div className="vip-badge-gradient" style={{
+                  position: 'absolute', top: '1rem', left: currentCandidate.aiScore ? '7.5rem' : '1rem',
+                  padding: '0.3rem 0.7rem', borderRadius: '20px',
+                  fontSize: '0.75rem', zIndex: 10,
+                }}>
+                  👑 VIP Account
                 </div>
               )}
 
@@ -999,6 +1144,20 @@ export default function Dashboard() {
         </div>
       )}
 
+      {/* ── VIP MODAL ── */}
+      {showVipModal && (
+        <VipModal
+          isVip={Boolean(profile?.isVip)}
+          onClose={() => setShowVipModal(false)}
+          onVipSuccess={(vipState) => {
+            setProfile(prev => prev ? { ...prev, isVip: vipState } : prev);
+            loadWhoLikedMe();
+            loadCandidates();
+          }}
+          setToast={setToast}
+        />
+      )}
+
       {/* ── USER SETTINGS MODAL ── */}
       {showSettingsModal && (
         <UserSettingsModal
@@ -1009,6 +1168,41 @@ export default function Dashboard() {
           setToast={setToast}
         />
       )}
+
+      {/* ── FLOATING BOTTOM-RIGHT VIP SUGGESTION BUTTON ── */}
+      <button
+        onClick={() => setShowVipModal(true)}
+        style={{
+          position: 'fixed',
+          bottom: '24px',
+          right: '24px',
+          zIndex: 999,
+          background: profile?.isVip
+            ? 'linear-gradient(135deg, #FFD700, #FF007F)'
+            : 'linear-gradient(135deg, #FF007F, #FF8C00, #FFD700)',
+          color: profile?.isVip ? '#000' : '#fff',
+          border: '2px solid rgba(255,215,0,0.6)',
+          borderRadius: '30px',
+          padding: '12px 22px',
+          fontWeight: 800,
+          fontSize: '0.92rem',
+          cursor: 'pointer',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '8px',
+          boxShadow: profile?.isVip
+            ? '0 8px 25px rgba(255,215,0,0.5)'
+            : '0 8px 30px rgba(255,0,128,0.6)',
+          backdropFilter: 'blur(10px)',
+          transition: 'all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
+        }}
+        onMouseEnter={e => { e.currentTarget.style.transform = 'scale(1.06) translateY(-2px)'; }}
+        onMouseLeave={e => { e.currentTarget.style.transform = 'scale(1) translateY(0)'; }}
+        title="Nâng cấp tài khoản VIP Account (3.000 VNĐ)"
+      >
+        <span style={{ fontSize: '1.2rem' }}>👑</span>
+        <span>{profile?.isVip ? 'Tài Khoản VIP' : 'Nâng VIP (3.000đ)'}</span>
+      </button>
 
       {/* ── TOAST NOTIFICATION ── */}
       <ToastNotification toast={toast} onClose={() => setToast(null)} />

@@ -32,6 +32,8 @@ async function getUserProfile(userId) {
       interests: true,
       photos: true,
       isProfileComplete: true,
+      isVip: true,
+      vipUntil: true,
       role: true,
       status: true,
       createdAt: true,

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { adminApi } from '../utils/api';
+import { connectSocket } from '../utils/socket';
 import ToastNotification from '../components/ToastNotification';
 
 export default function AdminDashboard() {
@@ -16,6 +17,7 @@ export default function AdminDashboard() {
   const [error, setError] = useState('');
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('ALL'); // ALL, ACTIVE, BANNED
+  const [roleFilter, setRoleFilter] = useState('ALL'); // ALL, ADMIN, USER_VIP, USER_NORMAL
   const [selectedUser, setSelectedUser] = useState(null);
   const [actionLoading, setActionLoading] = useState(null);
   const [toast, setToast] = useState(null);
@@ -28,6 +30,8 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     loadData();
+    const token = localStorage.getItem('ly_token');
+    if (token) connectSocket(token);
   }, []);
 
   const loadData = async () => {
@@ -106,10 +110,11 @@ export default function AdminDashboard() {
   };
 
   const getOnlineStatus = (u) => {
-    if (u?.isOnline) return { isOnline: true, text: 'Online' };
+    if (u?.isOnline || u?.userId === user?.userId) return { isOnline: true, text: 'Online' };
     if (!u?.lastActiveAt) return { isOnline: false, text: 'Chưa online' };
     const diffMs = Date.now() - new Date(u.lastActiveAt).getTime();
     const diffMin = Math.floor(diffMs / 60000);
+    if (diffMin < 2) return { isOnline: true, text: 'Online' };
     if (diffMin < 60) return { isOnline: false, text: `${diffMin}m trước` };
     const diffHours = Math.floor(diffMin / 60);
     if (diffHours < 24) return { isOnline: false, text: `${diffHours}h trước` };
@@ -137,8 +142,12 @@ export default function AdminDashboard() {
       (u.email && u.email.toLowerCase().includes(q))
     );
     if (!matchesQuery) return false;
-    if (statusFilter === 'ACTIVE') return u.status === 'ACTIVE';
-    if (statusFilter === 'BANNED') return u.status === 'BANNED';
+    if (statusFilter === 'ACTIVE' && u.status !== 'ACTIVE') return false;
+    if (statusFilter === 'BANNED' && u.status !== 'BANNED') return false;
+
+    if (roleFilter === 'ADMIN') return u.role === 'ADMIN';
+    if (roleFilter === 'USER_VIP') return u.role === 'USER' && Boolean(u.isVip);
+    if (roleFilter === 'USER_NORMAL') return u.role === 'USER' && !u.isVip;
     return true;
   });
 
@@ -238,6 +247,16 @@ export default function AdminDashboard() {
             </div>
 
             <div className="admin-stat-card" style={styles.statCard}>
+              <div style={styles.statIcon}>👑</div>
+              <div>
+                <div style={{ ...styles.statNumber, color: '#f59e0b' }}>
+                  {users.filter(u => u.isVip).length}
+                </div>
+                <div style={styles.statLabel}>Tài khoản VIP</div>
+              </div>
+            </div>
+
+            <div className="admin-stat-card" style={styles.statCard}>
               <div style={styles.statIcon}>🟢</div>
               <div>
                 <div style={{ ...styles.statNumber, color: '#10b981' }}>
@@ -248,18 +267,10 @@ export default function AdminDashboard() {
             </div>
 
             <div className="admin-stat-card" style={styles.statCard}>
-              <div style={styles.statIcon}>🚫</div>
-              <div>
-                <div style={{ ...styles.statNumber, color: '#ef4444' }}>{stats.bannedUsers}</div>
-                <div style={styles.statLabel}>Tài khoản đã bị khóa</div>
-              </div>
-            </div>
-
-            <div className="admin-stat-card" style={styles.statCard}>
               <div style={styles.statIcon}>💖</div>
               <div>
                 <div style={{ ...styles.statNumber, color: '#fd267d' }}>{stats.totalMatches}</div>
-                <div style={styles.statLabel}>Lượt ghép đôi trên ứng dụng</div>
+                <div style={styles.statLabel}>Lượt ghép đôi</div>
               </div>
             </div>
           </div>
@@ -319,9 +330,9 @@ export default function AdminDashboard() {
             </div>
           </div>
 
-          {/* TOOLBAR: SEARCH & STATUS FILTER */}
-          <div style={styles.toolbar}>
-            <div style={styles.searchBox}>
+          {/* TOOLBAR: SEARCH & STATUS/ROLE FILTER */}
+          <div style={{ ...styles.toolbar, flexWrap: 'wrap', gap: '1rem' }}>
+            <div style={{ ...styles.searchBox, flex: 1, minWidth: '280px' }}>
               <span style={{ fontSize: '1rem', color: 'rgba(255,255,255,0.5)' }}>🔍</span>
               <input
                 type="text"
@@ -332,17 +343,35 @@ export default function AdminDashboard() {
               />
             </div>
 
-            <div style={styles.filterGroup}>
-              {['ALL', 'ACTIVE', 'BANNED'].map(st => (
-                <button
-                  key={st}
-                  onClick={() => setStatusFilter(st)}
-                  className={`admin-filter-tab ${statusFilter === st ? 'active' : ''}`}
-                  style={styles.filterBtn}
-                >
-                  {st === 'ALL' ? 'Tất cả' : st === 'ACTIVE' ? '🟢 Bình thường' : '🚫 Đã bị khóa'}
-                </button>
-              ))}
+            <div style={{ display: 'flex', gap: '0.8rem', alignItems: 'center', flexWrap: 'wrap' }}>
+              {/* Role Filter Select */}
+              <select
+                value={roleFilter}
+                onChange={e => setRoleFilter(e.target.value)}
+                style={{
+                  padding: '0.65rem 1rem', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.15)',
+                  background: '#0f1115', color: '#fff', fontSize: '0.88rem', fontWeight: 700, cursor: 'pointer',
+                  outline: 'none',
+                }}
+              >
+                <option value="ALL">🛡️ Tất cả vai trò</option>
+                <option value="ADMIN">👑 ADMIN</option>
+                <option value="USER_VIP">👑 USER VIP</option>
+                <option value="USER_NORMAL">👤 USER THƯỜNG</option>
+              </select>
+
+              <div style={styles.filterGroup}>
+                {['ALL', 'ACTIVE', 'BANNED'].map(st => (
+                  <button
+                    key={st}
+                    onClick={() => setStatusFilter(st)}
+                    className={`admin-filter-tab ${statusFilter === st ? 'active' : ''}`}
+                    style={styles.filterBtn}
+                  >
+                    {st === 'ALL' ? 'Tất cả trạng thái' : st === 'ACTIVE' ? '🟢 Bình thường' : '🚫 Đã bị khóa'}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
 
@@ -404,14 +433,30 @@ export default function AdminDashboard() {
                           })()}
                         </td>
                         <td style={styles.td}>
-                          <span style={{
-                            ...styles.roleBadge,
-                            backgroundColor: u.role === 'ADMIN' ? 'rgba(245, 158, 11, 0.2)' : 'rgba(255,255,255,0.08)',
-                            color: u.role === 'ADMIN' ? '#f59e0b' : 'rgba(255,255,255,0.8)',
-                            border: u.role === 'ADMIN' ? '1px solid rgba(245, 158, 11, 0.4)' : '1px solid rgba(255,255,255,0.1)'
-                          }}>
-                            {u.role}
-                          </span>
+                          {u.role === 'ADMIN' ? (
+                            <span style={{
+                              padding: '4px 10px', borderRadius: '12px', fontSize: '0.75rem', fontWeight: 800,
+                              background: 'linear-gradient(135deg, #f59e0b, #d97706)', color: '#fff',
+                              boxShadow: '0 2px 6px rgba(245,158,11,0.3)', display: 'inline-flex', alignItems: 'center', gap: '4px',
+                            }}>
+                              👑 ADMIN
+                            </span>
+                          ) : u.isVip ? (
+                            <span className="vip-badge-gradient" style={{
+                              padding: '4px 10px', borderRadius: '12px', fontSize: '0.75rem', fontWeight: 800,
+                              display: 'inline-flex', alignItems: 'center', gap: '4px',
+                            }}>
+                              👑 USER VIP
+                            </span>
+                          ) : (
+                            <span style={{
+                              padding: '4px 10px', borderRadius: '12px', fontSize: '0.75rem', fontWeight: 600,
+                              background: 'rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.8)',
+                              border: '1px solid rgba(255,255,255,0.1)', display: 'inline-flex', alignItems: 'center', gap: '4px',
+                            }}>
+                              👤 USER
+                            </span>
+                          )}
                         </td>
                         <td style={styles.td}>
                           <span style={{
@@ -735,7 +780,16 @@ export default function AdminDashboard() {
                   style={styles.profileAvatarLarge}
                 />
                 <div>
-                  <h2 style={{ margin: '0 0 4px 0', fontSize: '1.4rem', color: '#ffffff' }}>{selectedUser.fullName || selectedUser.username}</h2>
+                  <h2 style={{ margin: '0 0 4px 0', fontSize: '1.4rem', color: '#ffffff', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    {selectedUser.fullName || selectedUser.username}
+                    {selectedUser.role === 'ADMIN' ? (
+                      <span style={{ fontSize: '0.75rem', background: '#f59e0b', color: '#fff', padding: '2px 8px', borderRadius: '10px', fontWeight: 800 }}>👑 ADMIN</span>
+                    ) : selectedUser.isVip ? (
+                      <span className="vip-badge-gradient" style={{ fontSize: '0.75rem', padding: '2px 8px', borderRadius: '10px', fontWeight: 800 }}>👑 USER VIP</span>
+                    ) : (
+                      <span style={{ fontSize: '0.75rem', background: 'rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.7)', padding: '2px 8px', borderRadius: '10px', fontWeight: 600 }}>👤 USER</span>
+                    )}
+                  </h2>
                   <div style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.9rem', marginBottom: '8px' }}>@{selectedUser.username} • {selectedUser.email}</div>
                   <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
                     <span style={styles.tag}>{selectedUser.location || 'Chưa có vị trí'}</span>
@@ -754,7 +808,7 @@ export default function AdminDashboard() {
                 <div><strong>Ngày tạo:</strong> <span style={{ color: 'rgba(255,255,255,0.85)' }}>{formatDate(selectedUser.createdAt)}</span></div>
                 <div><strong>Hoạt động gần nhất:</strong> <span style={{ color: 'rgba(255,255,255,0.85)' }}>{formatDate(selectedUser.lastActiveAt)}</span></div>
                 <div><strong>Số điện thoại:</strong> <span style={{ color: 'rgba(255,255,255,0.85)' }}>{selectedUser.phoneNumber || 'Chưa đăng ký'}</span></div>
-                <div><strong>Vai trò:</strong> <span style={{ color: 'rgba(255,255,255,0.85)' }}>{selectedUser.role === 'ADMIN' ? 'Quản trị viên' : 'Người dùng'}</span></div>
+                <div><strong>Vai trò:</strong> <span style={{ color: 'rgba(255,255,255,0.85)' }}>{selectedUser.role === 'ADMIN' ? 'Quản trị viên (ADMIN)' : selectedUser.isVip ? 'Người dùng VIP (USER VIP)' : 'Người dùng (USER)'}</span></div>
                 <div><strong>Trạng thái hiện tại:</strong> <span style={{ color: selectedUser.status === 'BANNED' ? '#ef4444' : '#10b981' }}>{selectedUser.status === 'BANNED' ? 'Đã bị khóa' : 'Đang hoạt động'}</span></div>
                 <div><strong>Hồ sơ hoàn tất:</strong> <span style={{ color: 'rgba(255,255,255,0.85)' }}>{selectedUser.isProfileComplete ? 'Đã hoàn tất' : 'Chưa xong'}</span></div>
               </div>

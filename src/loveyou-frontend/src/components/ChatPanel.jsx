@@ -289,7 +289,7 @@ export default function ChatPanel({ match, currentUserId, isOnline, onClose, onI
         borderBottom: '1px solid rgba(255,255,255,0.08)',
         flexShrink: 0,
       }}>
-        <div style={{ position: 'relative', flexShrink: 0 }}>
+        <div className={(match?.partner?.isVip || match?.isVip) ? 'vip-avatar-glow' : ''} style={{ position: 'relative', flexShrink: 0 }}>
           <img
             src={match?.partner?.photo || defaultAvatar}
             alt={match?.partner?.name}
@@ -307,6 +307,9 @@ export default function ChatPanel({ match, currentUserId, isOnline, onClose, onI
         <div style={{ flex: 1 }}>
           <div style={{ fontWeight: 700, fontSize: '0.95rem', color: '#fff', display: 'flex', alignItems: 'center', gap: '6px' }}>
             {match?.partner?.name || 'Partner'}
+            {(match?.partner?.isVip || match?.isVip) && (
+              <span className="vip-badge-gradient" style={{ fontSize: '0.68rem', padding: '1px 6px', borderRadius: '10px' }}>👑 VIP</span>
+            )}
             {isBlockedState && (
               <span style={{ fontSize: '0.7rem', background: 'rgba(239,68,68,0.2)', color: '#ef4444', padding: '1px 6px', borderRadius: '6px', fontWeight: 600 }}>
                 Đã chặn

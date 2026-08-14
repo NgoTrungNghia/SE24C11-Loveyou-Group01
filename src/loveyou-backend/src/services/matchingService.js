@@ -70,6 +70,7 @@ async function getCandidates(userId) {
         location: true,
         interests: true,
         photos: true,
+        isVip: true,
       },
     });
 
@@ -86,6 +87,7 @@ async function getCandidates(userId) {
         photo: primaryPhoto,
         photos: photosList.length > 0 ? photosList : [primaryPhoto],
         tags: parseJsonField(u.interests),
+        isVip: Boolean(u.isVip),
       };
     });
   } catch {
@@ -157,6 +159,7 @@ async function handleSwipe(swiperId, targetId, action) {
           location: true,
           bio: true,
           interests: true,
+          isVip: true,
         },
       });
 
@@ -172,6 +175,7 @@ async function handleSwipe(swiperId, targetId, action) {
           photo: photosList[0] || targetUserObj.profilePicture || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=600',
           photos: photosList.length > 0 ? photosList : [targetUserObj.profilePicture],
           tags: parseJsonField(targetUserObj.interests),
+          isVip: Boolean(targetUserObj.isVip),
         };
       }
     }
@@ -195,8 +199,8 @@ async function getUserMatches(userId) {
         ],
       },
       include: {
-        user1: { select: { userId: true, username: true, fullName: true, profilePicture: true, photos: true, dateOfBirth: true, height: true, location: true, bio: true, interests: true } },
-        user2: { select: { userId: true, username: true, fullName: true, profilePicture: true, photos: true, dateOfBirth: true, height: true, location: true, bio: true, interests: true } },
+        user1: { select: { userId: true, username: true, fullName: true, profilePicture: true, photos: true, dateOfBirth: true, height: true, location: true, bio: true, interests: true, isVip: true } },
+        user2: { select: { userId: true, username: true, fullName: true, profilePicture: true, photos: true, dateOfBirth: true, height: true, location: true, bio: true, interests: true, isVip: true } },
       },
     });
 
@@ -233,6 +237,7 @@ async function getUserMatches(userId) {
         isBlocked,
         isBlockedByMe,
         isBlockedByPartner,
+        isVip: Boolean(partner.isVip),
       };
     });
   } catch {
@@ -272,9 +277,159 @@ async function unmatchUser(currentUserId, targetId) {
   return { success: true };
 }
 
+/**
+ * Lấy danh sách "Ai đã tim mình" (Chỉ VIP mới xem được chi tiết, chưa VIP trả về mờ + số lượng)
+ */
+async function getWhoLikedMe(userId) {
+  const currentUserId = Number(userId);
+
+  const currentUser = await prisma.user.findUnique({
+    where: { userId: currentUserId },
+    select: { isVip: true },
+  });
+
+  const swipesReceived = await prisma.swipe.findMany({
+    where: {
+      targetId: currentUserId,
+      action: { in: ['LIKE', 'SUPER_LIKE'] },
+    },
+    include: {
+      swiper: {
+        select: {
+          userId: true,
+          username: true,
+          fullName: true,
+          dateOfBirth: true,
+          profilePicture: true,
+          photos: true,
+          bio: true,
+          location: true,
+          interests: true,
+          isVip: true,
+        },
+      },
+    },
+    orderBy: { createdAt: 'desc' },
+  });
+
+  // Filter out already matched users
+  const matches = await getUserMatches(currentUserId);
+  const matchedUserIds = new Set(matches.map(m => m.id));
+
+  const filteredSwipes = swipesReceived.filter(s => !matchedUserIds.has(s.swiperId));
+  const totalCount = filteredSwipes.length;
+  const isVip = Boolean(currentUser?.isVip);
+
+  if (!isVip) {
+    return {
+      isVip: false,
+      totalCount,
+      candidates: [],
+    };
+  }
+
+  const candidates = filteredSwipes.map(s => {
+    const u = s.swiper;
+    const photosList = parseJsonField(u.photos);
+    const primaryPhoto = photosList[0] || u.profilePicture || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=600';
+    return {
+      id: u.userId,
+      name: u.fullName || u.username,
+      age: calculateAge(u.dateOfBirth),
+      location: u.location ? `${u.location} • 3 km` : 'TP. Hồ Chí Minh • 3 km',
+      bio: u.bio || '',
+      photo: primaryPhoto,
+      photos: photosList.length > 0 ? photosList : [primaryPhoto],
+      tags: parseJsonField(u.interests),
+      likedAt: s.createdAt,
+      isVip: Boolean(u.isVip),
+    };
+  });
+
+  return {
+    isVip: true,
+    totalCount,
+    candidates,
+  };
+}
+
+/**
+ * Lấy danh sách "Mình đã tim ai"
+ */
+async function getWhoILiked(userId) {
+  const currentUserId = Number(userId);
+
+  const currentUser = await prisma.user.findUnique({
+    where: { userId: currentUserId },
+    select: { isVip: true },
+  });
+
+  const swipesSent = await prisma.swipe.findMany({
+    where: {
+      swiperId: currentUserId,
+      action: { in: ['LIKE', 'SUPER_LIKE'] },
+    },
+    include: {
+      target: {
+        select: {
+          userId: true,
+          username: true,
+          fullName: true,
+          dateOfBirth: true,
+          profilePicture: true,
+          photos: true,
+          bio: true,
+          location: true,
+          interests: true,
+          isVip: true,
+        },
+      },
+    },
+    orderBy: { createdAt: 'desc' },
+  });
+
+  const totalCount = swipesSent.length;
+  const isVip = Boolean(currentUser?.isVip);
+
+  if (!isVip) {
+    return {
+      isVip: false,
+      totalCount,
+      candidates: [],
+    };
+  }
+
+  const candidates = swipesSent.map(s => {
+    const u = s.target;
+    const photosList = parseJsonField(u.photos);
+    const primaryPhoto = photosList[0] || u.profilePicture || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=600';
+    return {
+      id: u.userId,
+      name: u.fullName || u.username,
+      age: calculateAge(u.dateOfBirth),
+      location: u.location ? `${u.location} • 3 km` : 'TP. Hồ Chí Minh • 3 km',
+      bio: u.bio || '',
+      photo: primaryPhoto,
+      photos: photosList.length > 0 ? photosList : [primaryPhoto],
+      tags: parseJsonField(u.interests),
+      likedAt: s.createdAt,
+      isVip: Boolean(u.isVip),
+    };
+  });
+
+  return {
+    isVip: true,
+    totalCount,
+    candidates,
+  };
+}
+
 module.exports = {
   getCandidates,
   handleSwipe,
   getUserMatches,
   unmatchUser,
+  getWhoLikedMe,
+  getWhoILiked,
 };
+

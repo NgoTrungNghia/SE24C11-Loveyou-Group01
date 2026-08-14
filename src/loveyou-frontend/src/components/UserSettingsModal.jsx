@@ -208,7 +208,7 @@ export default function UserSettingsModal({ profile, onProfileUpdated, onClose, 
             
             {/* Interactive Circular Avatar Picker */}
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '0.8rem' }}>
-              <label htmlFor="user-avatar-file-input" style={{ position: 'relative', cursor: 'pointer' }}>
+              <label htmlFor="user-avatar-file-input" className={profile?.isVip ? 'vip-avatar-glow' : ''} style={{ position: 'relative', cursor: 'pointer' }}>
                 <img
                   src={profilePicture || defaultAvatar}
                   alt="Avatar"
@@ -218,8 +218,8 @@ export default function UserSettingsModal({ profile, onProfileUpdated, onClose, 
                     height: '94px',
                     borderRadius: '50%',
                     objectFit: 'cover',
-                    border: '3px solid #fd267d',
-                    boxShadow: '0 6px 20px rgba(253,38,125,0.4)',
+                    border: profile?.isVip ? 'none' : '3px solid #fd267d',
+                    boxShadow: profile?.isVip ? 'none' : '0 6px 20px rgba(253,38,125,0.4)',
                     transition: 'all 0.2s ease',
                   }}
                 />

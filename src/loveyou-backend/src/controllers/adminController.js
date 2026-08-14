@@ -12,10 +12,18 @@ async function getStats(req, res, next) {
 
 async function getAllUsers(req, res, next) {
   try {
+    const chatService = require('../services/chatService');
+    const currentAdminId = Number(req.user.userId);
+    if (currentAdminId) {
+      await chatService.updateLastActive(currentAdminId);
+    }
+
     const onlineUsersMap = req.app.get('onlineUsers');
     const onlineSet = new Set(
       onlineUsersMap ? Array.from(onlineUsersMap.keys()).map(id => Number(id)) : []
     );
+    if (currentAdminId) onlineSet.add(currentAdminId);
+
     const users = await adminService.getAllUsers();
     const usersWithOnline = users.map(u => ({
       ...u,

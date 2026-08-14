@@ -43,9 +43,32 @@ async function unmatch(req, res, next) {
   }
 }
 
+async function getWhoLikedMe(req, res, next) {
+  try {
+    const userId = req.user.userId;
+    const result = await matchingService.getWhoLikedMe(userId);
+    return success(res, result);
+  } catch (err) {
+    return next(err);
+  }
+}
+
+async function getWhoILiked(req, res, next) {
+  try {
+    const userId = req.user.userId;
+    const result = await matchingService.getWhoILiked(userId);
+    return success(res, result);
+  } catch (err) {
+    return next(err);
+  }
+}
+
 module.exports = {
   getCandidates,
   swipe,
   getMatches,
   unmatch,
+  getWhoLikedMe,
+  getWhoILiked,
 };
+

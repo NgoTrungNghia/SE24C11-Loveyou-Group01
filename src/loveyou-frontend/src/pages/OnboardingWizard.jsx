@@ -53,14 +53,16 @@ export default function OnboardingWizard() {
       if (p) {
         const existingPhotos = Array.isArray(p.photos) ? p.photos : [];
         const photosArray = [0, 1, 2, 3].map(i => existingPhotos[i] || (i === 0 ? p.profilePicture || '' : ''));
+        const rawGender = p.gender ? String(p.gender).toUpperCase() : '';
+        const normalizedGender = ['FEMALE', 'NỮ'].includes(rawGender) ? 'FEMALE' : (['MALE', 'NAM'].includes(rawGender) ? 'MALE' : (rawGender ? 'OTHER' : 'MALE'));
         setForm({
           fullName: p.fullName || '',
           phoneNumber: p.phoneNumber || '',
-          gender: p.gender || 'MALE',
+          gender: normalizedGender,
           dateOfBirth: p.dateOfBirth ? p.dateOfBirth.split('T')[0] : '',
           profilePicture: p.profilePicture || '',
           bio: p.bio || '',
-          height: p.height || '',
+          height: p.height ? String(p.height) : '',
           location: p.location || '',
           latitude: p.latitude || null,
           longitude: p.longitude || null,
@@ -276,7 +278,14 @@ export default function OnboardingWizard() {
           onClick={async () => {
             if (form.fullName && form.fullName.trim()) {
               try {
-                await userApi.updateProfile({ ...form, isProfileComplete: true });
+                const cleanedPhotos = form.photos.filter(p => p && p.trim() !== '');
+                await userApi.updateProfile({
+                  ...form,
+                  height: form.height ? Number(form.height) : null,
+                  photos: cleanedPhotos,
+                  profilePicture: cleanedPhotos[0] || form.profilePicture || '',
+                  isProfileComplete: true,
+                });
               } catch { /* ignore */ }
             }
             navigate('/dashboard');

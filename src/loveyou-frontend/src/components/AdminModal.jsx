@@ -12,6 +12,7 @@ export default function AdminModal({ onClose }) {
   const [actionLoading, setActionLoading] = useState(null);
   const [error, setError] = useState('');
   const [search, setSearch] = useState('');
+  const [roleFilter, setRoleFilter] = useState('ALL'); // 'ALL' | 'ADMIN' | 'USER_VIP' | 'USER_NORMAL'
   const [toast, setToast] = useState(null);
 
   // AI Config state
@@ -84,11 +85,18 @@ export default function AdminModal({ onClose }) {
 
   const filteredUsers = users.filter(u => {
     const q = search.toLowerCase();
-    return (
+    const matchesSearch = (
       (u.fullName && u.fullName.toLowerCase().includes(q)) ||
       (u.username && u.username.toLowerCase().includes(q)) ||
       (u.email && u.email.toLowerCase().includes(q))
     );
+
+    if (!matchesSearch) return false;
+
+    if (roleFilter === 'ADMIN') return u.role === 'ADMIN';
+    if (roleFilter === 'USER_VIP') return u.role === 'USER' && Boolean(u.isVip);
+    if (roleFilter === 'USER_NORMAL') return u.role === 'USER' && !u.isVip;
+    return true;
   });
 
   const handleSaveApiKey = async () => {
@@ -163,19 +171,21 @@ export default function AdminModal({ onClose }) {
                   <div style={styles.statNumber}>{stats.totalUsers}</div>
                   <div style={styles.statLabel}>Tổng tài khoản</div>
                 </div>
+                <div style={{ ...styles.statCard, borderLeft: '4px solid #f59e0b' }}>
+                  <div style={{ ...styles.statNumber, color: '#f59e0b' }}>
+                    {users.filter(u => u.isVip).length}
+                  </div>
+                  <div style={styles.statLabel}>Tài khoản VIP</div>
+                </div>
                 <div style={{ ...styles.statCard, borderLeft: '4px solid #10b981' }}>
                   <div style={{ ...styles.statNumber, color: '#10b981' }}>
                     {users.filter(u => u.isOnline).length}
                   </div>
                   <div style={styles.statLabel}>Tài khoản online</div>
                 </div>
-                <div style={{ ...styles.statCard, borderLeft: '4px solid #ef4444' }}>
-                  <div style={{ ...styles.statNumber, color: '#ef4444' }}>{stats.bannedUsers}</div>
-                  <div style={styles.statLabel}>Tài khoản đã bị khóa</div>
-                </div>
                 <div style={{ ...styles.statCard, borderLeft: '4px solid #ec4899' }}>
                   <div style={{ ...styles.statNumber, color: '#ec4899' }}>{stats.totalMatches}</div>
-                  <div style={styles.statLabel}>Lượt ghép đôi thành công</div>
+                  <div style={styles.statLabel}>Lượt ghép đôi</div>
                 </div>
               </div>
             )}
@@ -225,15 +235,29 @@ export default function AdminModal({ onClose }) {
             {activeTab === 'USERS' && (
               <>
                 {/* Search & Filter */}
-                <div style={styles.searchBar}>
+                <div style={{ ...styles.searchBar, display: 'flex', gap: '0.8rem', alignItems: 'center' }}>
                   <input
                     type="text"
                     placeholder="🔍 Tìm kiếm theo Tên, Username hoặc Email..."
                     value={search}
                     onChange={e => setSearch(e.target.value)}
-                    style={styles.searchInput}
+                    style={{ ...styles.searchInput, flex: 1 }}
                   />
-                  <span style={{ fontSize: '0.88rem', color: '#6b7280' }}>
+                  <select
+                    value={roleFilter}
+                    onChange={e => setRoleFilter(e.target.value)}
+                    style={{
+                      padding: '0.6rem 1rem', borderRadius: '12px', border: '1px solid #d1d5db',
+                      background: '#fff', fontSize: '0.88rem', fontWeight: 600, color: '#374151', cursor: 'pointer',
+                      boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
+                    }}
+                  >
+                    <option value="ALL">Tất cả vai trò</option>
+                    <option value="ADMIN">👑 ADMIN</option>
+                    <option value="USER_VIP">👑 USER VIP</option>
+                    <option value="USER_NORMAL">👤 USER THƯỜNG</option>
+                  </select>
+                  <span style={{ fontSize: '0.88rem', color: '#6b7280', whiteSpace: 'nowrap' }}>
                     Hiển thị {filteredUsers.length} / {users.length} tài khoản
                   </span>
                 </div>
@@ -292,13 +316,29 @@ export default function AdminModal({ onClose }) {
                               })()}
                             </td>
                             <td style={styles.td}>
-                              <span style={{
-                                padding: '2px 8px', borderRadius: '12px', fontSize: '0.75rem', fontWeight: '600',
-                                backgroundColor: u.role === 'ADMIN' ? '#fef3c7' : '#f3f4f6',
-                                color: u.role === 'ADMIN' ? '#b45309' : '#4b5563'
-                              }}>
-                                {u.role}
-                              </span>
+                              {u.role === 'ADMIN' ? (
+                                <span style={{
+                                  padding: '4px 10px', borderRadius: '12px', fontSize: '0.75rem', fontWeight: 800,
+                                  background: 'linear-gradient(135deg, #f59e0b, #d97706)', color: '#fff',
+                                  boxShadow: '0 2px 6px rgba(245,158,11,0.3)', display: 'inline-flex', alignItems: 'center', gap: '4px',
+                                }}>
+                                  👑 ADMIN
+                                </span>
+                              ) : u.isVip ? (
+                                <span className="vip-badge-gradient" style={{
+                                  padding: '4px 10px', borderRadius: '12px', fontSize: '0.75rem', fontWeight: 800,
+                                  display: 'inline-flex', alignItems: 'center', gap: '4px',
+                                }}>
+                                  👑 USER VIP
+                                </span>
+                              ) : (
+                                <span style={{
+                                  padding: '4px 10px', borderRadius: '12px', fontSize: '0.75rem', fontWeight: 600,
+                                  background: '#f3f4f6', color: '#4b5563', display: 'inline-flex', alignItems: 'center', gap: '4px',
+                                }}>
+                                  👤 USER
+                                </span>
+                              )}
                             </td>
                             <td style={styles.td}>
                               <span style={{
@@ -590,7 +630,22 @@ export default function AdminModal({ onClose }) {
                   style={{ width: '120px', height: '120px', borderRadius: '16px', objectFit: 'cover', border: '3px solid #e5e7eb' }}
                 />
                 <div style={{ flex: 1 }}>
-                  <h2 style={{ margin: '0 0 4px 0', fontSize: '1.3rem' }}>{selectedUser.fullName || selectedUser.username}</h2>
+                  <h2 style={{ margin: '0 0 4px 0', fontSize: '1.3rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    {selectedUser.fullName || selectedUser.username}
+                    {selectedUser.role === 'ADMIN' ? (
+                      <span style={{ fontSize: '0.75rem', background: '#f59e0b', color: '#fff', padding: '2px 8px', borderRadius: '10px', fontWeight: 800 }}>
+                        👑 ADMIN
+                      </span>
+                    ) : selectedUser.isVip ? (
+                      <span className="vip-badge-gradient" style={{ fontSize: '0.75rem', padding: '2px 8px', borderRadius: '10px', fontWeight: 800 }}>
+                        👑 USER VIP
+                      </span>
+                    ) : (
+                      <span style={{ fontSize: '0.75rem', background: '#e5e7eb', color: '#4b5563', padding: '2px 8px', borderRadius: '10px', fontWeight: 600 }}>
+                        👤 USER
+                      </span>
+                    )}
+                  </h2>
                   <div style={{ color: '#4b5563', marginBottom: '8px' }}>@{selectedUser.username} • {selectedUser.email}</div>
                   <div style={{ display: 'flex', gap: '10px', fontSize: '0.85rem' }}>
                     <span>{selectedUser.location || 'Chưa có vị trí'}</span>

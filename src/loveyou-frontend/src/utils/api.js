@@ -59,6 +59,14 @@ export const matchingApi = {
   swipe: (targetId, action) => api.post('/matching/swipe', { targetId, action }),
   getMatches: () => api.get('/matching/matches'),
   unmatch: (targetId) => api.post('/matching/unmatch', { targetId }),
+  getWhoLikedMe: () => api.get('/matching/who-liked-me'),
+  getWhoILiked: () => api.get('/matching/who-i-liked'),
+};
+
+export const paymentApi = {
+  createPaymentLink: (returnUrl, cancelUrl) => api.post('/payment/create-payment-link', { returnUrl, cancelUrl }),
+  getStatus: (orderCode) => api.get(`/payment/status/${orderCode}`),
+  toggleVipDemo: (isVip) => api.post('/payment/toggle-vip-demo', { isVip }),
 };
 
 export const aiMatchingApi = {

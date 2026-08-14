@@ -49,6 +49,8 @@ model User {
   interests         String?   @db.Text
   photos            String?   @db.Text
   isProfileComplete Boolean   @default(false) @map("is_profile_complete")
+  isVip             Boolean   @default(false) @map("is_vip")
+  vipUntil          DateTime? @map("vip_until")
   lastActiveAt      DateTime? @map("last_active_at")
   role              Role      @default(USER)
   status            Status    @default(ACTIVE)
@@ -67,6 +69,7 @@ model User {
   blocksGiven         UserBlock[]          @relation("BlockerUser")
   blocksReceived      UserBlock[]          @relation("BlockedUser")
   conversationClears  UserConversationClear[]
+  payments            Payment[]
 
   @@map("users")
 }
@@ -197,4 +200,22 @@ model SystemConfig {
   updatedAt DateTime @default(now()) @updatedAt @map("updated_at")
 
   @@map("system_configs")
+}
+
+model Payment {
+  id          Int      @id @default(autoincrement())
+  orderCode   BigInt   @unique @map("order_code")
+  userId      Int      @map("user_id")
+  user        User     @relation(fields: [userId], references: [userId], onDelete: Cascade)
+  type        String   @default("VIP") @db.VarChar(50)
+  itemId      String?  @map("item_id") @db.VarChar(100)
+  amount      Int      @default(3000)
+  status      String   @default("PENDING") @db.VarChar(20)
+  payosLink   String?  @map("payos_link") @db.Text
+  description String?  @db.VarChar(255)
+  metadata    String?  @db.Text
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@map("payments")
 }
