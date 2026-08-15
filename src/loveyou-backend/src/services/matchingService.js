@@ -112,6 +112,9 @@ async function getCandidates(userId) {
         interests: true,
         photos: true,
         isVip: true,
+        isCitizenVerified: true,
+        isEmailVerified: true,
+        citizenVerificationStatus: true,
       },
     });
 
@@ -142,6 +145,8 @@ async function getCandidates(userId) {
         photos: photosList.length > 0 ? photosList : [primaryPhoto],
         tags: parseJsonField(u.interests),
         isVip: Boolean(u.isVip),
+        isCitizenVerified: Boolean(u.isCitizenVerified || u.citizenVerificationStatus === 'APPROVED'),
+        isEmailVerified: Boolean(u.isEmailVerified),
       };
     });
   } catch {
@@ -216,6 +221,8 @@ async function handleSwipe(swiperId, targetId, action) {
           bio: true,
           interests: true,
           isVip: true,
+          isCitizenVerified: true,
+          isEmailVerified: true,
         },
       });
 
@@ -237,6 +244,8 @@ async function handleSwipe(swiperId, targetId, action) {
           photos: photosList.length > 0 ? photosList : [targetUserObj.profilePicture],
           tags: parseJsonField(targetUserObj.interests),
           isVip: Boolean(targetUserObj.isVip),
+          isCitizenVerified: Boolean(targetUserObj.isCitizenVerified),
+          isEmailVerified: Boolean(targetUserObj.isEmailVerified),
         };
       }
     }
@@ -266,8 +275,8 @@ async function getUserMatches(userId) {
         isUnmatched: false,
       },
       include: {
-        user1: { select: { userId: true, username: true, fullName: true, profilePicture: true, photos: true, dateOfBirth: true, height: true, location: true, latitude: true, longitude: true, bio: true, interests: true, isVip: true } },
-        user2: { select: { userId: true, username: true, fullName: true, profilePicture: true, photos: true, dateOfBirth: true, height: true, location: true, latitude: true, longitude: true, bio: true, interests: true, isVip: true } },
+        user1: { select: { userId: true, username: true, fullName: true, profilePicture: true, photos: true, dateOfBirth: true, height: true, location: true, latitude: true, longitude: true, bio: true, interests: true, isVip: true, isCitizenVerified: true, isEmailVerified: true } },
+        user2: { select: { userId: true, username: true, fullName: true, profilePicture: true, photos: true, dateOfBirth: true, height: true, location: true, latitude: true, longitude: true, bio: true, interests: true, isVip: true, isCitizenVerified: true, isEmailVerified: true } },
       },
     });
 
@@ -305,6 +314,8 @@ async function getUserMatches(userId) {
         isBlockedByMe,
         isBlockedByPartner,
         isVip: Boolean(partner.isVip),
+        isCitizenVerified: Boolean(partner.isCitizenVerified),
+        isEmailVerified: Boolean(partner.isEmailVerified),
       };
     });
   } catch {
@@ -381,6 +392,8 @@ async function getWhoLikedMe(userId) {
           longitude: true,
           interests: true,
           isVip: true,
+          isCitizenVerified: true,
+          isEmailVerified: true,
         },
       },
     },
@@ -418,6 +431,8 @@ async function getWhoLikedMe(userId) {
       tags: parseJsonField(u.interests),
       likedAt: s.createdAt,
       isVip: Boolean(u.isVip),
+      isCitizenVerified: Boolean(u.isCitizenVerified),
+      isEmailVerified: Boolean(u.isEmailVerified),
     };
   });
 
@@ -457,6 +472,8 @@ async function getWhoILiked(userId) {
           location: true,
           interests: true,
           isVip: true,
+          isCitizenVerified: true,
+          isEmailVerified: true,
         },
       },
     },
@@ -489,6 +506,8 @@ async function getWhoILiked(userId) {
       tags: parseJsonField(u.interests),
       likedAt: s.createdAt,
       isVip: Boolean(u.isVip),
+      isCitizenVerified: Boolean(u.isCitizenVerified),
+      isEmailVerified: Boolean(u.isEmailVerified),
     };
   });
 

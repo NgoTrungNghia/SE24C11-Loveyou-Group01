@@ -10,6 +10,7 @@ import UserSettingsModal from '../components/UserSettingsModal';
 import VipModal from '../components/VipModal';
 import SupportChatModal from '../components/SupportChatModal';
 import ToastNotification from '../components/ToastNotification';
+import VerifiedBadge, { isFullyVerified } from '../components/VerifiedBadge';
 
 
 
@@ -133,6 +134,15 @@ export default function Dashboard() {
       setProfile(prev => prev ? { ...prev, isVip: true } : prev);
       setToast({ type: 'success', message: message || '🎉 Bạn đã kích hoạt Tài Khoản VIP thành công!' });
       loadWhoLikedMe();
+    });
+
+    socket.on('citizen_verification_result', ({ status, message, reason }) => {
+      if (status === 'APPROVED') {
+        setToast({ type: 'success', message: message || '🎉 Chúc mừng! Căn cước công dân của bạn đã được Quản trị viên duyệt thành công!' });
+      } else if (status === 'REJECTED') {
+        setToast({ type: 'error', message: message || `❌ Xác thực CCCD thất bại! ${reason ? 'Lý do: ' + reason : ''}` });
+      }
+      loadProfile();
     });
 
     // Explicitly ask server for current online users
@@ -509,7 +519,10 @@ export default function Dashboard() {
             </div>
             <div>
               <div style={{ fontWeight: 700, fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                {profile?.fullName || user?.fullName || user?.username}
+                <span>{profile?.fullName || user?.fullName || user?.username}</span>
+                {isFullyVerified(profile || user) && (
+                  <VerifiedBadge size={17} />
+                )}
                 {profile?.isVip && (
                   <span className="vip-badge-gradient" style={{ fontSize: '0.68rem', padding: '1px 6px', borderRadius: '10px' }}>👑 VIP</span>
                 )}
@@ -523,20 +536,6 @@ export default function Dashboard() {
             </div>
           </div>
           <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
-            <button
-              onClick={() => setShowSupportModal(true)}
-              style={{
-                background: 'rgba(59, 130, 246, 0.25)',
-                color: '#93C5FD', border: '1px solid rgba(59, 130, 246, 0.4)', borderRadius: '14px',
-                padding: '6px 10px', fontWeight: '700', fontSize: '0.78rem',
-                cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px',
-                transition: 'all 0.2s ease',
-              }}
-              title="Liên hệ hỗ trợ Admin"
-            >
-              🎧 Hỗ trợ
-            </button>
-
             <button
               onClick={() => setShowSettingsModal(true)}
               style={{
@@ -644,8 +643,9 @@ export default function Dashboard() {
                         }}
                       >💬</button>
 
-                      <div style={{ position: 'absolute', bottom: '8px', left: '8px', fontWeight: 700, fontSize: '0.82rem' }}>
-                        {m.name}, {m.age}
+                      <div style={{ position: 'absolute', bottom: '8px', left: '8px', fontWeight: 700, fontSize: '0.82rem', display: 'flex', alignItems: 'center', gap: '3px' }}>
+                        <span>{m.name}, {m.age}</span>
+                        {isFullyVerified(m) && <VerifiedBadge size={14} />}
                         {m.aiScore && <span style={{ color: '#fd267d', fontSize: '0.7rem', marginLeft: '0.3rem' }}>⭐{m.aiScore}</span>}
                       </div>
                     </div>
@@ -708,7 +708,10 @@ export default function Dashboard() {
                         </div>
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '2px' }}>
-                            <div style={{ fontWeight: 700, fontSize: '0.88rem', color: '#fff' }}>{conv.partner?.name}</div>
+                            <div style={{ fontWeight: 700, fontSize: '0.88rem', color: '#fff', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                              <span>{conv.partner?.name}</span>
+                              {isFullyVerified(conv.partner || conv) && <VerifiedBadge size={14} />}
+                            </div>
                             {conv.isUnmatched && (
                               <span style={{ fontSize: '0.68rem', padding: '2px 6px', borderRadius: '6px', background: 'rgba(255,68,88,0.2)', color: '#ff6b8a', fontWeight: 600 }}>
                                 💔 Đã hủy match
@@ -798,7 +801,8 @@ export default function Dashboard() {
 
                       <div style={{ position: 'absolute', bottom: '8px', left: '8px', right: '8px' }}>
                         <div style={{ fontWeight: 700, fontSize: '0.82rem', color: '#fff', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                          {c.name}, {c.age}
+                          <span>{c.name}, {c.age}</span>
+                          {isFullyVerified(c) && <VerifiedBadge size={14} />}
                           {c.isVip && <span style={{ fontSize: '0.65rem' }}>👑</span>}
                         </div>
                         <div style={{ fontSize: '0.7rem', color: '#34D399', fontWeight: 600 }}>❤️ Đã thích bạn</div>
@@ -824,6 +828,72 @@ export default function Dashboard() {
         display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
         position: 'relative', padding: '2rem'
       }}>
+
+        {/* Support Button (Bottom-Left Corner - LoveYou Theme) */}
+        <button
+          onClick={() => setShowSupportModal(true)}
+          style={{
+            position: 'absolute',
+            bottom: '1.5rem',
+            left: '1.5rem',
+            zIndex: 40,
+            display: 'flex',
+            alignItems: 'center',
+            gap: '9px',
+            background: 'rgba(24, 18, 28, 0.82)',
+            backdropFilter: 'blur(16px)',
+            border: '1px solid rgba(253, 38, 125, 0.35)',
+            color: '#FFFFFF',
+            padding: '6px 14px 6px 8px',
+            borderRadius: '30px',
+            fontWeight: 700,
+            fontSize: '0.82rem',
+            cursor: 'pointer',
+            boxShadow: '0 10px 30px rgba(0, 0, 0, 0.5), 0 0 18px rgba(253, 38, 125, 0.2)',
+            transition: 'all 0.25s cubic-bezier(0.16, 1, 0.3, 1)',
+          }}
+          onMouseEnter={e => {
+            e.currentTarget.style.transform = 'translateY(-2px) scale(1.04)';
+            e.currentTarget.style.borderColor = 'rgba(253, 38, 125, 0.75)';
+            e.currentTarget.style.boxShadow = '0 14px 35px rgba(0, 0, 0, 0.6), 0 0 28px rgba(253, 38, 125, 0.45)';
+            e.currentTarget.style.background = 'rgba(38, 22, 38, 0.95)';
+          }}
+          onMouseLeave={e => {
+            e.currentTarget.style.transform = 'none';
+            e.currentTarget.style.borderColor = 'rgba(253, 38, 125, 0.35)';
+            e.currentTarget.style.boxShadow = '0 10px 30px rgba(0, 0, 0, 0.5), 0 0 18px rgba(253, 38, 125, 0.2)';
+            e.currentTarget.style.background = 'rgba(24, 18, 28, 0.82)';
+          }}
+          title="Liên hệ đội ngũ hỗ trợ LoveYou 24/7"
+        >
+          {/* Glowing Gradient Icon Container */}
+          <span style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            width: '30px',
+            height: '30px',
+            borderRadius: '50%',
+            background: 'linear-gradient(135deg, #fd267d, #ff6036)',
+            boxShadow: '0 3px 12px rgba(253, 38, 125, 0.5)',
+            fontSize: '0.92rem',
+            flexShrink: 0,
+          }}>
+            🎧
+          </span>
+
+          <span style={{ letterSpacing: '0.2px' }}>Hỗ trợ</span>
+
+          {/* Active online pulse dot */}
+          <span style={{
+            width: '7px',
+            height: '7px',
+            borderRadius: '50%',
+            background: '#34D399',
+            boxShadow: '0 0 8px #34D399',
+            marginLeft: '2px',
+          }} />
+        </button>
 
         {/* Top Controls: Filter & AI Mode Toggle */}
         <div style={{ position: 'absolute', top: '1.2rem', right: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.8rem', zIndex: 50 }}>
@@ -1083,7 +1153,9 @@ export default function Dashboard() {
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
                   <span style={{ fontSize: '2rem', fontWeight: 800 }}>{currentCandidate.name}</span>
                   <span style={{ fontSize: '1.7rem', fontWeight: 400 }}>{currentCandidate.age}</span>
-                  <span style={{ color: '#20d5ec', fontSize: '1.3rem' }}>✓</span>
+                  {isFullyVerified(currentCandidate) && (
+                    <VerifiedBadge size={24} />
+                  )}
                 </div>
                 <div style={{ fontSize: '0.9rem', color: 'rgba(255,255,255,0.85)', marginTop: '0.3rem' }}>📍 {currentCandidate.location}</div>
                 <p style={{ fontSize: '0.88rem', color: 'rgba(255,255,255,0.8)', marginTop: '0.6rem', lineHeight: '1.4' }}>{currentCandidate.bio}</p>
@@ -1174,6 +1246,9 @@ export default function Dashboard() {
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', flexWrap: 'wrap' }}>
                     <h2 style={{ fontSize: '1.8rem', fontWeight: 800, margin: 0 }}>{selectedProfile.name}</h2>
                     <span style={{ fontSize: '1.5rem', fontWeight: 400 }}>{selectedProfile.age}</span>
+                    {isFullyVerified(selectedProfile) && (
+                      <VerifiedBadge size={22} />
+                    )}
                     {selectedProfile.isVip && (
                       <span
                         className="vip-badge-gradient"

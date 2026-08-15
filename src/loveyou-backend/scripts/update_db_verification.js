@@ -17,6 +17,8 @@ async function main() {
     ADD COLUMN IF NOT EXISTS "citizen_issue_date" VARCHAR(20),
     ADD COLUMN IF NOT EXISTS "citizen_front_photo" TEXT,
     ADD COLUMN IF NOT EXISTS "citizen_back_photo" TEXT,
+    ADD COLUMN IF NOT EXISTS "citizen_verification_status" VARCHAR(20) DEFAULT 'NONE',
+    ADD COLUMN IF NOT EXISTS "citizen_reject_reason" TEXT,
     ADD COLUMN IF NOT EXISTS "citizen_verified_at" TIMESTAMP(3);
   `);
 

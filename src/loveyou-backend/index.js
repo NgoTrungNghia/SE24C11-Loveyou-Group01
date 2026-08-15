@@ -56,6 +56,9 @@ function emitToUser(userId, event, data) {
   if (sockets) sockets.forEach(sId => io.to(sId).emit(event, data));
 }
 
+app.set('emitToUser', emitToUser);
+app.set('io', io);
+
 // Helper: emit đến cả 2 người trong session
 function emitToBothPlayers(session, event, data) {
   emitToUser(session.initiatorId, event, data);

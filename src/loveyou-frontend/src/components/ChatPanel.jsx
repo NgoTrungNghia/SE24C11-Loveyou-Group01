@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { chatApi, userApi } from '../utils/api';
 import { getSocket } from '../utils/socket';
 import { useAuth } from '../context/AuthContext';
-import ToastNotification from './ToastNotification';
+import VerifiedBadge, { isFullyVerified } from './VerifiedBadge';
 
 const defaultAvatar = 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=100';
 
@@ -310,7 +310,10 @@ export default function ChatPanel({ match, currentUserId, currentUserProfile, is
         </div>
         <div style={{ flex: 1 }}>
           <div style={{ fontWeight: 700, fontSize: '0.95rem', color: '#fff', display: 'flex', alignItems: 'center', gap: '6px' }}>
-            {match?.partner?.name || 'Partner'}
+            <span>{match?.partner?.name || 'Partner'}</span>
+            {isFullyVerified(match?.partner || match) && (
+              <VerifiedBadge size={16} />
+            )}
             {(match?.partner?.isVip || match?.isVip) && (
               <span className="vip-badge-gradient" style={{ fontSize: '0.68rem', padding: '1px 6px', borderRadius: '10px' }}>👑 VIP</span>
             )}

@@ -77,6 +77,10 @@ async function getAllUsers() {
       isProfileComplete: true,
       isEmailVerified: true,
       isCitizenVerified: true,
+      citizenVerificationStatus: true,
+      citizenRejectReason: true,
+      citizenFrontPhoto: true,
+      citizenBackPhoto: true,
       citizenIdNumber: true,
       citizenName: true,
       citizenDob: true,
@@ -114,6 +118,10 @@ async function getUserById(userId) {
       isProfileComplete: true,
       isEmailVerified: true,
       isCitizenVerified: true,
+      citizenVerificationStatus: true,
+      citizenRejectReason: true,
+      citizenFrontPhoto: true,
+      citizenBackPhoto: true,
       citizenIdNumber: true,
       citizenName: true,
       citizenDob: true,
@@ -232,6 +240,83 @@ async function updateReportStatus(reportId, status, resolution = null) {
   return updatedReport;
 }
 
+// ── Citizen Identity (CCCD) Verification Management ──
+async function getCitizenVerifications() {
+  return prisma.user.findMany({
+    where: {
+      OR: [
+        { citizenFrontPhoto: { not: null } },
+        { citizenVerificationStatus: { in: ['PENDING', 'APPROVED', 'REJECTED'] } },
+        { isCitizenVerified: true },
+      ],
+    },
+    orderBy: { updatedAt: 'desc' },
+    select: {
+      userId: true,
+      username: true,
+      email: true,
+      fullName: true,
+      profilePicture: true,
+      gender: true,
+      dateOfBirth: true,
+      isEmailVerified: true,
+      isCitizenVerified: true,
+      citizenVerificationStatus: true,
+      citizenRejectReason: true,
+      citizenFrontPhoto: true,
+      citizenBackPhoto: true,
+      citizenVerifiedAt: true,
+      createdAt: true,
+      updatedAt: true,
+    },
+  });
+}
+
+async function approveCitizenVerification(targetUserId) {
+  const user = await prisma.user.update({
+    where: { userId: Number(targetUserId) },
+    data: {
+      isCitizenVerified: true,
+      citizenVerificationStatus: 'APPROVED',
+      citizenRejectReason: null,
+      citizenVerifiedAt: new Date(),
+    },
+    select: {
+      userId: true,
+      username: true,
+      email: true,
+      fullName: true,
+      isCitizenVerified: true,
+      citizenVerificationStatus: true,
+      citizenRejectReason: true,
+      citizenVerifiedAt: true,
+    },
+  });
+  return user;
+}
+
+async function rejectCitizenVerification(targetUserId, reason = 'Ảnh chụp CCCD không rõ ràng hoặc không hợp lệ') {
+  const user = await prisma.user.update({
+    where: { userId: Number(targetUserId) },
+    data: {
+      isCitizenVerified: false,
+      citizenVerificationStatus: 'REJECTED',
+      citizenRejectReason: reason,
+    },
+    select: {
+      userId: true,
+      username: true,
+      email: true,
+      fullName: true,
+      isCitizenVerified: true,
+      citizenVerificationStatus: true,
+      citizenRejectReason: true,
+      citizenVerifiedAt: true,
+    },
+  });
+  return user;
+}
+
 // ── Gemini API Key Management ──
 const geminiService = require('./geminiService');
 
@@ -257,6 +342,9 @@ module.exports = {
   toggleBanStatus,
   getReports,
   updateReportStatus,
+  getCitizenVerifications,
+  approveCitizenVerification,
+  rejectCitizenVerification,
   getGeminiApiKeyForAdmin,
   setGeminiApiKeyAdmin,
 };

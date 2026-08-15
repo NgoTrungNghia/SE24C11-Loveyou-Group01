@@ -118,6 +118,61 @@ async function setApiKey(req, res, next) {
   }
 }
 
+async function getCitizenVerifications(req, res, next) {
+  try {
+    const verifications = await adminService.getCitizenVerifications();
+    return success(res, { verifications });
+  } catch (err) {
+    return next(err);
+  }
+}
+
+async function approveCitizenVerification(req, res, next) {
+  try {
+    const { userId } = req.params;
+    const user = await adminService.approveCitizenVerification(userId);
+
+    const emitToUser = req.app.get('emitToUser');
+    if (emitToUser) {
+      emitToUser(Number(userId), 'citizen_verification_result', {
+        status: 'APPROVED',
+        message: '🎉 Chúc mừng! Căn cước công dân của bạn đã được Quản trị viên phê duyệt thành công.',
+      });
+    }
+
+    return success(res, {
+      message: 'Đã duyệt xác thực Căn cước công dân thành công!',
+      user,
+    });
+  } catch (err) {
+    return next(err);
+  }
+}
+
+async function rejectCitizenVerification(req, res, next) {
+  try {
+    const { userId } = req.params;
+    const { reason } = req.body;
+    const user = await adminService.rejectCitizenVerification(userId, reason);
+
+    const emitToUser = req.app.get('emitToUser');
+    if (emitToUser) {
+      emitToUser(Number(userId), 'citizen_verification_result', {
+        status: 'REJECTED',
+        reason: reason || 'Ảnh chụp CCCD không rõ ràng hoặc không hợp lệ',
+        message: `Xác thực CCCD thất bại! ${reason ? 'Lý do: ' + reason : 'Vui lòng kiểm tra lại ảnh chụp và gửi lại.'}`,
+      });
+    }
+
+    return success(res, {
+      message: 'Đã từ chối xác thực Căn cước công dân!',
+      user,
+    });
+  } catch (err) {
+    return next(err);
+  }
+}
+
 module.exports = {
   getStats,
   getAllUsers,
@@ -127,5 +182,8 @@ module.exports = {
   updateReportStatus,
   getApiKey,
   setApiKey,
+  getCitizenVerifications,
+  approveCitizenVerification,
+  rejectCitizenVerification,
 };
 

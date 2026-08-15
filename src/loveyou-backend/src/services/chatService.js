@@ -86,12 +86,14 @@ async function getUserConversations(userId) {
         select: {
           userId: true, username: true, fullName: true,
           profilePicture: true, photos: true, lastActiveAt: true,
+          isCitizenVerified: true, isEmailVerified: true,
         },
       },
       user2: {
         select: {
           userId: true, username: true, fullName: true,
           profilePicture: true, photos: true, lastActiveAt: true,
+          isCitizenVerified: true, isEmailVerified: true,
         },
       },
     },
@@ -124,12 +126,16 @@ async function getUserConversations(userId) {
         name: partner.fullName || partner.username,
         photo: photosList[0] || partner.profilePicture || null,
         lastActiveAt: partner.lastActiveAt,
+        isCitizenVerified: Boolean(partner.isCitizenVerified),
+        isEmailVerified: Boolean(partner.isEmailVerified),
         isBlocked,
         isBlockedByMe,
         isBlockedByPartner,
         isUnmatched: Boolean(m.isUnmatched),
         unmatchedBy: m.unmatchedBy || null,
       },
+      isCitizenVerified: Boolean(partner.isCitizenVerified),
+      isEmailVerified: Boolean(partner.isEmailVerified),
       lastMessage: lastMsg
         ? { content: lastMsg.content, type: lastMsg.type, createdAt: lastMsg.createdAt, senderId: lastMsg.senderId }
         : null,

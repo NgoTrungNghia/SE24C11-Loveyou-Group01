@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { userApi, authApi } from '../utils/api';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import jsQR from 'jsqr';
+import VerifiedBadge, { isFullyVerified } from './VerifiedBadge';
 
 const normalizeGender = (g) => {
   if (!g) return 'Nam';
@@ -57,6 +57,10 @@ export default function UserSettingsModal({ profile, onProfileUpdated, onLogout,
       setProfilePicture(profile.profilePicture || '');
       setIsEmailVerified(Boolean(profile.isEmailVerified));
       setIsCitizenVerified(Boolean(profile.isCitizenVerified));
+      setCitizenVerificationStatus(profile.citizenVerificationStatus || (profile.isCitizenVerified ? 'APPROVED' : (profile.citizenFrontPhoto ? 'PENDING' : 'NONE')));
+      setCitizenRejectReason(profile.citizenRejectReason || '');
+      setFrontPhoto(profile.citizenFrontPhoto || '');
+      setBackPhoto(profile.citizenBackPhoto || '');
       setCitizenInfo({
         idNumber: profile.citizenIdNumber || '',
         name: profile.citizenName || '',
@@ -72,6 +76,8 @@ export default function UserSettingsModal({ profile, onProfileUpdated, onLogout,
   // Verification state (Email & CCCD)
   const [isEmailVerified, setIsEmailVerified] = useState(Boolean(profile?.isEmailVerified));
   const [isCitizenVerified, setIsCitizenVerified] = useState(Boolean(profile?.isCitizenVerified));
+  const [citizenVerificationStatus, setCitizenVerificationStatus] = useState(profile?.citizenVerificationStatus || (profile?.isCitizenVerified ? 'APPROVED' : (profile?.citizenFrontPhoto ? 'PENDING' : 'NONE')));
+  const [citizenRejectReason, setCitizenRejectReason] = useState(profile?.citizenRejectReason || '');
   const [citizenInfo, setCitizenInfo] = useState({
     idNumber: profile?.citizenIdNumber || '',
     name: profile?.citizenName || '',
@@ -90,15 +96,8 @@ export default function UserSettingsModal({ profile, onProfileUpdated, onLogout,
   const [resendCooldown, setResendCooldown] = useState(0);
 
   // Citizen CCCD workflow
-  const [frontPhoto, setFrontPhoto] = useState('');
-  const [backPhoto, setBackPhoto] = useState('');
-  const [qrScanning, setQrScanning] = useState(false);
-  const [backScanning, setBackScanning] = useState(false);
-  const [qrData, setQrData] = useState('');
-  const [parsedCccd, setParsedCccd] = useState(null);
-  const [qrError, setQrError] = useState('');
-  const [backError, setBackError] = useState('');
-  const [isBackVerified, setIsBackVerified] = useState(false);
+  const [frontPhoto, setFrontPhoto] = useState(profile?.citizenFrontPhoto || '');
+  const [backPhoto, setBackPhoto] = useState(profile?.citizenBackPhoto || '');
   const [submittingCccd, setSubmittingCccd] = useState(false);
 
   // Blocked users state
@@ -194,125 +193,18 @@ export default function UserSettingsModal({ profile, onProfileUpdated, onLogout,
     });
   };
 
-  // ── Helper: Scan QR from Image Element via jsQR ──
-  const scanQrCodeFromImage = (img) => {
-    const canvas = document.createElement('canvas');
-    const ctx = canvas.getContext('2d', { willReadFrequently: true });
-
-    // Scale 1: Original / High Res
-    canvas.width = img.naturalWidth || img.width;
-    canvas.height = img.naturalHeight || img.height;
-    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-
-    let imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-    let code = jsQR(imageData.data, imageData.width, imageData.height, { inversionAttempts: 'attemptBoth' });
-
-    // If not detected, try scan specifically at scaled resolution
-    if (!code && (canvas.width > 1200 || canvas.height > 1200)) {
-      const scale = Math.min(1000 / canvas.width, 1000 / canvas.height);
-      const w = Math.round(canvas.width * scale);
-      const h = Math.round(canvas.height * scale);
-      canvas.width = w;
-      canvas.height = h;
-      ctx.drawImage(img, 0, 0, w, h);
-      imageData = ctx.getImageData(0, 0, w, h);
-      code = jsQR(imageData.data, imageData.width, imageData.height, { inversionAttempts: 'attemptBoth' });
-    }
-
-    return code ? code.data : null;
-  };
-
-  // ── Helper: Parse Vietnamese CCCD QR Payload ──
-  const parseVietnameseCccdQr = (rawData) => {
-    if (!rawData || typeof rawData !== 'string') return null;
-    const parts = rawData.split('|');
-    if (parts.length < 5) return null;
-
-    const idNumber = parts[0]?.trim();
-    if (!/^\d{12}$/.test(idNumber)) return null;
-
-    return {
-      idNumber,
-      oldId: parts[1]?.trim() || '',
-      fullName: parts[2]?.trim() || '',
-      dob: parts[3]?.trim() || '',
-      gender: parts[4]?.trim() || '',
-      address: parts[5]?.trim() || '',
-      issueDate: parts[6]?.trim() || '',
-      raw: rawData,
-    };
-  };
-
-  // ── Handle CCCD Front Upload & Auto-Scan QR ──
+  // ── Handle CCCD Front Upload ──
   const handleCccdFrontUpload = async (e) => {
     const file = e.target.files && e.target.files[0];
     if (!file) return;
 
-    setQrScanning(true);
-    setQrError('');
-    setParsedCccd(null);
-    setQrData('');
-
     try {
-      const { compressedBase64, img } = await compressImage(file, 800, 0.72);
+      const { compressedBase64 } = await compressImage(file, 1200, 0.85);
       setFrontPhoto(compressedBase64);
-
-      // Attempt to scan QR code on front side
-      const scannedText = scanQrCodeFromImage(img);
-      if (!scannedText) {
-        setQrError('⚠️ Không nhận diện được căn cước công dân, vui lòng chụp rõ mặt trước CCCD.');
-        return;
-      }
-
-      const parsed = parseVietnameseCccdQr(scannedText);
-      if (!parsed) {
-        setQrError('⚠️ Căn cước công dân không hợp lệ.');
-        return;
-      }
-
-      setQrData(scannedText);
-      setParsedCccd(parsed);
-      if (setToast) setToast({ type: 'success', message: `✓ Đã quét thành công CCCD: ${parsed.fullName}` });
+      if (setToast) setToast({ type: 'success', message: '✓ Đã tải lên ảnh mặt trước CCCD' });
     } catch (err) {
       console.error('Front upload error:', err);
-      setQrError('Lỗi xử lý ảnh căn cước công dân');
-    } finally {
-      setQrScanning(false);
-    }
-  };
-
-  // ── Helper: Validate CCCD Back Side via Tesseract OCR ──
-  const validateCccdBackImage = async (canvas, expectedIdNumber) => {
-    try {
-      const { data } = await Tesseract.recognize(canvas, 'eng');
-      const text = String(data?.text || '').toUpperCase().replace(/[\s\r\n]+/g, '');
-
-      // 1. Check for MRZ indicators (IDVNM, VNM, ICAO patterns)
-      const hasMrz = text.includes('IDVNM') || text.includes('VNM') || /ID[A-Z0-9]{3}/.test(text);
-
-      // 2. Check for 12-digit CCCD number matching front QR code
-      const cleanExpectedId = String(expectedIdNumber || '').trim();
-      const hasMatchingId = cleanExpectedId.length === 12 && text.includes(cleanExpectedId);
-
-      // 3. Check for keywords unique to Vietnamese CCCD back side
-      const hasBackKeywords = (
-        text.includes('DACDIEM') ||
-        text.includes('NHANDANG') ||
-        text.includes('CUCTRUONG') ||
-        text.includes('CANHSAT') ||
-        text.includes('VANTAY') ||
-        text.includes('NGONTRO') ||
-        text.includes('COGIATRI') ||
-        text.includes('NGAYTHANG') ||
-        text.includes('SOCIALIST') ||
-        text.includes('REPUBLIC')
-      );
-
-      const isValid = hasMrz || hasMatchingId || hasBackKeywords;
-      return { isValid, recognizedText: text };
-    } catch (err) {
-      console.warn('Tesseract OCR error:', err);
-      return { isValid: false, recognizedText: '' };
+      if (setToast) setToast({ type: 'error', message: 'Lỗi tải ảnh mặt trước căn cước' });
     }
   };
 
@@ -321,48 +213,24 @@ export default function UserSettingsModal({ profile, onProfileUpdated, onLogout,
     const file = e.target.files && e.target.files[0];
     if (!file) return;
 
-    setBackScanning(true);
-    setBackError('');
-    setIsBackVerified(false);
-    setBackPhoto('');
-
     try {
-      const { compressedBase64, canvas } = await compressImage(file, 800, 0.72);
-
-      // Run OCR & MRZ validation on back image
-      const { isValid } = await validateCccdBackImage(canvas, parsedCccd?.idNumber);
-
-      if (!isValid) {
-        setBackPhoto('');
-        setIsBackVerified(false);
-        setBackError('⚠️ Ảnh mặt sau không hợp lệ! Vui lòng chụp rõ mặt sau CCCD.');
-        if (setToast) setToast({ type: 'error', message: 'Ảnh tải lên không đúng mặt sau Căn cước công dân!' });
-        return;
-      }
-
+      const { compressedBase64 } = await compressImage(file, 1200, 0.85);
       setBackPhoto(compressedBase64);
-      setIsBackVerified(true);
-      if (setToast) setToast({ type: 'success', message: '✓ Đã nhận diện & xác thực thành công mặt sau CCCD' });
+      if (setToast) setToast({ type: 'success', message: '✓ Đã tải lên ảnh mặt sau CCCD' });
     } catch (err) {
       console.error('Back upload error:', err);
-      setBackError('Lỗi phân tích ảnh mặt sau căn cước');
-    } finally {
-      setBackScanning(false);
+      if (setToast) setToast({ type: 'error', message: 'Lỗi tải ảnh mặt sau căn cước' });
     }
   };
 
-  // ── Submit CCCD Verification ──
+  // ── Submit CCCD Verification to Admin ──
   const handleSubmitCitizenVerification = async () => {
     if (!frontPhoto) {
-      setToast({ type: 'warning', message: 'Vui lòng tải lên ảnh mặt trước CCCD' });
+      if (setToast) setToast({ type: 'warning', message: 'Vui lòng tải lên ảnh mặt trước CCCD' });
       return;
     }
     if (!backPhoto) {
-      setToast({ type: 'warning', message: 'Vui lòng tải lên ảnh mặt sau CCCD' });
-      return;
-    }
-    if (!qrData || !parsedCccd) {
-      setToast({ type: 'warning', message: 'Ảnh mặt trước chưa được nhận diện CCCD hợp lệ' });
+      if (setToast) setToast({ type: 'warning', message: 'Vui lòng tải lên ảnh mặt sau CCCD' });
       return;
     }
 
@@ -371,34 +239,24 @@ export default function UserSettingsModal({ profile, onProfileUpdated, onLogout,
       const res = await userApi.verifyCitizen({
         frontPhoto,
         backPhoto,
-        qrData,
-        parsedInfo: parsedCccd,
       });
 
-      const citizenData = res.data?.data?.citizenInfo || {};
-      setIsCitizenVerified(true);
-      setCitizenInfo({
-        idNumber: citizenData.citizenIdNumber || parsedCccd.idNumber,
-        name: citizenData.citizenName || parsedCccd.fullName,
-        dob: citizenData.citizenDob || parsedCccd.dob,
-        gender: citizenData.citizenGender || parsedCccd.gender,
-        address: citizenData.citizenAddress || parsedCccd.address,
-        issueDate: citizenData.citizenIssueDate || parsedCccd.issueDate,
-        verifiedAt: new Date().toISOString(),
-      });
+      setCitizenVerificationStatus('PENDING');
+      setCitizenRejectReason('');
+      if (setToast) setToast({ type: 'success', message: '✓ Đã gửi yêu cầu xác thực CCCD! Vui lòng chờ Quản trị viên xét duyệt.' });
 
       if (onProfileUpdated) {
         onProfileUpdated({
           ...profile,
-          isCitizenVerified: true,
-          citizenIdNumber: citizenData.citizenIdNumber || parsedCccd.idNumber,
-          citizenName: citizenData.citizenName || parsedCccd.fullName,
+          citizenFrontPhoto: frontPhoto,
+          citizenBackPhoto: backPhoto,
+          citizenVerificationStatus: 'PENDING',
+          citizenRejectReason: null,
+          isCitizenVerified: false,
         });
       }
-
-      setToast({ type: 'success', message: '🎉 Xác thực Căn cước công dân thành công!' });
     } catch (err) {
-      setToast({ type: 'error', message: err.response?.data?.error?.message || 'Xác thực căn cước công dân thất bại' });
+      if (setToast) setToast({ type: 'error', message: err.response?.data?.error?.message || 'Có lỗi xảy ra khi gửi yêu cầu xác thực' });
     } finally {
       setSubmittingCccd(false);
     }
@@ -561,7 +419,9 @@ export default function UserSettingsModal({ profile, onProfileUpdated, onLogout,
             }}
           >
             <span>🛡️ Xác thực</span>
-            {(isEmailVerified && isCitizenVerified) && <span style={{ fontSize: '0.75rem', color: '#6EE7B7' }}>✓</span>}
+            {isFullyVerified({ isEmailVerified, isCitizenVerified, citizenVerificationStatus }) && (
+              <VerifiedBadge size={14} />
+            )}
           </button>
 
           <button
@@ -638,6 +498,16 @@ export default function UserSettingsModal({ profile, onProfileUpdated, onLogout,
               <span style={{ fontSize: '0.78rem', color: 'rgba(255,255,255,0.6)', marginTop: '0.5rem' }}>
                 Nhấp vào ảnh đại diện để chọn ảnh từ thiết bị
               </span>
+
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '0.6rem' }}>
+                <span style={{ fontWeight: 700, fontSize: '1.05rem', color: '#fff' }}>{fullName || profile?.username}</span>
+                {isFullyVerified({ isEmailVerified, isCitizenVerified, citizenVerificationStatus }) && (
+                  <VerifiedBadge size={18} />
+                )}
+                {profile?.isVip && (
+                  <span className="vip-badge-gradient" style={{ fontSize: '0.65rem', padding: '1px 6px', borderRadius: '8px' }}>👑 VIP</span>
+                )}
+              </div>
             </div>
 
             <div style={styles.inputGroup}>
@@ -830,47 +700,113 @@ export default function UserSettingsModal({ profile, onProfileUpdated, onLogout,
                   <span style={{ fontSize: '1.3rem' }}>🪪</span>
                   <span style={{ fontWeight: 800, fontSize: '1rem', color: '#fff' }}>2. Xác Thực Công Dân (CCCD)</span>
                 </div>
-                {isCitizenVerified ? (
+                {isCitizenVerified || citizenVerificationStatus === 'APPROVED' ? (
                   <span style={styles.badgeSuccess}>✓ Đã xác thực</span>
+                ) : citizenVerificationStatus === 'PENDING' ? (
+                  <span style={{ ...styles.badgePending, background: 'rgba(245, 158, 11, 0.15)', color: '#F59E0B', border: '1px solid rgba(245, 158, 11, 0.3)' }}>
+                    ⏳ Chờ duyệt
+                  </span>
+                ) : citizenVerificationStatus === 'REJECTED' ? (
+                  <span style={{ ...styles.badgePending, background: 'rgba(239, 68, 68, 0.15)', color: '#EF4444', border: '1px solid rgba(239, 68, 68, 0.3)' }}>
+                    ✕ Bị từ chối
+                  </span>
                 ) : (
                   <span style={styles.badgePending}>Chưa xác thực</span>
                 )}
               </div>
 
-              {isCitizenVerified ? (
+              {isCitizenVerified || citizenVerificationStatus === 'APPROVED' ? (
                 /* Verified Citizen Info Card */
                 <div style={{
                   background: 'rgba(16,185,129,0.08)',
                   border: '1px solid rgba(16,185,129,0.3)',
                   borderRadius: '16px',
-                  padding: '1rem',
+                  padding: '1.1rem',
                   display: 'flex',
                   flexDirection: 'column',
                   gap: '0.6rem',
                   fontSize: '0.85rem',
                 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#34D399', fontWeight: 800 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#34D399', fontWeight: 800, fontSize: '0.92rem' }}>
                     <span>🛡️</span>
-                    <span>Tài khoản đã được xác minh danh tính công dân Việt Nam</span>
+                    <span>Tài khoản đã được Quản trị viên xác minh danh tính Căn cước công dân thành công!</span>
                   </div>
 
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem', marginTop: '0.4rem', color: 'rgba(255,255,255,0.8)' }}>
-                    <div>Số CCCD: <b style={{ color: '#fff' }}>•••• •••• {citizenInfo.idNumber?.slice(-4) || '••••'}</b></div>
-                    <div>Họ và tên: <b style={{ color: '#fff' }}>{citizenInfo.name || '***'}</b></div>
-                    <div>Ngày sinh: <b style={{ color: '#fff' }}>{citizenInfo.dob || '***'}</b></div>
-                    <div>Giới tính: <b style={{ color: '#fff' }}>{citizenInfo.gender || '***'}</b></div>
+                </div>
+              ) : citizenVerificationStatus === 'PENDING' ? (
+                /* Pending Approval Card */
+                <div style={{
+                  background: 'rgba(245, 158, 11, 0.08)',
+                  border: '1px solid rgba(245, 158, 11, 0.3)',
+                  borderRadius: '16px',
+                  padding: '1.1rem',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '0.8rem',
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#F59E0B', fontWeight: 800, fontSize: '0.92rem' }}>
+                    <span>⏳</span>
+                    <span>Yêu cầu xác thực đang chờ Quản trị viên phê duyệt</span>
+                  </div>
+                  <p style={{ margin: 0, color: 'rgba(255,255,255,0.75)', fontSize: '0.82rem', lineHeight: 1.5 }}>
+                    Bạn đã gửi ảnh 2 mặt CCCD lên hệ thống. Quản trị viên sẽ kiểm tra và phê duyệt hồ sơ trong thời gian sớm nhất.
+                  </p>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.6rem', marginTop: '0.2rem' }}>
+                    {frontPhoto && (
+                      <div>
+                        <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.6)', marginBottom: '4px' }}>Ảnh mặt trước:</div>
+                        <img src={frontPhoto} alt="Mặt trước" style={{ width: '100%', height: '80px', objectFit: 'cover', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.1)' }} />
+                      </div>
+                    )}
+                    {backPhoto && (
+                      <div>
+                        <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.6)', marginBottom: '4px' }}>Ảnh mặt sau:</div>
+                        <img src={backPhoto} alt="Mặt sau" style={{ width: '100%', height: '80px', objectFit: 'cover', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.1)' }} />
+                      </div>
+                    )}
+                  </div>
+                  <div style={{ textAlign: 'right' }}>
+                    <button
+                      type="button"
+                      onClick={() => setCitizenVerificationStatus('NONE')}
+                      style={{ background: 'transparent', border: 'none', color: '#38bdf8', fontSize: '0.8rem', fontWeight: 600, cursor: 'pointer', textDecoration: 'underline' }}
+                    >
+                      Tải lại ảnh khác
+                    </button>
                   </div>
                 </div>
               ) : (
-                /* Upload & Scan CCCD */
+                /* Upload CCCD Form (NONE or REJECTED) */
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.9rem' }}>
+                  {citizenVerificationStatus === 'REJECTED' && (
+                    <div style={{
+                      background: 'rgba(239, 68, 68, 0.12)',
+                      border: '1px solid rgba(239, 68, 68, 0.35)',
+                      borderRadius: '12px',
+                      padding: '0.8rem 1rem',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '0.3rem',
+                    }}>
+                      <div style={{ color: '#EF4444', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.88rem' }}>
+                        <span>⚠️</span>
+                        <span>Xác thực CCCD thất bại!</span>
+                      </div>
+                      <div style={{ color: '#FCA5A5', fontSize: '0.82rem' }}>
+                        Lý do: <b>{citizenRejectReason || 'Ảnh chụp không rõ ràng hoặc không hợp lệ.'}</b>
+                      </div>
+                      <div style={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.78rem' }}>
+                        Vui lòng chụp lại 2 mặt Căn cước công dân rõ nét và gửi lại yêu cầu bên dưới.
+                      </div>
+                    </div>
+                  )}
+
                   <p style={{ fontSize: '0.82rem', color: 'rgba(255,255,255,0.7)', margin: 0, lineHeight: 1.5 }}>
-                    Tải lên ảnh 2 mặt Căn cước công dân. Hệ thống sẽ tự động quét và xác thực thông tin.
+                    Tải lên ảnh chụp 2 mặt Căn cước công dân của bạn để gửi Quản trị viên xét duyệt:
                   </p>
 
                   {/* 2-Side Upload Inputs */}
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.8rem' }}>
-
                     {/* Mặt trước */}
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
                       <label style={{ fontSize: '0.8rem', fontWeight: 700, color: 'rgba(255,255,255,0.85)' }}>
@@ -878,7 +814,7 @@ export default function UserSettingsModal({ profile, onProfileUpdated, onLogout,
                       </label>
                       <label style={{
                         ...styles.uploadBox,
-                        borderColor: parsedCccd ? '#10b981' : qrError ? '#ef4444' : 'rgba(255,255,255,0.2)',
+                        borderColor: frontPhoto ? '#10b981' : 'rgba(255,255,255,0.2)',
                         background: frontPhoto ? 'rgba(0,0,0,0.4)' : 'rgba(255,255,255,0.03)',
                       }}>
                         {frontPhoto ? (
@@ -890,10 +826,10 @@ export default function UserSettingsModal({ profile, onProfileUpdated, onLogout,
                             />
                             <div style={{
                               position: 'absolute', top: '4px', right: '4px',
-                              background: parsedCccd ? '#10b981' : '#ef4444',
+                              background: '#10b981',
                               color: '#fff', fontSize: '11px', fontWeight: 800, padding: '2px 6px', borderRadius: '6px',
                             }}>
-                              {parsedCccd ? '✓ Đã quét QR' : 'Đổi ảnh'}
+                              Đổi ảnh
                             </div>
                           </div>
                         ) : (
@@ -914,11 +850,11 @@ export default function UserSettingsModal({ profile, onProfileUpdated, onLogout,
                     {/* Mặt sau */}
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
                       <label style={{ fontSize: '0.8rem', fontWeight: 700, color: 'rgba(255,255,255,0.85)' }}>
-                        Mặt sau CCCD *
+                        Mặt sau *
                       </label>
                       <label style={{
                         ...styles.uploadBox,
-                        borderColor: isBackVerified ? '#10b981' : backError ? '#ef4444' : 'rgba(255,255,255,0.2)',
+                        borderColor: backPhoto ? '#10b981' : 'rgba(255,255,255,0.2)',
                         background: backPhoto ? 'rgba(0,0,0,0.4)' : 'rgba(255,255,255,0.03)',
                       }}>
                         {backPhoto ? (
@@ -933,7 +869,7 @@ export default function UserSettingsModal({ profile, onProfileUpdated, onLogout,
                               background: '#10b981',
                               color: '#fff', fontSize: '11px', fontWeight: 800, padding: '2px 6px', borderRadius: '6px',
                             }}>
-                              ✓ Khớp MRZ
+                              Đổi ảnh
                             </div>
                           </div>
                         ) : (
@@ -952,63 +888,26 @@ export default function UserSettingsModal({ profile, onProfileUpdated, onLogout,
                     </div>
                   </div>
 
-                  {/* Indicators & Errors */}
-                  {qrScanning && (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#38bdf8', fontSize: '0.82rem' }}>
-                      <span className="spinner" style={{ width: '14px', height: '14px', borderTopColor: '#38bdf8' }} />
-                      <span>Đang quét mã QR từ ảnh mặt trước CCCD...</span>
-                    </div>
-                  )}
-
-                  {backScanning && (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#38bdf8', fontSize: '0.82rem' }}>
-                      <span className="spinner" style={{ width: '14px', height: '14px', borderTopColor: '#38bdf8' }} />
-                      <span>Đang đọc mã MRZ & xác thực thông tin mặt sau CCCD...</span>
-                    </div>
-                  )}
-
-                  {qrError && (
-                    <div style={{ background: 'rgba(239, 68, 68, 0.12)', border: '1px solid rgba(239, 68, 68, 0.3)', borderRadius: '10px', padding: '0.6rem 0.8rem', color: '#ef4444', fontSize: '0.8rem', lineHeight: 1.4 }}>
-                      {qrError}
-                    </div>
-                  )}
-
-                  {backError && (
-                    <div style={{ background: 'rgba(239, 68, 68, 0.12)', border: '1px solid rgba(239, 68, 68, 0.3)', borderRadius: '10px', padding: '0.6rem 0.8rem', color: '#ef4444', fontSize: '0.8rem', lineHeight: 1.4 }}>
-                      {backError}
-                    </div>
-                  )}
-
-                  {parsedCccd && (
-                    <div style={{ background: 'rgba(16, 185, 129, 0.12)', border: '1px solid rgba(16, 185, 129, 0.3)', borderRadius: '12px', padding: '0.7rem 0.9rem', display: 'flex', flexDirection: 'column', gap: '0.3rem', fontSize: '0.82rem' }}>
-                      <div style={{ color: '#34D399', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '6px' }}>
-                        <span>✓ Nhận diện thành công mã QR Căn cước công dân:</span>
-                      </div>
-                      <div style={{ color: '#fff' }}>Họ tên: <b>{parsedCccd.fullName}</b> • CCCD: <b>•••• •••• {parsedCccd.idNumber?.slice(-4)}</b></div>
-                      <div style={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.76rem' }}>Ngày sinh: {parsedCccd.dob} • Giới tính: {parsedCccd.gender}</div>
-                    </div>
-                  )}
-
                   {/* Submit CCCD Button */}
                   <button
                     type="button"
                     onClick={handleSubmitCitizenVerification}
-                    disabled={submittingCccd || !frontPhoto || !backPhoto || !parsedCccd || !isBackVerified}
+                    disabled={submittingCccd || !frontPhoto || !backPhoto}
                     style={{
                       padding: '0.8rem', borderRadius: '14px',
-                      background: (!frontPhoto || !backPhoto || !parsedCccd || !isBackVerified)
+                      background: (!frontPhoto || !backPhoto)
                         ? 'rgba(255,255,255,0.08)'
                         : 'linear-gradient(135deg, #10b981, #059669)',
                       border: 'none',
-                      color: (!frontPhoto || !backPhoto || !parsedCccd || !isBackVerified) ? 'rgba(255,255,255,0.4)' : '#fff',
+                      color: (!frontPhoto || !backPhoto) ? 'rgba(255,255,255,0.4)' : '#fff',
                       fontWeight: 800, fontSize: '0.9rem',
-                      cursor: (!frontPhoto || !backPhoto || !parsedCccd || !isBackVerified) ? 'not-allowed' : 'pointer',
-                      boxShadow: (!frontPhoto || !backPhoto || !parsedCccd || !isBackVerified) ? 'none' : '0 4px 15px rgba(16,185,129,0.35)',
+                      cursor: (!frontPhoto || !backPhoto) ? 'not-allowed' : 'pointer',
+                      boxShadow: (!frontPhoto || !backPhoto) ? 'none' : '0 4px 15px rgba(16,185,129,0.35)',
                       transition: 'all 0.2s ease',
                       marginTop: '0.2rem',
                     }}
                   >
-                    {submittingCccd ? '⏳ Đang lưu & xác thực danh tính...' : '🛡️ Hoàn Tất Xác Thực Công Dân'}
+                    {submittingCccd ? '⏳ Đang gửi yêu cầu xác thực...' : '🛡️ Gửi Yêu Cầu Xác Thực CCCD'}
                   </button>
                 </div>
               )}

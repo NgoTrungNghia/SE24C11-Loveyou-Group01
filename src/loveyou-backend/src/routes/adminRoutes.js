@@ -31,4 +31,13 @@ router.get('/config/api-key', adminController.getApiKey);
 // PUT /api/admin/config/api-key  — Cập nhật Gemini API key
 router.put('/config/api-key', adminController.setApiKey);
 
+// GET /api/admin/citizen-verifications — Danh sách yêu cầu xác thực CCCD
+router.get('/citizen-verifications', adminController.getCitizenVerifications);
+
+// PUT /api/admin/citizen-verifications/:userId/approve — Duyệt xác thực CCCD
+router.put('/citizen-verifications/:userId/approve', adminController.approveCitizenVerification);
+
+// PUT /api/admin/citizen-verifications/:userId/reject — Từ chối xác thực CCCD
+router.put('/citizen-verifications/:userId/reject', adminController.rejectCitizenVerification);
+
 module.exports = router;

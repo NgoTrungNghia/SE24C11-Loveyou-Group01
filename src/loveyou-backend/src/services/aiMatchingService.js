@@ -139,7 +139,7 @@ async function getAICandidates(userId) {
       dateOfBirth: true, profilePicture: true, bio: true, height: true,
       location: true, latitude: true, longitude: true,
       interests: true, photos: true, lastActiveAt: true,
-      isVip: true,
+      isVip: true, isCitizenVerified: true, isEmailVerified: true, citizenVerificationStatus: true,
     },
   });
 
@@ -177,6 +177,8 @@ async function getAICandidates(userId) {
       aiScore: score,
       distanceKm: dist,
       isVip: Boolean(c.isVip),
+      isCitizenVerified: Boolean(c.isCitizenVerified || c.citizenVerificationStatus === 'APPROVED'),
+      isEmailVerified: Boolean(c.isEmailVerified),
     };
   });
 

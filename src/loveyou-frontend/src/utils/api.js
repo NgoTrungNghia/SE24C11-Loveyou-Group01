@@ -118,6 +118,9 @@ export const adminApi = {
   updateReportStatus: (id, status, resolution) => api.put(`/admin/reports/${id}/status`, { status, resolution }),
   getApiKey: () => api.get('/admin/config/api-key'),
   setApiKey: (key) => api.put('/admin/config/api-key', { key }),
+  getCitizenVerifications: () => api.get('/admin/citizen-verifications'),
+  approveCitizenVerification: (userId) => api.put(`/admin/citizen-verifications/${userId}/approve`),
+  rejectCitizenVerification: (userId, reason) => api.put(`/admin/citizen-verifications/${userId}/reject`, { reason }),
 };
 
 export const supportApi = {

@@ -61,9 +61,11 @@ model User {
   citizenGender     String?   @map("citizen_gender") @db.VarChar(20)
   citizenAddress    String?   @map("citizen_address") @db.Text
   citizenIssueDate  String?   @map("citizen_issue_date") @db.VarChar(20)
-  citizenFrontPhoto String?   @map("citizen_front_photo") @db.Text
-  citizenBackPhoto  String?   @map("citizen_back_photo") @db.Text
-  citizenVerifiedAt DateTime? @map("citizen_verified_at")
+  citizenFrontPhoto         String?   @map("citizen_front_photo") @db.Text
+  citizenBackPhoto          String?   @map("citizen_back_photo") @db.Text
+  citizenVerificationStatus String?   @default("NONE") @map("citizen_verification_status") @db.VarChar(20)
+  citizenRejectReason       String?   @map("citizen_reject_reason") @db.Text
+  citizenVerifiedAt         DateTime? @map("citizen_verified_at")
   lastActiveAt      DateTime? @map("last_active_at")
   role              Role      @default(USER)
   status            Status    @default(ACTIVE)

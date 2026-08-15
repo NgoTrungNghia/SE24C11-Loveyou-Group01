@@ -3,6 +3,7 @@ import { adminApi, supportApi } from '../utils/api';
 import { getSocket } from '../utils/socket';
 import { useAuth } from '../context/AuthContext';
 import ToastNotification from './ToastNotification';
+import VerifiedBadge, { isFullyVerified } from './VerifiedBadge';
 
 export default function AdminModal({ onClose }) {
   const { user } = useAuth();
@@ -15,8 +16,16 @@ export default function AdminModal({ onClose }) {
   const [actionLoading, setActionLoading] = useState(null);
   const [error, setError] = useState('');
   const [search, setSearch] = useState('');
-  const [roleFilter, setRoleFilter] = useState('ALL'); // 'ALL' | 'ADMIN' | 'USER_VIP' | 'USER_NORMAL'
   const [toast, setToast] = useState(null);
+
+  // Citizen Verification state
+  const [verifications, setVerifications] = useState([]);
+  const [verificationFilter, setVerificationFilter] = useState('ALL'); // 'ALL' | 'PENDING' | 'APPROVED' | 'REJECTED'
+  const [verificationSearch, setVerificationSearch] = useState('');
+  const [verificationActionLoading, setVerificationActionLoading] = useState(null);
+  const [rejectingUser, setRejectingUser] = useState(null);
+  const [rejectReasonInput, setRejectReasonInput] = useState('');
+  const [previewImage, setPreviewImage] = useState(null);
 
   // Support Chat state
   const [supportConversations, setSupportConversations] = useState([]);
@@ -91,18 +100,20 @@ export default function AdminModal({ onClose }) {
     setLoading(true);
     setError('');
     try {
-      const [statsRes, usersRes, reportsRes, supportRes, apiKeyRes] = await Promise.all([
+      const [statsRes, usersRes, reportsRes, supportRes, apiKeyRes, verificationsRes] = await Promise.all([
         adminApi.stats(),
         adminApi.getUsers(),
         adminApi.getReports(),
         supportApi.getAdminConversations().catch(() => ({ data: { data: { conversations: [] } } })),
         adminApi.getApiKey().catch(() => ({ data: { data: { masked: null, hasKey: false } } })),
+        adminApi.getCitizenVerifications().catch(() => ({ data: { data: { verifications: [] } } })),
       ]);
       setStats(statsRes.data.data.stats);
       setUsers(usersRes.data.data.users || []);
       setReports(reportsRes.data.data.reports || []);
       setSupportConversations(supportRes.data.data.conversations || []);
       setApiKeyInfo(apiKeyRes.data.data);
+      setVerifications(verificationsRes.data?.data?.verifications || []);
     } catch (err) {
       setError(err.response?.data?.error?.message || 'Không thể tải dữ liệu quản trị');
     } finally {
@@ -264,6 +275,64 @@ export default function AdminModal({ onClose }) {
     }
   };
 
+  const handleApproveVerification = async (targetUserId) => {
+    setVerificationActionLoading(targetUserId);
+    try {
+      await adminApi.approveCitizenVerification(targetUserId);
+      setVerifications(prev => prev.map(v => v.userId === targetUserId ? {
+        ...v,
+        isCitizenVerified: true,
+        citizenVerificationStatus: 'APPROVED',
+        citizenRejectReason: null,
+        citizenVerifiedAt: new Date().toISOString(),
+      } : v));
+      setUsers(prev => prev.map(u => u.userId === targetUserId ? {
+        ...u,
+        isCitizenVerified: true,
+        citizenVerificationStatus: 'APPROVED',
+        citizenRejectReason: null,
+      } : u));
+      setToast({ type: 'success', message: '✓ Đã phê duyệt xác thực Căn cước công dân thành công!' });
+    } catch (err) {
+      setToast({ type: 'error', message: err.response?.data?.error?.message || 'Không thể duyệt hồ sơ' });
+    } finally {
+      setVerificationActionLoading(null);
+    }
+  };
+
+  const handleOpenRejectModal = (userItem) => {
+    setRejectingUser(userItem);
+    setRejectReasonInput('');
+  };
+
+  const handleConfirmReject = async () => {
+    if (!rejectingUser) return;
+    const reason = rejectReasonInput.trim() || 'Ảnh chụp CCCD không rõ ràng hoặc không hợp lệ';
+    setVerificationActionLoading(rejectingUser.userId);
+    try {
+      await adminApi.rejectCitizenVerification(rejectingUser.userId, reason);
+      setVerifications(prev => prev.map(v => v.userId === rejectingUser.userId ? {
+        ...v,
+        isCitizenVerified: false,
+        citizenVerificationStatus: 'REJECTED',
+        citizenRejectReason: reason,
+      } : v));
+      setUsers(prev => prev.map(u => u.userId === rejectingUser.userId ? {
+        ...u,
+        isCitizenVerified: false,
+        citizenVerificationStatus: 'REJECTED',
+        citizenRejectReason: reason,
+      } : u));
+      setToast({ type: 'success', message: 'Đã từ chối xác thực CCCD và gửi thông báo tới người dùng' });
+      setRejectingUser(null);
+      setRejectReasonInput('');
+    } catch (err) {
+      setToast({ type: 'error', message: err.response?.data?.error?.message || 'Không thể từ chối hồ sơ' });
+    } finally {
+      setVerificationActionLoading(null);
+    }
+  };
+
   const getOnlineStatus = (u) => {
     if (!u) return { isOnline: false, text: 'Ngoại tuyến' };
     if (u?.isOnline || u?.userId === user?.userId) return { isOnline: true, text: 'Online' };
@@ -377,6 +446,18 @@ export default function AdminModal({ onClose }) {
                 💬 Hỗ trợ người dùng ({supportConversations.filter(c => (c.adminUnreadCount || 0) > 0).length})
               </button>
               <button
+                onClick={() => setActiveTab('VERIFICATION')}
+                style={{
+                  padding: '0.6rem 1.2rem', borderRadius: '10px', fontWeight: 700, fontSize: '0.88rem',
+                  cursor: 'pointer', border: 'none', transition: 'all 0.2s ease',
+                  background: activeTab === 'VERIFICATION' ? '#0284c7' : '#e5e7eb',
+                  color: activeTab === 'VERIFICATION' ? '#fff' : '#374151',
+                  display: 'flex', alignItems: 'center', gap: '0.4rem',
+                }}
+              >
+                🛡️ Xác thực người dùng ({verifications.filter(v => v.citizenVerificationStatus === 'PENDING').length})
+              </button>
+              <button
                 onClick={() => setActiveTab('AI_CONFIG')}
                 style={{
                   padding: '0.6rem 1.2rem', borderRadius: '10px', fontWeight: 700, fontSize: '0.88rem',
@@ -457,7 +538,10 @@ export default function AdminModal({ onClose }) {
                                   style={styles.avatar}
                                 />
                                 <div>
-                                  <div style={{ fontWeight: '600', color: '#111827' }}>{u.fullName || u.username}</div>
+                                  <div style={{ fontWeight: '600', color: '#111827', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                    <span>{u.fullName || u.username}</span>
+                                    {isFullyVerified(u) && <VerifiedBadge size={14} />}
+                                  </div>
                                   <div style={{ fontSize: '0.78rem', color: '#6b7280' }}>@{u.username}</div>
                                 </div>
                               </div>
@@ -921,14 +1005,12 @@ export default function AdminModal({ onClose }) {
                           <div>
                             <div style={{ fontWeight: 700, fontSize: '0.9rem', color: '#111827', display: 'flex', alignItems: 'center', gap: '6px' }}>
                               <span>{selectedSupportConv.user?.fullName || selectedSupportConv.user?.username}</span>
+                              {isFullyVerified(selectedSupportConv.user) && (
+                                <VerifiedBadge size={15} />
+                              )}
                               {selectedSupportConv.user?.isVip && (
                                 <span style={{ background: '#fef3c7', color: '#d97706', fontSize: '0.68rem', fontWeight: 800, padding: '1px 5px', borderRadius: '6px' }}>
                                   👑 VIP
-                                </span>
-                              )}
-                              {selectedSupportConv.user?.isCitizenVerified && (
-                                <span style={{ background: '#ecfdf5', color: '#059669', fontSize: '0.68rem', fontWeight: 800, padding: '1px 5px', borderRadius: '6px' }}>
-                                  ✓ CCCD
                                 </span>
                               )}
                             </div>
@@ -1048,6 +1130,241 @@ export default function AdminModal({ onClose }) {
                     </div>
                   )}
                 </div>
+              </div>
+            )}
+
+            {/* CITIZEN VERIFICATION MANAGEMENT SECTION */}
+            {activeTab === 'VERIFICATION' && (
+              <div style={{ padding: '1rem 0' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.2rem', flexWrap: 'wrap', gap: '0.8rem' }}>
+                  <div>
+                    <h3 style={{ margin: '0 0 4px 0', fontSize: '1.15rem', color: '#0284c7', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <span>🛡️</span>
+                      <span>Xác thực người dùng (Căn cước công dân)</span>
+                    </h3>
+                    <p style={{ margin: 0, fontSize: '0.82rem', color: '#6b7280' }}>
+                      Xem ảnh 2 mặt CCCD và phê duyệt hoặc từ chối yêu cầu xác thực
+                    </p>
+                  </div>
+                  <div style={{ fontSize: '0.85rem', color: '#6b7280' }}>
+                    Tổng số yêu cầu: <strong>{verifications.length}</strong>
+                  </div>
+                </div>
+
+                {/* Filter Tabs & Search */}
+                <div style={{ display: 'flex', gap: '0.8rem', marginBottom: '1.2rem', flexWrap: 'wrap', alignItems: 'center' }}>
+                  <input
+                    type="text"
+                    placeholder="Tìm theo Tên, Username hoặc Email..."
+                    value={verificationSearch}
+                    onChange={e => setVerificationSearch(e.target.value)}
+                    style={{ ...styles.searchInput, width: '280px', padding: '8px 12px' }}
+                  />
+
+                  <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
+                    {[
+                      { key: 'ALL', label: 'Tất cả', count: verifications.length },
+                      { key: 'PENDING', label: '⏳ Chờ duyệt', count: verifications.filter(v => v.citizenVerificationStatus === 'PENDING').length },
+                      { key: 'APPROVED', label: '✅ Đã duyệt', count: verifications.filter(v => v.isCitizenVerified || v.citizenVerificationStatus === 'APPROVED').length },
+                      { key: 'REJECTED', label: '❌ Bị từ chối', count: verifications.filter(v => v.citizenVerificationStatus === 'REJECTED').length },
+                    ].map(tab => (
+                      <button
+                        key={tab.key}
+                        type="button"
+                        onClick={() => setVerificationFilter(tab.key)}
+                        style={{
+                          padding: '6px 12px', borderRadius: '8px', fontSize: '0.8rem', fontWeight: 600,
+                          cursor: 'pointer', border: '1px solid',
+                          borderColor: verificationFilter === tab.key ? '#0284c7' : '#d1d5db',
+                          background: verificationFilter === tab.key ? '#e0f2fe' : '#fff',
+                          color: verificationFilter === tab.key ? '#0369a1' : '#4b5563',
+                        }}
+                      >
+                        {tab.label} ({tab.count})
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Items List */}
+                {(() => {
+                  const filtered = verifications.filter(v => {
+                    if (verificationFilter === 'PENDING' && v.citizenVerificationStatus !== 'PENDING') return false;
+                    if (verificationFilter === 'APPROVED' && !v.isCitizenVerified && v.citizenVerificationStatus !== 'APPROVED') return false;
+                    if (verificationFilter === 'REJECTED' && v.citizenVerificationStatus !== 'REJECTED') return false;
+                    if (verificationSearch.trim()) {
+                      const q = verificationSearch.toLowerCase().trim();
+                      const nameMatch = (v.fullName || '').toLowerCase().includes(q);
+                      const userMatch = (v.username || '').toLowerCase().includes(q);
+                      const emailMatch = (v.email || '').toLowerCase().includes(q);
+                      if (!nameMatch && !userMatch && !emailMatch) return false;
+                    }
+                    return true;
+                  });
+
+                  if (filtered.length === 0) {
+                    return (
+                      <div style={{ textAlign: 'center', padding: '3rem 1rem', color: '#9ca3af', background: '#f9fafb', borderRadius: '12px' }}>
+                        <div style={{ fontSize: '2.5rem', marginBottom: '0.4rem' }}>📭</div>
+                        <div style={{ fontWeight: 600, color: '#374151' }}>Không có yêu cầu xác thực nào</div>
+                      </div>
+                    );
+                  }
+
+                  return (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                      {filtered.map(item => {
+                        const isPending = item.citizenVerificationStatus === 'PENDING';
+                        const isApproved = item.isCitizenVerified || item.citizenVerificationStatus === 'APPROVED';
+                        const isRejected = item.citizenVerificationStatus === 'REJECTED';
+
+                        return (
+                          <div
+                            key={item.userId}
+                            style={{
+                              background: isPending ? '#fffbeb' : '#fff',
+                              border: isPending ? '1px solid #fde68a' : isApproved ? '1px solid #a7f3d0' : '1px solid #fecaca',
+                              borderRadius: '14px',
+                              padding: '1.2rem',
+                              display: 'flex',
+                              flexDirection: 'column',
+                              gap: '0.9rem',
+                            }}
+                          >
+                            {/* Top info */}
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.6rem' }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                <img
+                                  src={item.profilePicture || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150'}
+                                  alt=""
+                                  style={{ width: '42px', height: '42px', borderRadius: '50%', objectFit: 'cover' }}
+                                />
+                                <div>
+                                  <div style={{ fontWeight: 700, fontSize: '0.95rem', color: '#111827' }}>
+                                    {item.fullName || item.username} <span style={{ fontSize: '0.8rem', color: '#6b7280', fontWeight: 500 }}>@{item.username}</span>
+                                  </div>
+                                  <div style={{ fontSize: '0.78rem', color: '#6b7280' }}>
+                                    📧 {item.email} • 📅 Cập nhật: {formatDate(item.updatedAt)}
+                                  </div>
+                                </div>
+                              </div>
+
+                              <div>
+                                {isApproved ? (
+                                  <span style={{ background: '#d1fae5', color: '#065f46', border: '1px solid #a7f3d0', padding: '4px 10px', borderRadius: '8px', fontSize: '0.8rem', fontWeight: 700 }}>
+                                    ✓ Đã duyệt
+                                  </span>
+                                ) : isRejected ? (
+                                  <span style={{ background: '#fee2e2', color: '#991b1b', border: '1px solid #fecaca', padding: '4px 10px', borderRadius: '8px', fontSize: '0.8rem', fontWeight: 700 }}>
+                                    ✕ Bị từ chối
+                                  </span>
+                                ) : (
+                                  <span style={{ background: '#fef3c7', color: '#92400e', border: '1px solid #fde68a', padding: '4px 10px', borderRadius: '8px', fontSize: '0.8rem', fontWeight: 700 }}>
+                                    ⏳ Chờ Admin duyệt
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+
+                            {/* Photos */}
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '0.8rem' }}>
+                              {/* Front */}
+                              <div style={{ background: '#f3f4f6', borderRadius: '10px', padding: '0.6rem', border: '1px solid #e5e7eb' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+                                  <span style={{ fontSize: '0.78rem', fontWeight: 700, color: '#374151' }}>Mặt trước CCCD</span>
+                                  {item.citizenFrontPhoto && (
+                                    <button
+                                      type="button"
+                                      onClick={() => setPreviewImage(item.citizenFrontPhoto)}
+                                      style={{ background: 'none', border: 'none', color: '#0284c7', fontSize: '0.75rem', cursor: 'pointer', textDecoration: 'underline' }}
+                                    >
+                                      🔍 Phóng to
+                                    </button>
+                                  )}
+                                </div>
+                                {item.citizenFrontPhoto ? (
+                                  <div
+                                    onClick={() => setPreviewImage(item.citizenFrontPhoto)}
+                                    style={{ height: '130px', background: '#e5e7eb', borderRadius: '8px', overflow: 'hidden', cursor: 'pointer' }}
+                                  >
+                                    <img src={item.citizenFrontPhoto} alt="Mặt trước" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+                                  </div>
+                                ) : (
+                                  <div style={{ height: '90px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#9ca3af', fontSize: '0.8rem' }}>Chưa có ảnh</div>
+                                )}
+                              </div>
+
+                              {/* Back */}
+                              <div style={{ background: '#f3f4f6', borderRadius: '10px', padding: '0.6rem', border: '1px solid #e5e7eb' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+                                  <span style={{ fontSize: '0.78rem', fontWeight: 700, color: '#374151' }}>Mặt sau CCCD</span>
+                                  {item.citizenBackPhoto && (
+                                    <button
+                                      type="button"
+                                      onClick={() => setPreviewImage(item.citizenBackPhoto)}
+                                      style={{ background: 'none', border: 'none', color: '#0284c7', fontSize: '0.75rem', cursor: 'pointer', textDecoration: 'underline' }}
+                                    >
+                                      🔍 Phóng to
+                                    </button>
+                                  )}
+                                </div>
+                                {item.citizenBackPhoto ? (
+                                  <div
+                                    onClick={() => setPreviewImage(item.citizenBackPhoto)}
+                                    style={{ height: '130px', background: '#e5e7eb', borderRadius: '8px', overflow: 'hidden', cursor: 'pointer' }}
+                                  >
+                                    <img src={item.citizenBackPhoto} alt="Mặt sau" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+                                  </div>
+                                ) : (
+                                  <div style={{ height: '90px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#9ca3af', fontSize: '0.8rem' }}>Chưa có ảnh</div>
+                                )}
+                              </div>
+                            </div>
+
+                            {/* Reject reason note */}
+                            {isRejected && (
+                              <div style={{ background: '#fee2e2', border: '1px solid #fecaca', borderRadius: '8px', padding: '6px 10px', fontSize: '0.8rem', color: '#991b1b' }}>
+                                <strong>Lý do từ chối:</strong> {item.citizenRejectReason || 'Ảnh chụp không rõ ràng hoặc không hợp lệ'}
+                              </div>
+                            )}
+
+                            {/* Actions */}
+                            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.6rem', paddingTop: '0.4rem', borderTop: '1px solid #f3f4f6' }}>
+                              <button
+                                type="button"
+                                onClick={() => handleOpenRejectModal(item)}
+                                disabled={verificationActionLoading === item.userId}
+                                style={{
+                                  padding: '6px 14px', borderRadius: '8px',
+                                  background: '#fee2e2', border: '1px solid #fecaca',
+                                  color: '#991b1b', fontWeight: 700, fontSize: '0.82rem',
+                                  cursor: 'pointer',
+                                }}
+                              >
+                                ❌ Từ chối
+                              </button>
+
+                              <button
+                                type="button"
+                                onClick={() => handleApproveVerification(item.userId)}
+                                disabled={verificationActionLoading === item.userId || isApproved}
+                                style={{
+                                  padding: '6px 16px', borderRadius: '8px',
+                                  background: isApproved ? '#9ca3af' : 'linear-gradient(135deg, #10b981, #059669)',
+                                  border: 'none', color: '#fff',
+                                  fontWeight: 700, fontSize: '0.82rem',
+                                  cursor: (verificationActionLoading === item.userId || isApproved) ? 'default' : 'pointer',
+                                }}
+                              >
+                                {verificationActionLoading === item.userId ? 'Đang xử lý...' : isApproved ? '✓ Đã duyệt' : '✅ Phê duyệt'}
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  );
+                })()}
               </div>
             )}
 
@@ -1179,7 +1496,10 @@ export default function AdminModal({ onClose }) {
                 />
                 <div style={{ flex: 1 }}>
                   <h2 style={{ margin: '0 0 4px 0', fontSize: '1.3rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    {selectedUser.fullName || selectedUser.username}
+                    <span>{selectedUser.fullName || selectedUser.username}</span>
+                    {isFullyVerified(selectedUser) && (
+                      <VerifiedBadge size={17} />
+                    )}
                     {selectedUser.role === 'ADMIN' ? (
                       <span style={{
                         fontSize: '0.78rem', background: 'linear-gradient(135deg, #FF0055, #FF5500, #FFB700)',
@@ -1311,6 +1631,116 @@ export default function AdminModal({ onClose }) {
             </div>
           </div>
         )}
+        {/* ── IMAGE LIGHTBOX PREVIEW MODAL ── */}
+        {previewImage && (
+          <div
+            style={{
+              position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+              background: 'rgba(0, 0, 0, 0.9)', backdropFilter: 'blur(8px)',
+              display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+              zIndex: 10002, padding: '20px',
+            }}
+            onClick={() => setPreviewImage(null)}
+          >
+            <div style={{ position: 'relative', maxWidth: '90vw', maxHeight: '85vh', display: 'flex', flexDirection: 'column', alignItems: 'center' }} onClick={e => e.stopPropagation()}>
+              <img
+                src={previewImage}
+                alt="CCCD Preview"
+                style={{ maxWidth: '100%', maxHeight: '80vh', objectFit: 'contain', borderRadius: '14px', boxShadow: '0 20px 50px rgba(0,0,0,0.8)' }}
+              />
+              <button
+                onClick={() => setPreviewImage(null)}
+                style={{
+                  marginTop: '15px', padding: '8px 24px', borderRadius: '10px',
+                  background: 'rgba(255,255,255,0.15)', color: '#fff', border: '1px solid rgba(255,255,255,0.3)',
+                  fontWeight: 700, fontSize: '0.9rem', cursor: 'pointer',
+                }}
+              >
+                ✕ Đóng ảnh
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* ── REJECT CCCD REASON MODAL ── */}
+        {rejectingUser && (
+          <div style={styles.nestedBackdrop} onClick={() => setRejectingUser(null)}>
+            <div style={{ ...styles.nestedModal, maxWidth: '480px' }} onClick={e => e.stopPropagation()}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
+                <h3 style={{ margin: 0, fontSize: '1.1rem', color: '#991b1b', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <span>❌</span>
+                  <span>Từ chối CCCD: {rejectingUser.fullName || rejectingUser.username}</span>
+                </h3>
+                <button style={styles.closeBtn} onClick={() => setRejectingUser(null)}>✕</button>
+              </div>
+
+              <p style={{ margin: '0 0 12px 0', fontSize: '0.85rem', color: '#4b5563', lineHeight: 1.45 }}>
+                Vui lòng chọn hoặc nhập lý do từ chối để thông báo tới người dùng:
+              </p>
+
+              {/* Quick Preset Reasons */}
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '12px' }}>
+                {[
+                  'Ảnh chụp bị mờ / không đọc được chữ',
+                  'Ảnh bị lóa sáng / phản chiếu ánh sáng',
+                  'Không đúng ảnh Căn cước công dân',
+                  'Ảnh bị cắt góc / che khuất thông tin',
+                  'Ảnh mặt trước và mặt sau không khớp',
+                ].map(preset => (
+                  <button
+                    key={preset}
+                    type="button"
+                    onClick={() => setRejectReasonInput(preset)}
+                    style={{
+                      padding: '4px 8px', borderRadius: '6px', fontSize: '0.75rem',
+                      background: rejectReasonInput === preset ? '#fee2e2' : '#f3f4f6',
+                      border: '1px solid',
+                      borderColor: rejectReasonInput === preset ? '#f87171' : '#e5e7eb',
+                      color: rejectReasonInput === preset ? '#991b1b' : '#374151',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    {preset}
+                  </button>
+                ))}
+              </div>
+
+              <textarea
+                rows={3}
+                value={rejectReasonInput}
+                onChange={e => setRejectReasonInput(e.target.value)}
+                placeholder="Nhập lý do từ chối cụ thể..."
+                style={{
+                  width: '100%', boxSizing: 'border-box', border: '1px solid #d1d5db',
+                  borderRadius: '8px', padding: '8px 10px', fontSize: '0.85rem', outline: 'none',
+                  marginBottom: '16px',
+                }}
+              />
+
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
+                <button
+                  type="button"
+                  style={{ padding: '6px 14px', borderRadius: '6px', border: '1px solid #d1d5db', background: '#fff', cursor: 'pointer', fontSize: '0.85rem' }}
+                  onClick={() => setRejectingUser(null)}
+                >
+                  Hủy bỏ
+                </button>
+                <button
+                  type="button"
+                  onClick={handleConfirmReject}
+                  disabled={verificationActionLoading === rejectingUser.userId}
+                  style={{
+                    padding: '6px 16px', borderRadius: '6px', border: 'none',
+                    background: '#ef4444', color: '#fff', fontWeight: 700, fontSize: '0.85rem', cursor: 'pointer',
+                  }}
+                >
+                  {verificationActionLoading === rejectingUser.userId ? 'Đang gửi...' : 'Xác nhận từ chối'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         <ToastNotification toast={toast} onClose={() => setToast(null)} />
       </div>
     </div>
