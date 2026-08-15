@@ -4,6 +4,26 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import jsQR from 'jsqr';
 
+const normalizeGender = (g) => {
+  if (!g) return 'Nam';
+  const s = String(g).toLowerCase().trim();
+  if (s === 'female' || s === 'nữ' || s === 'nu' || s === 'f') return 'Nữ';
+  if (s === 'other' || s === 'khác' || s === 'khac') return 'Khác';
+  if (s === 'male' || s === 'nam' || s === 'm') return 'Nam';
+  return 'Khác';
+};
+
+const getDefaultAvatar = (gender) => {
+  const g = String(gender || '').toUpperCase();
+  if (g === 'FEMALE' || g === 'NỮ' || g === 'NU') {
+    return 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=300';
+  }
+  if (g === 'OTHER' || g === 'KHÁC' || g === 'KHAC') {
+    return 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=300';
+  }
+  return 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=300';
+};
+
 export default function UserSettingsModal({ profile, onProfileUpdated, onLogout, onClose, setToast }) {
   const navigate = useNavigate();
   const { logout: authLogout } = useAuth();
@@ -23,9 +43,31 @@ export default function UserSettingsModal({ profile, onProfileUpdated, onLogout,
   const [bio, setBio] = useState(profile?.bio || '');
   const [location, setLocation] = useState(profile?.location || '');
   const [height, setHeight] = useState(profile?.height || '');
-  const [gender, setGender] = useState(profile?.gender || 'Nam');
+  const [gender, setGender] = useState(() => normalizeGender(profile?.gender));
   const [profilePicture, setProfilePicture] = useState(profile?.profilePicture || '');
   const [updatingProfile, setUpdatingProfile] = useState(false);
+
+  useEffect(() => {
+    if (profile) {
+      setFullName(profile.fullName || '');
+      setBio(profile.bio || '');
+      setLocation(profile.location || '');
+      setHeight(profile.height || '');
+      setGender(normalizeGender(profile.gender));
+      setProfilePicture(profile.profilePicture || '');
+      setIsEmailVerified(Boolean(profile.isEmailVerified));
+      setIsCitizenVerified(Boolean(profile.isCitizenVerified));
+      setCitizenInfo({
+        idNumber: profile.citizenIdNumber || '',
+        name: profile.citizenName || '',
+        dob: profile.citizenDob || '',
+        gender: profile.citizenGender || '',
+        address: profile.citizenAddress || '',
+        issueDate: profile.citizenIssueDate || '',
+        verifiedAt: profile.citizenVerifiedAt || '',
+      });
+    }
+  }, [profile]);
 
   // Verification state (Email & CCCD)
   const [isEmailVerified, setIsEmailVerified] = useState(Boolean(profile?.isEmailVerified));
@@ -427,7 +469,7 @@ export default function UserSettingsModal({ profile, onProfileUpdated, onLogout,
         bio: bio.trim(),
         location: location.trim(),
         height: height ? Number(height) : null,
-        gender,
+        gender: gender === 'Nữ' ? 'female' : (gender === 'Khác' ? 'other' : 'male'),
         profilePicture: profilePicture.trim(),
       });
       const updatedUser = res.data.data.profile;
@@ -648,7 +690,13 @@ export default function UserSettingsModal({ profile, onProfileUpdated, onLogout,
                 <select
                   value={gender}
                   onChange={e => setGender(e.target.value)}
-                  style={{ ...styles.input, cursor: 'pointer' }}
+                  style={{
+                    ...styles.input,
+                    cursor: 'pointer',
+                    appearance: 'auto',
+                    color: '#ffffff',
+                    background: '#0f1115',
+                  }}
                 >
                   <option value="Nam" style={{ background: '#1e232a', color: '#fff' }}>Nam</option>
                   <option value="Nữ" style={{ background: '#1e232a', color: '#fff' }}>Nữ</option>

@@ -19,7 +19,7 @@ export default function ResetPassword() {
 
   useEffect(() => {
     if (!resetToken) {
-      setApiError('Reset authorization is missing or expired. Request a new code.');
+      setApiError('Mã ủy quyền đặt lại mật khẩu không hợp lệ hoặc đã hết hạn. Vui lòng yêu cầu mã mới.');
     }
   }, [resetToken]);
 
@@ -30,9 +30,9 @@ export default function ResetPassword() {
 
   const validate = () => {
     const e = {};
-    if (!resetToken) e.token = 'Reset authorization is required';
-    if (form.newPassword.length < 6) e.newPassword = 'Password must be at least 6 characters';
-    if (form.newPassword !== form.confirm) e.confirm = 'Passwords do not match';
+    if (!resetToken) e.token = 'Yêu cầu mã ủy quyền đặt lại mật khẩu';
+    if (form.newPassword.length < 6) e.newPassword = 'Mật khẩu mới phải có ít nhất 6 ký tự';
+    if (form.newPassword !== form.confirm) e.confirm = 'Mật khẩu xác nhận không khớp';
     return e;
   };
 
@@ -52,7 +52,7 @@ export default function ResetPassword() {
       setTimeout(() => navigate('/login'), 3000);
     } catch (err) {
       setApiError(
-        err.response?.data?.error?.message || 'Reset failed. Authorization may be expired or invalid.'
+        err.response?.data?.error?.message || 'Đặt lại mật khẩu thất bại. Mã ủy quyền có thể đã hết hạn.'
       );
     } finally {
       setLoading(false);
@@ -63,18 +63,18 @@ export default function ResetPassword() {
     <AuthLayout>
       <Brand />
 
-      <h2 className="card-title">New password</h2>
-      <p className="card-subtitle">Choose a new password for your account</p>
+      <h2 className="card-title">Tạo mật khẩu mới</h2>
+      <p className="card-subtitle">Nhập mật khẩu mới an toàn cho tài khoản của bạn</p>
 
       {done ? (
         <div className="form">
           <div className="alert alert-success" style={{ flexDirection: 'column', gap: '0.5rem' }}>
-            <strong>✓ Password updated successfully!</strong>
-            <span style={{ fontSize: '0.82rem' }}>Redirecting to sign in in 3 seconds…</span>
+            <strong>✓ Đã cập nhật mật khẩu mới thành công!</strong>
+            <span style={{ fontSize: '0.82rem' }}>Đang tự động chuyển đến trang đăng nhập sau 3 giây…</span>
           </div>
           <Link to="/login">
             <button className="btn btn-primary" style={{ width: '100%' }}>
-              Go to sign in →
+              Đến trang đăng nhập ngay →
             </button>
           </Link>
         </div>
@@ -92,10 +92,10 @@ export default function ResetPassword() {
           )}
 
           <Field
-            label="New password"
+            label="Mật khẩu mới"
             id="new-password"
             type="password"
-            placeholder="Min. 6 characters"
+            placeholder="Tối thiểu 6 ký tự"
             autoComplete="new-password"
             value={form.newPassword}
             onChange={set('newPassword')}
@@ -103,10 +103,10 @@ export default function ResetPassword() {
           />
 
           <Field
-            label="Confirm new password"
+            label="Xác nhận mật khẩu mới"
             id="confirm-password"
             type="password"
-            placeholder="Repeat your new password"
+            placeholder="Nhập lại mật khẩu mới"
             autoComplete="new-password"
             value={form.confirm}
             onChange={set('confirm')}
@@ -120,20 +120,20 @@ export default function ResetPassword() {
             id="reset-btn"
           >
             {loading ? <span className="spinner" /> : null}
-            {loading ? 'Updating…' : 'Update password'}
+            {loading ? 'Đang cập nhật…' : 'Cập nhật mật khẩu'}
           </button>
 
-          <div className="divider">or</div>
+          <div className="divider">hoặc</div>
           <Link to="/forgot-password">
             <button type="button" className="btn btn-ghost">
-              Request a new code
+              Yêu cầu gửi mã mới
             </button>
           </Link>
         </form>
       )}
 
       <p className="form-footer">
-        <Link to="/login">← Back to sign in</Link>
+        <Link to="/login">← Quay lại đăng nhập</Link>
       </p>
     </AuthLayout>
   );

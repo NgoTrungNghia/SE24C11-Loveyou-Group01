@@ -37,7 +37,7 @@ function calculateCompatibilityScore(currentUser, candidate, preferences) {
       currentUser.latitude, currentUser.longitude,
       candidate.latitude, candidate.longitude
     );
-    const maxDist = preferences?.maxDistance || 1500;
+    const maxDist = preferences?.maxDistance || 5000;
     if (dist <= 10) score += 25;
     else if (dist <= 50) score += 20;
     else if (dist <= 300) score += 15;

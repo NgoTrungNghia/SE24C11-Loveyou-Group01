@@ -463,16 +463,24 @@ export default function AdminModal({ onClose }) {
                               </div>
                             </td>
                             <td style={styles.td}>{u.email}</td>
-                            <td style={styles.td}>
+                            <td style={{ ...styles.td, whiteSpace: 'nowrap' }}>
                               {(() => {
                                 const onlineInfo = getOnlineStatus(u);
                                 return (
                                   <span style={{
-                                    padding: '3px 8px', borderRadius: '10px', fontSize: '0.78rem', fontWeight: 600,
+                                    padding: '4px 10px',
+                                    borderRadius: '12px',
+                                    fontSize: '0.78rem',
+                                    fontWeight: 600,
+                                    whiteSpace: 'nowrap',
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    gap: '6px',
                                     backgroundColor: onlineInfo.isOnline ? '#d1fae5' : '#f3f4f6',
                                     color: onlineInfo.isOnline ? '#065f46' : '#6b7280',
                                   }}>
-                                    {onlineInfo.isOnline ? '🟢 Online' : `⚪ ${onlineInfo.text}`}
+                                    <span style={{ fontSize: '0.65rem' }}>{onlineInfo.isOnline ? '🟢' : '⚪'}</span>
+                                    <span>{onlineInfo.isOnline ? 'Online' : onlineInfo.text}</span>
                                   </span>
                                 );
                               })()}
@@ -963,8 +971,12 @@ export default function AdminModal({ onClose }) {
                                   alignItems: isAdmin ? 'flex-end' : 'flex-start',
                                 }}
                               >
-                                <div style={{ fontSize: '0.7rem', color: '#9ca3af', marginBottom: '2px', marginLeft: isAdmin ? 0 : '4px', marginRight: isAdmin ? '4px' : 0 }}>
-                                  {isAdmin ? `👑 ${msg.sender?.fullName || msg.sender?.username || 'Admin'}` : (selectedSupportConv.user?.fullName || selectedSupportConv.user?.username)} • {formatDate(msg.createdAt)}
+                                <div style={{ fontSize: '0.72rem', color: '#6b7280', marginBottom: '3px', marginLeft: isAdmin ? 0 : '4px', marginRight: isAdmin ? '4px' : 0, display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                  <span style={{ fontWeight: 600, color: isAdmin ? '#2563eb' : '#111827' }}>
+                                    {isAdmin ? `👑 ${msg.sender?.fullName || msg.sender?.username || 'Admin'}` : (selectedSupportConv.user?.fullName || selectedSupportConv.user?.username)}
+                                  </span>
+                                  <span>•</span>
+                                  <span style={{ fontSize: '0.7rem', color: '#9ca3af' }}>{formatDate(msg.createdAt)}</span>
                                 </div>
                                 <div
                                   style={{
@@ -981,7 +993,7 @@ export default function AdminModal({ onClose }) {
                                     borderBottomLeftRadius: isAdmin ? '16px' : '4px',
                                   }}
                                 >
-                                  {msg.content}
+                                  <div style={{ wordBreak: 'break-word' }}>{msg.content}</div>
                                 </div>
                               </div>
                             );

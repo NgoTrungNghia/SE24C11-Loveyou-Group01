@@ -70,7 +70,7 @@ export default function Dashboard() {
     genderPreference: 'all',
     minAge: 18,
     maxAge: 45,
-    maxDistance: 50,
+    maxDistance: 5000,
   });
   const [savingFilters, setSavingFilters] = useState(false);
 
@@ -180,7 +180,7 @@ export default function Dashboard() {
       userApi.getProfile().then(res => {
         const p = res.data?.data?.profile;
         if (p) setProfile(p);
-      }).catch(() => {});
+      }).catch(() => { });
     } else if (paymentStatus === 'cancel') {
       window.history.replaceState({}, document.title, window.location.pathname);
       setToast({ type: 'info', message: 'Bạn đã hủy thanh toán nâng cấp VIP.' });
@@ -213,7 +213,7 @@ export default function Dashboard() {
             genderPreference: p.genderPreference || 'all',
             minAge: p.minAge || 18,
             maxAge: p.maxAge || 45,
-            maxDistance: p.maxDistance || 50,
+            maxDistance: p.maxDistance || 5000,
           });
         }
       } catch { /* ignore */ }
@@ -419,7 +419,7 @@ export default function Dashboard() {
 
   const currentCandidate = candidates[candidateIdx];
   const defaultFemaleAvatar = 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=400';
-  const defaultMaleAvatar   = 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=400';
+  const defaultMaleAvatar = 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=400';
   const defaultNeutralAvatar = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="%2394a3b8"><rect width="100" height="100" fill="%23334155"/><circle cx="50" cy="38" r="20" fill="%23cbd5e1"/><path d="M20 85c0-18 14-30 30-30s30 12 30 30" fill="%23cbd5e1"/></svg>';
 
   const getDefaultAvatar = (gender) => {
@@ -509,7 +509,7 @@ export default function Dashboard() {
             </div>
             <div>
               <div style={{ fontWeight: 700, fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                {profile?.fullName || user?.username}
+                {profile?.fullName || user?.fullName || user?.username}
                 {profile?.isVip && (
                   <span className="vip-badge-gradient" style={{ fontSize: '0.68rem', padding: '1px 6px', borderRadius: '10px' }}>👑 VIP</span>
                 )}
@@ -517,9 +517,8 @@ export default function Dashboard() {
                   <span style={{ fontSize: '0.7rem', background: '#f59e0b', color: '#000', padding: '1px 6px', borderRadius: '10px', fontWeight: '800' }}>ADMIN</span>
                 )}
               </div>
-              <div style={{ fontSize: '0.75rem', opacity: 0.88, display: 'flex', alignItems: 'center', gap: '4px' }}>
-
-                {profile?.location && <span> {profile.location}</span>}
+              <div style={{ fontSize: '0.78rem', opacity: 0.82, display: 'flex', alignItems: 'center', gap: '4px', color: 'rgba(255,255,255,0.85)' }}>
+                @{profile?.username || user?.username || 'user'}
               </div>
             </div>
           </div>
@@ -834,13 +833,13 @@ export default function Dashboard() {
             style={{
               display: 'flex', alignItems: 'center', gap: '6px',
               padding: '6px 12px', borderRadius: '18px',
-              background: (filters.genderPreference !== 'all' || filters.minAge > 18 || filters.maxAge < 45 || filters.maxDistance < 50)
+              background: (filters.genderPreference !== 'all' || filters.minAge > 18 || filters.maxAge < 45 || filters.maxDistance < 5000)
                 ? 'linear-gradient(135deg, #fd267d, #ff6036)'
                 : 'rgba(255,255,255,0.1)',
               border: '1px solid rgba(255,255,255,0.18)',
               color: '#fff', fontSize: '0.8rem', fontWeight: 700,
               cursor: 'pointer', transition: 'all 0.2s ease',
-              boxShadow: (filters.genderPreference !== 'all' || filters.minAge > 18 || filters.maxAge < 45 || filters.maxDistance < 50)
+              boxShadow: (filters.genderPreference !== 'all' || filters.minAge > 18 || filters.maxAge < 45 || filters.maxDistance < 5000)
                 ? '0 4px 12px rgba(253,38,125,0.4)'
                 : 'none',
             }}
@@ -848,7 +847,7 @@ export default function Dashboard() {
           >
             <span>🎯</span>
             <span>Bộ lọc</span>
-            {(filters.genderPreference !== 'all' || filters.minAge > 18 || filters.maxAge < 45 || filters.maxDistance < 50) && (
+            {(filters.genderPreference !== 'all' || filters.minAge > 18 || filters.maxAge < 45 || filters.maxDistance < 5000) && (
               <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#fff' }} />
             )}
           </button>
@@ -1136,7 +1135,7 @@ export default function Dashboard() {
                     if (profile?.role !== 'ADMIN' && (!profile?.isEmailVerified || !profile?.isCitizenVerified)) {
                       setToast({
                         type: 'warning',
-                        message: '⚠️ Chỉ những tài khoản đã xác thực đầy đủ (Email & CCCD) mới có thể gửi báo cáo người dùng. Vui lòng vào Cài Đặt để xác thực.',
+                        message: 'Chỉ những tài khoản đã xác thực đầy đủ (Email & CCCD) mới có thể gửi báo cáo người dùng. Vui lòng vào Cài Đặt để xác thực.',
                       });
                       return;
                     }
@@ -1455,7 +1454,7 @@ export default function Dashboard() {
                   <span style={{ fontSize: '0.85rem', fontWeight: 800, color: '#34D399' }}>{filters.maxDistance} km</span>
                 </div>
                 <input
-                  type="range" min="5" max="200" step="5" value={filters.maxDistance}
+                  type="range" min="5" max="5000" step="25" value={filters.maxDistance}
                   onChange={e => setFilters(f => ({ ...f, maxDistance: Number(e.target.value) }))}
                   style={{ width: '100%', accentColor: '#34D399' }}
                 />
@@ -1466,7 +1465,7 @@ export default function Dashboard() {
                 <button
                   type="button"
                   onClick={() => {
-                    const defaultFilters = { genderPreference: 'all', minAge: 18, maxAge: 45, maxDistance: 50 };
+                    const defaultFilters = { genderPreference: 'all', minAge: 18, maxAge: 45, maxDistance: 5000 };
                     handleApplyFilters(defaultFilters);
                   }}
                   style={{

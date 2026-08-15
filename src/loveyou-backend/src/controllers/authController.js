@@ -79,9 +79,9 @@ async function verifyOtp(req, res, next) {
     const { email, otp } = req.body;
     const result = await authService.verifyPasswordResetOtp(email, otp);
     if (!result) {
-      return res.status(401).json({
+      return res.status(400).json({
         success: false,
-        error: { message: 'Invalid or expired code', code: 'INVALID_OTP' },
+        error: { message: 'Mã xác thực không đúng hoặc đã hết hạn', code: 'INVALID_OTP' },
       });
     }
     return success(res, { resetToken: result.resetToken, expiresAt: result.expiresAt });
@@ -95,9 +95,9 @@ async function resetPassword(req, res, next) {
     const { resetToken, newPassword } = req.body;
     const ok = await authService.resetPassword(resetToken, newPassword);
     if (!ok) {
-      return res.status(401).json({
+      return res.status(400).json({
         success: false,
-        error: { message: 'Invalid or expired token', code: 'INVALID_TOKEN' },
+        error: { message: 'Mã ủy quyền không hợp lệ hoặc đã hết hạn', code: 'INVALID_TOKEN' },
       });
     }
     return success(res, { message: 'Password updated' });

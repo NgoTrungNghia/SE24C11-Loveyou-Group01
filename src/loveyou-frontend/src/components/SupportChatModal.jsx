@@ -102,7 +102,9 @@ export default function SupportChatModal({ onClose, currentUserProfile }) {
     if (!dateStr) return '';
     try {
       const d = new Date(dateStr);
-      return d.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+      const time = d.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+      const date = d.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' });
+      return `${time}, ${date}`;
     } catch {
       return '';
     }
@@ -167,14 +169,36 @@ export default function SupportChatModal({ onClose, currentUserProfile }) {
                       alignItems: isMe ? 'flex-end' : 'flex-start',
                     }}
                   >
-                    {!isMe && (
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px', marginLeft: '4px' }}>
-                        <span style={{ fontSize: '0.72rem', fontWeight: 800, color: '#FFD700' }}>
-                          {/*👑({msg.sender?.fullName || msg.sender?.username || 'Admin'})*/}
-                          👑 {'Admin'}
-                        </span>
-                      </div>
-                    )}
+                    <div
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                        marginBottom: '4px',
+                        marginLeft: isMe ? 0 : '4px',
+                        marginRight: isMe ? '4px' : 0,
+                        fontSize: '0.72rem',
+                      }}
+                    >
+                      {isMe ? (
+                        <>
+                          <span style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.45)' }}>{formatTime(msg.createdAt)}</span>
+                          <span style={{ color: 'rgba(255,255,255,0.3)' }}>•</span>
+                          <span style={{ fontWeight: 700, color: '#FF6584' }}>
+                            {effectiveUser?.fullName || effectiveUser?.username || 'Bạn'}
+                          </span>
+                        </>
+                      ) : (
+                        <>
+                          <span style={{ fontWeight: 800, color: '#FFD700' }}>
+                            👑 Admin
+                          </span>
+                          <span style={{ color: 'rgba(255,255,255,0.3)' }}>•</span>
+                          <span style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.45)' }}>{formatTime(msg.createdAt)}</span>
+                        </>
+                      )}
+                    </div>
+
                     <div
                       style={{
                         ...styles.bubble,
@@ -182,16 +206,6 @@ export default function SupportChatModal({ onClose, currentUserProfile }) {
                       }}
                     >
                       <div style={{ wordBreak: 'break-word', lineHeight: 1.45 }}>{msg.content}</div>
-                      <div
-                        style={{
-                          fontSize: '0.68rem',
-                          marginTop: '4px',
-                          textAlign: 'right',
-                          color: isMe ? 'rgba(255,255,255,0.7)' : 'rgba(255,255,255,0.5)',
-                        }}
-                      >
-                        {formatTime(msg.createdAt)}
-                      </div>
                     </div>
                   </div>
                 );

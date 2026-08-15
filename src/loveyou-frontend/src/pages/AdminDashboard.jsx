@@ -338,7 +338,7 @@ export default function AdminDashboard() {
     if (!u) return { isOnline: false, text: 'Ngoại tuyến' };
     const isOnline = onlineUsers.has(Number(u.userId)) || Number(u.userId) === Number(user?.userId);
     if (isOnline) return { isOnline: true, text: 'Online' };
-    if (!u.lastActiveAt) return { isOnline: false, text: 'Chưa online' };
+    if (!u.lastActiveAt) return { isOnline: false, text: 'Offline' };
     const diffMs = Date.now() - new Date(u.lastActiveAt).getTime();
     const diffMin = Math.floor(diffMs / 60000);
     if (diffMin < 1) return { isOnline: false, text: 'Vừa mới' };
@@ -356,6 +356,18 @@ export default function AdminDashboard() {
       return d.toLocaleDateString('vi-VN', {
         year: 'numeric', month: '2-digit', day: '2-digit'
       });
+    } catch {
+      return dateStr;
+    }
+  };
+
+  const formatDateTime = (dateStr) => {
+    if (!dateStr) return '';
+    try {
+      const d = new Date(dateStr);
+      const time = d.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+      const date = d.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' });
+      return `${time}, ${date}`;
     } catch {
       return dateStr;
     }
@@ -658,17 +670,25 @@ export default function AdminDashboard() {
                             </div>
                           </td>
                           <td style={styles.td}>{u.email}</td>
-                          <td style={styles.td}>
+                          <td style={{ ...styles.td, whiteSpace: 'nowrap' }}>
                             {(() => {
                               const onlineInfo = getOnlineStatus(u);
                               return (
                                 <span style={{
-                                  padding: '3px 8px', borderRadius: '10px', fontSize: '0.78rem', fontWeight: 600,
+                                  padding: '4px 10px',
+                                  borderRadius: '12px',
+                                  fontSize: '0.78rem',
+                                  fontWeight: 600,
+                                  whiteSpace: 'nowrap',
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  gap: '6px',
                                   backgroundColor: onlineInfo.isOnline ? 'rgba(16, 185, 129, 0.2)' : 'rgba(255, 255, 255, 0.06)',
-                                  color: onlineInfo.isOnline ? '#34d399' : 'rgba(255, 255, 255, 0.5)',
+                                  color: onlineInfo.isOnline ? '#34d399' : 'rgba(255, 255, 255, 0.65)',
                                   border: onlineInfo.isOnline ? '1px solid rgba(16, 185, 129, 0.4)' : '1px solid rgba(255, 255, 255, 0.1)',
                                 }}>
-                                  {onlineInfo.isOnline ? '🟢 Online' : `⚪ ${onlineInfo.text}`}
+                                  <span style={{ fontSize: '0.65rem' }}>{onlineInfo.isOnline ? '🟢' : '⚪'}</span>
+                                  <span>{onlineInfo.isOnline ? 'Online' : onlineInfo.text}</span>
                                 </span>
                               );
                             })()}
@@ -1205,8 +1225,12 @@ export default function AdminDashboard() {
                                 alignItems: isAdmin ? 'flex-end' : 'flex-start',
                               }}
                             >
-                              <div style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.5)', marginBottom: '2px', marginLeft: isAdmin ? 0 : '4px', marginRight: isAdmin ? '4px' : 0 }}>
-                                {isAdmin ? `👑 ${msg.sender?.fullName || msg.sender?.username || 'Admin'}` : (selectedSupportConv.user?.fullName || selectedSupportConv.user?.username)} • {formatDate(msg.createdAt)}
+                              <div style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,0.5)', marginBottom: '3px', marginLeft: isAdmin ? 0 : '4px', marginRight: isAdmin ? '4px' : 0, display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                <span style={{ fontWeight: 600, color: isAdmin ? '#34d399' : '#fff' }}>
+                                  {isAdmin ? `👑 ${msg.sender?.fullName || msg.sender?.username || 'Admin'}` : (selectedSupportConv.user?.fullName || selectedSupportConv.user?.username)}
+                                </span>
+                                <span>•</span>
+                                <span style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.45)' }}>{formatDateTime(msg.createdAt)}</span>
                               </div>
                               <div
                                 style={{
@@ -1223,7 +1247,7 @@ export default function AdminDashboard() {
                                   borderBottomLeftRadius: isAdmin ? '16px' : '4px',
                                 }}
                               >
-                                {msg.content}
+                                <div style={{ wordBreak: 'break-word' }}>{msg.content}</div>
                               </div>
                             </div>
                           );

@@ -18,10 +18,10 @@ export default function Signup() {
 
   const validate = () => {
     const e = {};
-    if (!form.username.trim()) e.username = 'Username is required';
-    if (!form.email.trim())    e.email    = 'Email is required';
-    else if (!/\S+@\S+\.\S+/.test(form.email)) e.email = 'Enter a valid email';
-    if (form.password.length < 6) e.password = 'Password must be at least 6 characters';
+    if (!form.username.trim()) e.username = 'Vui lòng nhập tên người dùng (username)';
+    if (!form.email.trim())    e.email    = 'Vui lòng nhập địa chỉ email';
+    else if (!/\S+@\S+\.\S+/.test(form.email)) e.email = 'Địa chỉ email không đúng định dạng';
+    if (form.password.length < 6) e.password = 'Mật khẩu phải có ít nhất 6 ký tự';
     return e;
   };
 
@@ -42,7 +42,7 @@ export default function Signup() {
       navigate('/login', { state: { registered: true } });
     } catch (err) {
       const errData = err.response?.data?.error;
-      const msg     = errData?.message || 'Sign up failed';
+      const msg     = errData?.message || 'Đăng ký thất bại, vui lòng thử lại';
       const field   = errData?.field   || null;
 
       // Handle field-level issues array
@@ -62,8 +62,8 @@ export default function Signup() {
     <AuthLayout>
       <Brand />
 
-      <h2 className="card-title">Create account</h2>
-      <p className="card-subtitle">Start your love story today 💕</p>
+      <h2 className="card-title">Tạo tài khoản mới</h2>
+      <p className="card-subtitle">Bắt đầu câu chuyện tình yêu của bạn ngay hôm nay 💕</p>
 
       <form className="form" onSubmit={handleSubmit} noValidate>
         {apiError && (
@@ -71,10 +71,10 @@ export default function Signup() {
         )}
 
         <Field
-          label="Username"
+          label="Tên đăng nhập (Username)"
           id="username"
           type="text"
-          placeholder="e.g. rose_2025"
+          placeholder="ví dụ: huong_lan2025"
           autoComplete="username"
           value={form.username}
           onChange={set('username')}
@@ -82,10 +82,10 @@ export default function Signup() {
         />
 
         <Field
-          label="Email address"
+          label="Địa chỉ Email"
           id="email"
           type="email"
-          placeholder="you@example.com"
+          placeholder="nhap_email@gmail.com"
           autoComplete="email"
           value={form.email}
           onChange={set('email')}
@@ -93,10 +93,10 @@ export default function Signup() {
         />
 
         <Field
-          label="Password"
+          label="Mật khẩu"
           id="password"
           type="password"
-          placeholder="Min. 6 characters"
+          placeholder="Tối thiểu 6 ký tự"
           autoComplete="new-password"
           value={form.password}
           onChange={set('password')}
@@ -104,7 +104,7 @@ export default function Signup() {
         />
 
         <Field
-          label="Phone number (optional)"
+          label="Số điện thoại (tùy chọn)"
           id="phone"
           type="tel"
           placeholder="+84 900 000 000"
@@ -115,12 +115,12 @@ export default function Signup() {
 
         <button className="btn btn-primary" type="submit" disabled={loading} id="signup-btn">
           {loading ? <span className="spinner" /> : null}
-          {loading ? 'Creating account…' : 'Create account'}
+          {loading ? 'Đang tạo tài khoản…' : 'Đăng ký tài khoản'}
         </button>
       </form>
 
       <p className="form-footer">
-        Already have an account? <Link to="/login">Sign in</Link>
+        Đã có tài khoản? <Link to="/login">Đăng nhập</Link>
       </p>
     </AuthLayout>
   );

@@ -5,9 +5,10 @@ import { userApi } from '../utils/api';
 import { Field } from '../components/shared';
 
 const PRESET_INTERESTS = [
-  '🎵 Music', '☕ Coffee', '✈️ Travel', '🏋️ Gym', '🎮 Gaming',
-  '📚 Books', '🍳 Cooking', '🎬 Movies', '🐱 Pets', '🎨 Art',
-  '💻 Coding', '⚽ Sports', '🍷 Wine', '📸 Photography', '🧘 Yoga'
+  '🎵 Âm nhạc', '☕ Cà phê', '✈️ Du lịch', '🏋️ Tập gym', '🎮 Chơi game',
+  '📚 Đọc sách', '🍳 Nấu ăn', '🎬 Xem phim', '🐱 Thú cưng', '🎨 Hội họa',
+  '💻 Công nghệ', '⚽ Thể thao', '🧋 Trà sữa', '📸 Nhiếp ảnh', '🧘 Yoga',
+  '🎸 Guitar', '🏕️ Cắm trại', '🏃 Chạy bộ', '🍲 Ẩm thực', '🏊 Bơi lội'
 ];
 
 export default function OnboardingWizard() {

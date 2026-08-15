@@ -28,9 +28,14 @@ api.interceptors.response.use(
     if (errCode === 'ACCOUNT_BANNED' || (err.response?.status === 403 && errMsg?.includes('khóa'))) {
       localStorage.removeItem('ly_token');
       window.location.href = '/login?banned=true';
-    } else if (err.response?.status === 401 && !err.config?.url?.includes('/auth/login')) {
-      localStorage.removeItem('ly_token');
-      if (typeof window !== 'undefined' && !['/login', '/signup'].includes(window.location.pathname)) {
+    } else if (err.response?.status === 401) {
+      const url = String(err.config?.url || '');
+      const pathname = typeof window !== 'undefined' ? window.location.pathname : '';
+      const isAuthUrl = url.includes('/auth/') || url.includes('/login') || url.includes('/signup');
+      const isPublicPage = ['/login', '/signup', '/forgot-password', '/reset-password'].some(p => pathname.startsWith(p));
+
+      if (!isAuthUrl && !isPublicPage) {
+        localStorage.removeItem('ly_token');
         window.location.href = '/login';
       }
     }
