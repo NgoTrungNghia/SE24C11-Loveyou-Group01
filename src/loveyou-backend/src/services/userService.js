@@ -31,6 +31,8 @@ async function getUserProfile(userId) {
       bio: true,
       height: true,
       location: true,
+      latitude: true,
+      longitude: true,
       interests: true,
       photos: true,
       isProfileComplete: true,
@@ -64,16 +66,36 @@ async function getUserProfile(userId) {
 }
 
 async function updateUserProfile(userId, profileData) {
-  const { fullName, phoneNumber, gender, dateOfBirth, profilePicture, bio, height, location, interests, photos, isProfileComplete } = profileData;
+  const { fullName, phoneNumber, gender, dateOfBirth, profilePicture, bio, height, location, latitude, longitude, interests, photos, isProfileComplete } = profileData;
   const updateData = {};
   if (fullName !== undefined) updateData.fullName = fullName;
   if (phoneNumber !== undefined) updateData.phoneNumber = phoneNumber;
   if (gender !== undefined) updateData.gender = gender;
-  if (dateOfBirth !== undefined) updateData.dateOfBirth = dateOfBirth ? new Date(dateOfBirth) : null;
+  if (dateOfBirth !== undefined) {
+    if (!dateOfBirth) {
+      updateData.dateOfBirth = null;
+    } else {
+      const d = new Date(dateOfBirth);
+      updateData.dateOfBirth = isNaN(d.getTime()) ? null : d;
+    }
+  }
   if (profilePicture !== undefined) updateData.profilePicture = profilePicture;
   if (bio !== undefined) updateData.bio = bio;
-  if (height !== undefined) updateData.height = height ? parseInt(height) : null;
+  if (height !== undefined) {
+    if (height === null || height === undefined || height === '') {
+      updateData.height = null;
+    } else {
+      const parsedHeight = parseInt(height, 10);
+      updateData.height = isNaN(parsedHeight) ? null : parsedHeight;
+    }
+  }
   if (location !== undefined) updateData.location = location;
+  if (latitude !== undefined) {
+    updateData.latitude = (latitude === null || latitude === undefined || isNaN(Number(latitude))) ? null : parseFloat(latitude);
+  }
+  if (longitude !== undefined) {
+    updateData.longitude = (longitude === null || longitude === undefined || isNaN(Number(longitude))) ? null : parseFloat(longitude);
+  }
   if (interests !== undefined) updateData.interests = stringifyJsonField(interests);
   if (photos !== undefined) updateData.photos = stringifyJsonField(photos);
   if (isProfileComplete !== undefined) updateData.isProfileComplete = Boolean(isProfileComplete);
@@ -93,6 +115,8 @@ async function updateUserProfile(userId, profileData) {
       bio: true,
       height: true,
       location: true,
+      latitude: true,
+      longitude: true,
       interests: true,
       photos: true,
       isProfileComplete: true,

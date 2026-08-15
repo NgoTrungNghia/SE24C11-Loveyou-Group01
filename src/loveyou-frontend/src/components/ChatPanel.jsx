@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { chatApi, userApi } from '../utils/api';
 import { getSocket } from '../utils/socket';
 import { useAuth } from '../context/AuthContext';
+import ToastNotification from './ToastNotification';
 import VerifiedBadge, { isFullyVerified } from './VerifiedBadge';
 
 const defaultAvatar = 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=100';

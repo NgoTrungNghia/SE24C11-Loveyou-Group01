@@ -166,14 +166,26 @@ export default function OnboardingWizard() {
     setSaving(true);
     setError('');
     try {
-      const cleanedPhotos = form.photos.filter(p => p && p.trim() !== '');
+      const cleanedPhotos = (form.photos || []).filter(p => p && typeof p === 'string' && p.trim() !== '');
       const hasName = Boolean(form.fullName && form.fullName.trim().length > 0);
+      const parsedHeight = form.height ? Number(form.height) : null;
+      const parsedLat = form.latitude !== null && form.latitude !== undefined && !isNaN(Number(form.latitude)) ? Number(form.latitude) : null;
+      const parsedLng = form.longitude !== null && form.longitude !== undefined && !isNaN(Number(form.longitude)) ? Number(form.longitude) : null;
+
       const payload = {
-        ...form,
-        height: form.height ? Number(form.height) : null,
+        fullName: form.fullName || '',
+        phoneNumber: form.phoneNumber || '',
+        gender: form.gender || 'MALE',
+        dateOfBirth: form.dateOfBirth || null,
+        bio: form.bio || '',
+        height: isNaN(parsedHeight) ? null : parsedHeight,
+        location: form.location || '',
+        latitude: parsedLat,
+        longitude: parsedLng,
+        interests: Array.isArray(form.interests) ? form.interests : [],
         photos: cleanedPhotos,
         profilePicture: cleanedPhotos[0] || form.profilePicture || '',
-        isProfileComplete: isFinal || hasName,
+        isProfileComplete: Boolean(isFinal || hasName),
       };
 
       await userApi.updateProfile(payload);
@@ -182,7 +194,15 @@ export default function OnboardingWizard() {
         navigate('/dashboard', { replace: true });
       }
     } catch (err) {
-      setError(err.response?.data?.error?.message || 'Lỗi khi lưu thông tin');
+      console.error('[Onboarding Save Error]:', err);
+      const serverMsg = err.response?.data?.error?.message;
+      if (serverMsg) {
+        setError(serverMsg);
+      } else if (err.message === 'Network Error' || !err.response) {
+        setError('Không thể kết nối đến máy chủ. Vui lòng thử lại sau giây lát.');
+      } else {
+        setError('Lỗi khi lưu thông tin. Vui lòng kiểm tra lại dữ liệu.');
+      }
     } finally {
       setSaving(false);
     }
