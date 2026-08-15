@@ -226,20 +226,26 @@ async function saveMessage(conversationId, senderId, content, type = 'TEXT') {
     throw new Error('Hai bạn đã hủy ghép đôi. Vui lòng ghép đôi lại để tiếp tục nhắn tin.');
   }
 
-  const partnerId = conv.match.user1Id === sid ? conv.match.user2Id : conv.match.user1Id;
+  const partnerId = conv.match ? (conv.match.user1Id === sid ? conv.match.user2Id : conv.match.user1Id) : null;
 
   // 2. Kiểm tra nếu có bất kỳ lệnh chặn nào giữa 2 người
-  const blockRecord = await prisma.userBlock.findFirst({
-    where: {
-      OR: [
-        { blockerId: sid, blockedId: partnerId },
-        { blockerId: partnerId, blockedId: sid },
-      ],
-    },
-  });
+  if (partnerId) {
+    const blockRecord = await prisma.userBlock.findFirst({
+      where: {
+        OR: [
+          { blockerId: sid, blockedId: partnerId },
+          { blockerId: partnerId, blockedId: sid },
+        ],
+      },
+    });
 
-  if (blockRecord) {
-    throw new Error('Tài khoản này đã bị chặn. Không thể gửi tin nhắn mới.');
+    if (blockRecord) {
+      if (blockRecord.blockerId === sid) {
+        throw new Error('Bạn đã chặn người dùng này. Bỏ chặn để tiếp tục trò chuyện.');
+      } else {
+        throw new Error('Người dùng này đã chặn bạn.');
+      }
+    }
   }
 
   const message = await prisma.message.create({
