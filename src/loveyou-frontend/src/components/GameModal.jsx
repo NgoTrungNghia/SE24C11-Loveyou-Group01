@@ -45,6 +45,7 @@ export default function GameModal({ match, currentUserId, initialSession, onClos
 
   const socket = getSocket();
   const waitIntervalRef = useRef(null);
+  const hasEmittedFinishRef = useRef(false);
 
   useEffect(() => {
     if (!socket) return;
@@ -56,6 +57,7 @@ export default function GameModal({ match, currentUserId, initialSession, onClos
       setCurrentQIdx(0);
       setMyAnswer(null);
       setPartnerAnswered(false);
+      hasEmittedFinishRef.current = false;
     };
 
     // game_questions_ready: AI đã sinh xong câu hỏi → bắt đầu PLAYING
@@ -67,6 +69,7 @@ export default function GameModal({ match, currentUserId, initialSession, onClos
       setPartnerAnswered(false);
       setHasSpunRound(false);
       setBottleRotation(0);
+      hasEmittedFinishRef.current = false;
     };
 
     const handleAnswerReceived = ({ userId }) => {
@@ -98,7 +101,8 @@ export default function GameModal({ match, currentUserId, initialSession, onClos
           const nextIndex = answeredIndex + 1;
           if (nextIndex >= qList.length) {
             setPhase('EVALUATING_AI');
-            if (socket && currentSession?.sessionId) {
+            if (socket && currentSession?.sessionId && !hasEmittedFinishRef.current) {
+              hasEmittedFinishRef.current = true;
               socket.emit('game_finish', { sessionId: currentSession.sessionId });
             }
           } else {
@@ -110,7 +114,13 @@ export default function GameModal({ match, currentUserId, initialSession, onClos
     };
 
     const handleGameResult = ({ result: r }) => {
-      setResult(r);
+      setResult(prev => {
+        // Luôn giữ kết quả AI phân tích chi tiết đầy đủ chính thức
+        if (prev?.summary && prev?.aiPowered && !r?.aiPowered) {
+          return prev;
+        }
+        return r;
+      });
       setPhase('RESULT');
     };
 
@@ -695,13 +705,39 @@ export default function GameModal({ match, currentUserId, initialSession, onClos
               const isSame = (ans1 !== undefined && ans2 !== undefined && ans1 === ans2);
 
               return (
-                <div style={{ textAlign: 'center', padding: '1rem 0', animation: 'fadeIn 0.3s ease' }}>
-                  <div style={{ fontSize: '2.5rem', marginBottom: '0.8rem' }}>
+                <div style={{ textAlign: 'center', padding: '0.8rem 0', animation: 'fadeIn 0.3s ease' }}>
+                  <div style={{ fontSize: '2.4rem', marginBottom: '0.6rem' }}>
                     {isSame ? '🎉' : '🔀'}
                   </div>
-                  <div style={{ fontWeight: 800, fontSize: '1.2rem', color: '#fff', marginBottom: '0.5rem' }}>
-                    {isSame ? 'Hai bạn chọn giống nhau!' : 'Hai bạn chọn khác nhau!'}
+                  <div style={{ fontWeight: 800, fontSize: '1.15rem', color: '#fff', marginBottom: '0.6rem' }}>
+                    {isSame ? 'Hai bạn có cùng sự lựa chọn!' : 'Hai bạn có góc nhìn khác nhau!'}
                   </div>
+
+                  <div style={{
+                    display: 'flex', gap: '0.7rem', marginTop: '0.5rem', marginBottom: '0.9rem', textAlign: 'left',
+                  }}>
+                    <div style={{
+                      flex: 1, padding: '0.7rem 0.9rem', borderRadius: '12px',
+                      background: 'rgba(52,211,153,0.1)', border: '1px solid rgba(52,211,153,0.25)',
+                      fontSize: '0.82rem',
+                    }}>
+                      <div style={{ color: '#34D399', fontSize: '0.74rem', fontWeight: 700, marginBottom: '3px' }}>👤 Bạn chọn:</div>
+                      <div style={{ color: '#fff', fontWeight: 600, lineHeight: '1.4' }}>
+                        {ans1 ? currentQ?.[ans1] || ans1 : 'Chưa chọn'}
+                      </div>
+                    </div>
+                    <div style={{
+                      flex: 1, padding: '0.7rem 0.9rem', borderRadius: '12px',
+                      background: 'rgba(253,38,125,0.1)', border: '1px solid rgba(253,38,125,0.25)',
+                      fontSize: '0.82rem',
+                    }}>
+                      <div style={{ color: '#fd267d', fontSize: '0.74rem', fontWeight: 700, marginBottom: '3px' }}>💖 {match?.partner?.name || 'Đối phương'}:</div>
+                      <div style={{ color: '#fff', fontWeight: 600, lineHeight: '1.4' }}>
+                        {ans2 ? currentQ?.[ans2] || ans2 : 'Chưa chọn'}
+                      </div>
+                    </div>
+                  </div>
+
                   <div style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.85rem' }}>
                     {currentQIdx >= questions.length - 1 ? 'Đang tổng hợp kết quả AI...' : 'Câu tiếp theo đang đến...'}
                   </div>

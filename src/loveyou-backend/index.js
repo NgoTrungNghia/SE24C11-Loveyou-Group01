@@ -263,11 +263,23 @@ io.on('connection', (socket) => {
   });
 
   /**
-   * Kết thúc game → AI đánh giá kết quả → gửi cho cả 2
+   * Kết thúc game → AI đánh giá kết quả → gửi cho cả 2 (Deduplicated & Cached)
    */
   socket.on('game_finish', async ({ sessionId }) => {
     const session = gameService.getGameSession(sessionId);
     if (!session) return socket.emit('error', { message: 'Session not found' });
+
+    // 1. Nếu kết quả AI chính thức đã được sinh cho session này, gửi ngay kết quả đã lưu mà không gọi AI lại
+    if (session.finalResult) {
+      return emitToBothPlayers(session, 'game_result', { result: session.finalResult });
+    }
+
+    // 2. Nếu một trong hai người chơi đã kích hoạt tiến trình gọi Gemini AI và đang đợi kết quả, bỏ qua yêu cầu trùng lặp
+    if (session.isEvaluating) {
+      return;
+    }
+
+    session.isEvaluating = true;
 
     const basicResult = gameService.computeGameResult(sessionId);
 
@@ -291,8 +303,11 @@ io.on('connection', (socket) => {
       }
 
       const finalResult = { ...basicResult, ...aiEvaluation, aiPowered: true };
+      session.finalResult = finalResult;
+      session.isEvaluating = false;
       emitToBothPlayers(session, 'game_result', { result: finalResult });
     } catch (err) {
+      session.isEvaluating = false;
       console.error('[Game] AI evaluation failed:', err.message);
       gameService.pauseGameSession(sessionId);
       emitToBothPlayers(session, 'game_paused', {
