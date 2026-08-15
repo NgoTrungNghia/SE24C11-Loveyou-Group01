@@ -63,9 +63,9 @@ const USER_ACCOUNTS = [
     latitude: 21.0285,
     longitude: 105.8542,
     interests: JSON.stringify(['🎵 Music', '☕ Coffee', '📸 Photography', '🧋 Boba']),
-    isProfileComplete: true,
-    isEmailVerified: true,
-    isCitizenVerified: true,
+    isProfileComplete: false,
+    isEmailVerified: false,
+    isCitizenVerified: false,
   },
   {
     username: 'test2',
@@ -84,9 +84,9 @@ const USER_ACCOUNTS = [
     latitude: 10.8231,
     longitude: 106.6297,
     interests: JSON.stringify(['🎵 Music', '☕ Coffee', '📸 Photography']),
-    isProfileComplete: true,
-    isEmailVerified: true,
-    isCitizenVerified: true,
+    isProfileComplete: false,
+    isEmailVerified: false,
+    isCitizenVerified: false,
   },
   {
     username: 'test3',
@@ -105,8 +105,8 @@ const USER_ACCOUNTS = [
     latitude: 10.7769,
     longitude: 106.7009,
     interests: JSON.stringify(['🏋️ Gym', '🧘 Yoga', '✈️ Travel']),
-    isProfileComplete: true,
-    isEmailVerified: true,
+    isProfileComplete: false,
+    isEmailVerified: false,
     isCitizenVerified: false,
   },
   {
@@ -126,9 +126,9 @@ const USER_ACCOUNTS = [
     latitude: 16.0544,
     longitude: 108.2022,
     interests: JSON.stringify(['✈️ Travel', '🐱 Pets', '🍳 Cooking']),
-    isProfileComplete: true,
-    isEmailVerified: true,
-    isCitizenVerified: true,
+    isProfileComplete: false,
+    isEmailVerified: false,
+    isCitizenVerified: false,
   },
   {
     username: 'test5',
@@ -147,9 +147,9 @@ const USER_ACCOUNTS = [
     latitude: 10.762622,
     longitude: 106.660172,
     interests: JSON.stringify(['💻 Coding', '🎮 Gaming', '🎬 Movies']),
-    isProfileComplete: true,
-    isEmailVerified: true,
-    isCitizenVerified: true,
+    isProfileComplete: false,
+    isEmailVerified: false,
+    isCitizenVerified: false,
   },
   {
     username: 'test6',
@@ -168,9 +168,9 @@ const USER_ACCOUNTS = [
     latitude: 21.0285,
     longitude: 105.8542,
     interests: JSON.stringify(['⚽ Sports', '✈️ Travel', '🎸 Guitar']),
-    isProfileComplete: true,
-    isEmailVerified: true,
-    isCitizenVerified: true,
+    isProfileComplete: false,
+    isEmailVerified: false,
+    isCitizenVerified: false,
   },
   {
     username: 'test7',
@@ -189,8 +189,8 @@ const USER_ACCOUNTS = [
     latitude: 10.8231,
     longitude: 106.6297,
     interests: JSON.stringify(['📸 Photography', '✈️ Travel', '☕ Coffee']),
-    isProfileComplete: true,
-    isEmailVerified: true,
+    isProfileComplete: false,
+    isEmailVerified: false,
     isCitizenVerified: false,
   },
   {
@@ -210,9 +210,9 @@ const USER_ACCOUNTS = [
     latitude: 10.7769,
     longitude: 106.7009,
     interests: JSON.stringify(['📐 Architecture', '🎷 Jazz', '☕ Coffee']),
-    isProfileComplete: true,
-    isEmailVerified: true,
-    isCitizenVerified: true,
+    isProfileComplete: false,
+    isEmailVerified: false,
+    isCitizenVerified: false,
   },
   {
     username: 'test9',
@@ -231,9 +231,9 @@ const USER_ACCOUNTS = [
     latitude: 10.762622,
     longitude: 106.660172,
     interests: JSON.stringify(['📚 Books', '🥐 Baking', '🌸 Ghibli']),
-    isProfileComplete: true,
-    isEmailVerified: true,
-    isCitizenVerified: true,
+    isProfileComplete: false,
+    isEmailVerified: false,
+    isCitizenVerified: false,
   },
   {
     username: 'test10',
@@ -252,9 +252,9 @@ const USER_ACCOUNTS = [
     latitude: 16.0544,
     longitude: 108.2022,
     interests: JSON.stringify(['🚀 Startup', '🏃‍♂️ Running', '💻 Tech']),
-    isProfileComplete: true,
-    isEmailVerified: true,
-    isCitizenVerified: true,
+    isProfileComplete: false,
+    isEmailVerified: false,
+    isCitizenVerified: false,
   },
   {
     username: 'test11',
@@ -273,8 +273,8 @@ const USER_ACCOUNTS = [
     latitude: 21.0333,
     longitude: 105.8500,
     interests: JSON.stringify(['🎓 Learning', '🎧 Podcast', '✈️ Travel']),
-    isProfileComplete: true,
-    isEmailVerified: true,
+    isProfileComplete: false,
+    isEmailVerified: false,
     isCitizenVerified: false,
   },
   {
@@ -294,9 +294,9 @@ const USER_ACCOUNTS = [
     latitude: 10.7800,
     longitude: 106.6900,
     interests: JSON.stringify(['🐶 Dogs', '🐱 Cats', '🎸 Guitar', '🏕️ Camping']),
-    isProfileComplete: true,
-    isEmailVerified: true,
-    isCitizenVerified: true,
+    isProfileComplete: false,
+    isEmailVerified: false,
+    isCitizenVerified: false,
   },
   {
     username: 'test13',
@@ -315,9 +315,9 @@ const USER_ACCOUNTS = [
     latitude: 16.0600,
     longitude: 108.2100,
     interests: JSON.stringify(['🎤 MC', '🏊‍♀️ Swimming', '🍲 Foodie']),
-    isProfileComplete: true,
-    isEmailVerified: true,
-    isCitizenVerified: true,
+    isProfileComplete: false,
+    isEmailVerified: false,
+    isCitizenVerified: false,
   },
   {
     username: 'test14',
@@ -336,9 +336,9 @@ const USER_ACCOUNTS = [
     latitude: 10.8000,
     longitude: 106.6500,
     interests: JSON.stringify(['🤖 AI', '🏃 Marathon', '🌌 Sci-Fi']),
-    isProfileComplete: true,
-    isEmailVerified: true,
-    isCitizenVerified: true,
+    isProfileComplete: false,
+    isEmailVerified: false,
+    isCitizenVerified: false,
   },
   {
     username: 'test15',
@@ -357,9 +357,9 @@ const USER_ACCOUNTS = [
     latitude: 21.0400,
     longitude: 105.8300,
     interests: JSON.stringify(['💐 Flowers', '🎵 Acoustic', '🚲 Cycling']),
-    isProfileComplete: true,
-    isEmailVerified: true,
-    isCitizenVerified: true,
+    isProfileComplete: false,
+    isEmailVerified: false,
+    isCitizenVerified: false,
   },
   {
     username: 'test16',
@@ -378,8 +378,8 @@ const USER_ACCOUNTS = [
     latitude: 21.0100,
     longitude: 105.8200,
     interests: JSON.stringify(['🎨 Design', '🎲 Boardgames', '🧗‍♂️ Climbing']),
-    isProfileComplete: true,
-    isEmailVerified: true,
+    isProfileComplete: false,
+    isEmailVerified: false,
     isCitizenVerified: false,
   },
   {
@@ -399,9 +399,9 @@ const USER_ACCOUNTS = [
     latitude: 10.7900,
     longitude: 106.6800,
     interests: JSON.stringify(['☕ Coffee', '🍞 Baking', '📻 Lofi']),
-    isProfileComplete: true,
-    isEmailVerified: true,
-    isCitizenVerified: true,
+    isProfileComplete: false,
+    isEmailVerified: false,
+    isCitizenVerified: false,
   },
   {
     username: 'test18',
@@ -420,9 +420,9 @@ const USER_ACCOUNTS = [
     latitude: 10.7500,
     longitude: 106.6700,
     interests: JSON.stringify(['🏋️‍♂️ Fitness', '🏀 Basketball', '🥗 Nutrition']),
-    isProfileComplete: true,
-    isEmailVerified: true,
-    isCitizenVerified: true,
+    isProfileComplete: false,
+    isEmailVerified: false,
+    isCitizenVerified: false,
   },
   {
     username: 'test19',
@@ -441,8 +441,8 @@ const USER_ACCOUNTS = [
     latitude: 16.0700,
     longitude: 108.2200,
     interests: JSON.stringify(['🎨 Art', '🌊 Beach', '🍵 Tea']),
-    isProfileComplete: true,
-    isEmailVerified: true,
+    isProfileComplete: false,
+    isEmailVerified: false,
     isCitizenVerified: false,
   },
   {
@@ -462,9 +462,9 @@ const USER_ACCOUNTS = [
     latitude: 10.7700,
     longitude: 106.7000,
     interests: JSON.stringify(['📈 Finance', '🎾 Tennis', '📚 History', '✈️ Travel']),
-    isProfileComplete: true,
-    isEmailVerified: true,
-    isCitizenVerified: true,
+    isProfileComplete: false,
+    isEmailVerified: false,
+    isCitizenVerified: false,
   },
 ];
 
@@ -475,19 +475,19 @@ async function resetAndSeedDatabase() {
   try {
     await prisma.$executeRawUnsafe('TRUNCATE TABLE users CASCADE;');
   } catch (_e) {
-    await prisma.supportMessage.deleteMany({}).catch(() => {});
-    await prisma.supportConversation.deleteMany({}).catch(() => {});
-    await prisma.payment.deleteMany({}).catch(() => {});
-    await prisma.userConversationClear.deleteMany({}).catch(() => {});
-    await prisma.userBlock.deleteMany({}).catch(() => {});
-    await prisma.report.deleteMany({}).catch(() => {});
-    await prisma.message.deleteMany({}).catch(() => {});
-    await prisma.conversation.deleteMany({}).catch(() => {});
-    await prisma.match.deleteMany({}).catch(() => {});
-    await prisma.swipe.deleteMany({}).catch(() => {});
-    await prisma.userPreferences.deleteMany({}).catch(() => {});
-    await prisma.passwordResetToken.deleteMany({}).catch(() => {});
-    await prisma.user.deleteMany({}).catch(() => {});
+    await prisma.supportMessage.deleteMany({}).catch(() => { });
+    await prisma.supportConversation.deleteMany({}).catch(() => { });
+    await prisma.payment.deleteMany({}).catch(() => { });
+    await prisma.userConversationClear.deleteMany({}).catch(() => { });
+    await prisma.userBlock.deleteMany({}).catch(() => { });
+    await prisma.report.deleteMany({}).catch(() => { });
+    await prisma.message.deleteMany({}).catch(() => { });
+    await prisma.conversation.deleteMany({}).catch(() => { });
+    await prisma.match.deleteMany({}).catch(() => { });
+    await prisma.swipe.deleteMany({}).catch(() => { });
+    await prisma.userPreferences.deleteMany({}).catch(() => { });
+    await prisma.passwordResetToken.deleteMany({}).catch(() => { });
+    await prisma.user.deleteMany({}).catch(() => { });
   }
 
   console.log('✨ Đã dọn sạch database!');
@@ -513,9 +513,9 @@ async function resetAndSeedDatabase() {
         latitude: adm.latitude,
         longitude: adm.longitude,
         interests: adm.interests,
-        isProfileComplete: true,
-        isEmailVerified: true,
-        isCitizenVerified: true,
+        isProfileComplete: false,
+        isEmailVerified: false,
+        isCitizenVerified: false,
       },
     });
 
