@@ -145,14 +145,114 @@ export default function Dashboard() {
       loadProfile();
     });
 
+    socket.on('user_block_updated', ({ blockerId, blockedId, action }) => {
+      const myId = Number(profile?.userId || user?.userId);
+      const isMeBlocker = myId === Number(blockerId);
+      const partnerId = isMeBlocker ? Number(blockedId) : Number(blockerId);
+
+      if (action === 'BLOCK') {
+        setMatches(prev => prev.map(m => Number(m.id) === partnerId ? {
+          ...m,
+          isBlocked: true,
+          isBlockedByMe: isMeBlocker ? true : Boolean(m.isBlockedByMe),
+          isBlockedByPartner: isMeBlocker ? Boolean(m.isBlockedByPartner) : true,
+        } : m));
+
+        setConversations(prev => prev.map(c => Number(c.partner?.id) === partnerId ? {
+          ...c,
+          isBlocked: true,
+          isBlockedByMe: isMeBlocker ? true : Boolean(c.partner?.isBlockedByMe || c.isBlockedByMe),
+          isBlockedByPartner: isMeBlocker ? Boolean(c.partner?.isBlockedByPartner || c.isBlockedByPartner) : true,
+          partner: {
+            ...c.partner,
+            isBlocked: true,
+            isBlockedByMe: isMeBlocker ? true : Boolean(c.partner?.isBlockedByMe || c.isBlockedByMe),
+            isBlockedByPartner: isMeBlocker ? Boolean(c.partner?.isBlockedByPartner || c.isBlockedByPartner) : true,
+          },
+        } : c));
+
+        setActiveChatMatch(prev => {
+          if (!prev) return prev;
+          if (Number(prev.partner?.id || prev.id) === partnerId) {
+            return {
+              ...prev,
+              isBlocked: true,
+              isBlockedByMe: isMeBlocker ? true : Boolean(prev.partner?.isBlockedByMe || prev.isBlockedByMe),
+              isBlockedByPartner: isMeBlocker ? Boolean(prev.partner?.isBlockedByPartner || prev.isBlockedByPartner) : true,
+              partner: prev.partner ? {
+                ...prev.partner,
+                isBlocked: true,
+                isBlockedByMe: isMeBlocker ? true : Boolean(prev.partner?.isBlockedByMe || prev.isBlockedByMe),
+                isBlockedByPartner: isMeBlocker ? Boolean(prev.partner?.isBlockedByPartner || prev.isBlockedByPartner) : true,
+              } : undefined,
+            };
+          }
+          return prev;
+        });
+      } else if (action === 'UNBLOCK') {
+        setMatches(prev => prev.map(m => Number(m.id) === partnerId ? {
+          ...m,
+          isBlocked: isMeBlocker ? Boolean(m.isBlockedByPartner) : Boolean(m.isBlockedByMe),
+          isBlockedByMe: isMeBlocker ? false : Boolean(m.isBlockedByMe),
+          isBlockedByPartner: isMeBlocker ? Boolean(m.isBlockedByPartner) : false,
+        } : m));
+
+        setConversations(prev => prev.map(c => Number(c.partner?.id) === partnerId ? {
+          ...c,
+          isBlocked: isMeBlocker ? Boolean(c.partner?.isBlockedByPartner || c.isBlockedByPartner) : Boolean(c.partner?.isBlockedByMe || c.isBlockedByMe),
+          isBlockedByMe: isMeBlocker ? false : Boolean(c.partner?.isBlockedByMe || c.isBlockedByMe),
+          isBlockedByPartner: isMeBlocker ? Boolean(c.partner?.isBlockedByPartner || c.isBlockedByPartner) : false,
+          partner: {
+            ...c.partner,
+            isBlocked: isMeBlocker ? Boolean(c.partner?.isBlockedByPartner || c.isBlockedByPartner) : Boolean(c.partner?.isBlockedByMe || c.isBlockedByMe),
+            isBlockedByMe: isMeBlocker ? false : Boolean(c.partner?.isBlockedByMe || c.isBlockedByMe),
+            isBlockedByPartner: isMeBlocker ? Boolean(c.partner?.isBlockedByPartner || c.isBlockedByPartner) : false,
+          },
+        } : c));
+
+        setActiveChatMatch(prev => {
+          if (!prev) return prev;
+          if (Number(prev.partner?.id || prev.id) === partnerId) {
+            const stillBlocked = isMeBlocker
+              ? Boolean(prev.partner?.isBlockedByPartner || prev.isBlockedByPartner)
+              : Boolean(prev.partner?.isBlockedByMe || prev.isBlockedByMe);
+            return {
+              ...prev,
+              isBlocked: stillBlocked,
+              isBlockedByMe: isMeBlocker ? false : Boolean(prev.partner?.isBlockedByMe || prev.isBlockedByMe),
+              isBlockedByPartner: isMeBlocker ? Boolean(prev.partner?.isBlockedByPartner || prev.isBlockedByPartner) : false,
+              partner: prev.partner ? {
+                ...prev.partner,
+                isBlocked: stillBlocked,
+                isBlockedByMe: isMeBlocker ? false : Boolean(prev.partner?.isBlockedByMe || prev.isBlockedByMe),
+                isBlockedByPartner: isMeBlocker ? Boolean(prev.partner?.isBlockedByPartner || prev.isBlockedByPartner) : false,
+              } : undefined,
+            };
+          }
+          return prev;
+        });
+      }
+    });
+
     // Explicitly ask server for current online users
     socket.emit('get_online_users');
-  }, []);
+  }, [profile?.userId, user?.userId]);
 
   const loadConversations = async () => {
     try {
       const res = await chatApi.getConversations();
       setConversations(res.data.data.conversations || []);
+    } catch { /* ignore */ }
+  };
+
+  const loadMatchesAndConversations = async () => {
+    try {
+      const [matchRes, convRes] = await Promise.all([
+        matchingApi.getMatches(),
+        chatApi.getConversations(),
+      ]);
+      setMatches(matchRes.data.data.matches || []);
+      setConversations(convRes.data.data.conversations || []);
     } catch { /* ignore */ }
   };
 
@@ -349,8 +449,23 @@ export default function Dashboard() {
   };
 
   const handleBlockUserInDashboard = (matchId, targetId, message) => {
-    setMatches(prev => prev.map(m => Number(m.id) === Number(targetId) ? { ...m, isBlocked: true, isBlockedByMe: true } : m));
-    setConversations(prev => prev.map(c => Number(c.partner?.id) === Number(targetId) ? { ...c, isBlocked: true, isBlockedByMe: true, partner: { ...c.partner, isBlocked: true, isBlockedByMe: true } } : c));
+    setMatches(prev => prev.map(m => Number(m.id) === Number(targetId) ? {
+      ...m,
+      isBlocked: true,
+      isBlockedByMe: true,
+    } : m));
+
+    setConversations(prev => prev.map(c => Number(c.partner?.id) === Number(targetId) ? {
+      ...c,
+      isBlocked: true,
+      isBlockedByMe: true,
+      partner: {
+        ...c.partner,
+        isBlocked: true,
+        isBlockedByMe: true,
+      },
+    } : c));
+
     setActiveChatMatch(prev => {
       if (!prev) return prev;
       if (Number(prev.partner?.id || prev.id) === Number(targetId)) {
@@ -358,32 +473,59 @@ export default function Dashboard() {
           ...prev,
           isBlocked: true,
           isBlockedByMe: true,
-          partner: { ...prev.partner, isBlocked: true, isBlockedByMe: true },
+          partner: prev.partner ? {
+            ...prev.partner,
+            isBlocked: true,
+            isBlockedByMe: true,
+          } : undefined,
         };
       }
       return prev;
     });
+
     if (message) {
       setToast({ type: 'info', message });
     }
   };
 
   const handleUnblockUserInDashboard = (matchId, targetId, message) => {
-    setMatches(prev => prev.map(m => Number(m.id) === Number(targetId) ? { ...m, isBlocked: m.isBlockedByPartner || false, isBlockedByMe: false } : m));
-    setConversations(prev => prev.map(c => Number(c.partner?.id) === Number(targetId) ? { ...c, isBlocked: c.isBlockedByPartner || false, isBlockedByMe: false, partner: { ...c.partner, isBlocked: c.isBlockedByPartner || false, isBlockedByMe: false } } : c));
+    setMatches(prev => prev.map(m => Number(m.id) === Number(targetId) ? {
+      ...m,
+      isBlocked: Boolean(m.isBlockedByPartner),
+      isBlockedByMe: false,
+    } : m));
+
+    setConversations(prev => prev.map(c => Number(c.partner?.id) === Number(targetId) ? {
+      ...c,
+      isBlocked: Boolean(c.partner?.isBlockedByPartner || c.isBlockedByPartner),
+      isBlockedByMe: false,
+      partner: {
+        ...c.partner,
+        isBlocked: Boolean(c.partner?.isBlockedByPartner || c.isBlockedByPartner),
+        isBlockedByMe: false,
+      },
+    } : c));
+
     setActiveChatMatch(prev => {
       if (!prev) return prev;
       if (Number(prev.partner?.id || prev.id) === Number(targetId)) {
-        const stillBlocked = prev.isBlockedByPartner || false;
+        const stillBlocked = Boolean(prev.partner?.isBlockedByPartner || prev.isBlockedByPartner);
         return {
           ...prev,
           isBlocked: stillBlocked,
           isBlockedByMe: false,
-          partner: { ...prev.partner, isBlocked: stillBlocked, isBlockedByMe: false },
+          isBlockedByPartner: stillBlocked,
+          partner: prev.partner ? {
+            ...prev.partner,
+            isBlocked: stillBlocked,
+            isBlockedByMe: false,
+            isBlockedByPartner: stillBlocked,
+          } : undefined,
         };
       }
       return prev;
     });
+
     if (message) {
       setToast({ type: 'info', message });
     }
@@ -1590,7 +1732,10 @@ export default function Dashboard() {
           profile={profile}
           onProfileUpdated={(updatedProfile) => setProfile(updatedProfile)}
           onLogout={logout}
-          onClose={() => setShowSettingsModal(false)}
+          onClose={() => {
+            setShowSettingsModal(false);
+            loadMatchesAndConversations();
+          }}
           setToast={setToast}
         />
       )}

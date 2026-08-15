@@ -17,11 +17,40 @@ export default function ChatPanel({ match, currentUserId, currentUserProfile, is
   const [partnerTyping, setPartnerTyping] = useState(false);
   const [sending, setSending] = useState(false);
 
+  // Helper getters to safely extract boolean flags without `||` falsy fallthrough bugs
+  const getIsBlocked = (m) => {
+    if (!m) return false;
+    if (m.partner && typeof m.partner.isBlocked === 'boolean') return m.partner.isBlocked;
+    if (typeof m.isBlocked === 'boolean') return m.isBlocked;
+    return false;
+  };
+
+  const getIsBlockedByMe = (m) => {
+    if (!m) return false;
+    if (m.partner && typeof m.partner.isBlockedByMe === 'boolean') return m.partner.isBlockedByMe;
+    if (typeof m.isBlockedByMe === 'boolean') return m.isBlockedByMe;
+    return false;
+  };
+
+  const getIsBlockedByPartner = (m) => {
+    if (!m) return false;
+    if (m.partner && typeof m.partner.isBlockedByPartner === 'boolean') return m.partner.isBlockedByPartner;
+    if (typeof m.isBlockedByPartner === 'boolean') return m.isBlockedByPartner;
+    return false;
+  };
+
+  const getIsUnmatched = (m) => {
+    if (!m) return false;
+    if (m.partner && typeof m.partner.isUnmatched === 'boolean') return m.partner.isUnmatched;
+    if (typeof m.isUnmatched === 'boolean') return m.isUnmatched;
+    return false;
+  };
+
   // 3-dots menu & action states
-  const [isBlockedState, setIsBlockedState] = useState(match?.partner?.isBlocked || match?.isBlocked || false);
-  const [isBlockedByMeState, setIsBlockedByMeState] = useState(match?.partner?.isBlockedByMe || match?.isBlockedByMe || false);
-  const [isBlockedByPartnerState, setIsBlockedByPartnerState] = useState(match?.partner?.isBlockedByPartner || match?.isBlockedByPartner || false);
-  const [isUnmatchedState, setIsUnmatchedState] = useState(Boolean(match?.partner?.isUnmatched || match?.isUnmatched));
+  const [isBlockedState, setIsBlockedState] = useState(() => getIsBlocked(match));
+  const [isBlockedByMeState, setIsBlockedByMeState] = useState(() => getIsBlockedByMe(match));
+  const [isBlockedByPartnerState, setIsBlockedByPartnerState] = useState(() => getIsBlockedByPartner(match));
+  const [isUnmatchedState, setIsUnmatchedState] = useState(() => getIsUnmatched(match));
   const [showMenu, setShowMenu] = useState(false);
   const [showBlockConfirm, setShowBlockConfirm] = useState(false);
   const [showUnblockConfirm, setShowUnblockConfirm] = useState(false);
@@ -36,10 +65,10 @@ export default function ChatPanel({ match, currentUserId, currentUserProfile, is
   const [toast, setToast] = useState(null);
 
   useEffect(() => {
-    setIsBlockedState(match?.partner?.isBlocked || match?.isBlocked || false);
-    setIsBlockedByMeState(match?.partner?.isBlockedByMe || match?.isBlockedByMe || false);
-    setIsBlockedByPartnerState(match?.partner?.isBlockedByPartner || match?.isBlockedByPartner || false);
-    setIsUnmatchedState(Boolean(match?.partner?.isUnmatched || match?.isUnmatched));
+    setIsBlockedState(getIsBlocked(match));
+    setIsBlockedByMeState(getIsBlockedByMe(match));
+    setIsBlockedByPartnerState(getIsBlockedByPartner(match));
+    setIsUnmatchedState(getIsUnmatched(match));
   }, [match]);
 
   const messagesEndRef = useRef(null);
@@ -78,14 +107,39 @@ export default function ChatPanel({ match, currentUserId, currentUserProfile, is
       }
     };
 
+    const handleUserBlockUpdated = ({ blockerId, blockedId, action }) => {
+      const partnerId = Number(match?.partner?.id || match?.partner?.userId || match?.id || match?.userId);
+      const myId = Number(currentUserId);
+
+      if (partnerId === Number(blockerId) && myId === Number(blockedId)) {
+        if (action === 'BLOCK') {
+          setIsBlockedByPartnerState(true);
+          setIsBlockedState(true);
+        } else if (action === 'UNBLOCK') {
+          setIsBlockedByPartnerState(false);
+          setIsBlockedState(isBlockedByMeState);
+        }
+      } else if (myId === Number(blockerId) && partnerId === Number(blockedId)) {
+        if (action === 'BLOCK') {
+          setIsBlockedByMeState(true);
+          setIsBlockedState(true);
+        } else if (action === 'UNBLOCK') {
+          setIsBlockedByMeState(false);
+          setIsBlockedState(isBlockedByPartnerState);
+        }
+      }
+    };
+
     socket.on('new_message', handleNewMessage);
     socket.on('typing_status', handleTypingStatus);
+    socket.on('user_block_updated', handleUserBlockUpdated);
 
     return () => {
       socket.off('new_message', handleNewMessage);
       socket.off('typing_status', handleTypingStatus);
+      socket.off('user_block_updated', handleUserBlockUpdated);
     };
-  }, [conversation?.id, currentUserId, socket]);
+  }, [conversation?.id, currentUserId, socket, match, isBlockedByMeState, isBlockedByPartnerState]);
 
   useEffect(() => {
     scrollToBottom();
@@ -181,7 +235,7 @@ export default function ChatPanel({ match, currentUserId, currentUserProfile, is
   };
 
   async function handleConfirmBlock() {
-    const targetId = match?.partner?.id || match?.partner?.userId;
+    const targetId = match?.partner?.id || match?.partner?.userId || match?.id || match?.userId;
     if (!targetId) return;
     setIsSubmitting(true);
     try {
@@ -200,14 +254,14 @@ export default function ChatPanel({ match, currentUserId, currentUserProfile, is
   }
 
   async function handleConfirmUnblock() {
-    const targetId = match?.partner?.id || match?.partner?.userId;
+    const targetId = match?.partner?.id || match?.partner?.userId || match?.id || match?.userId;
     if (!targetId) return;
     setIsSubmitting(true);
     try {
       await userApi.unblockUser(targetId);
       setShowUnblockConfirm(false);
       setIsBlockedByMeState(false);
-      setIsBlockedState(isBlockedByPartnerState);
+      setIsBlockedState(Boolean(isBlockedByPartnerState));
       const msg = `Đã bỏ chặn thành công ${match?.partner?.name || 'người dùng'}.`;
       setToast({ type: 'success', message: msg });
       if (onUnblockUser) onUnblockUser(match.matchId, targetId, msg);

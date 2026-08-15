@@ -38,6 +38,13 @@ async function blockUser(req, res, next) {
       });
     }
     const result = await userService.blockUser(userId, targetId);
+
+    const emitToUser = req.app.get('emitToUser');
+    if (emitToUser) {
+      emitToUser(Number(targetId), 'user_block_updated', { blockerId: Number(userId), blockedId: Number(targetId), action: 'BLOCK' });
+      emitToUser(Number(userId), 'user_block_updated', { blockerId: Number(userId), blockedId: Number(targetId), action: 'BLOCK' });
+    }
+
     return success(res, result);
   } catch (err) {
     return next(err);
@@ -82,6 +89,13 @@ async function unblockUser(req, res, next) {
       });
     }
     const result = await userService.unblockUser(userId, targetId);
+
+    const emitToUser = req.app.get('emitToUser');
+    if (emitToUser) {
+      emitToUser(Number(targetId), 'user_block_updated', { blockerId: Number(userId), blockedId: Number(targetId), action: 'UNBLOCK' });
+      emitToUser(Number(userId), 'user_block_updated', { blockerId: Number(userId), blockedId: Number(targetId), action: 'UNBLOCK' });
+    }
+
     return success(res, result);
   } catch (err) {
     return next(err);
