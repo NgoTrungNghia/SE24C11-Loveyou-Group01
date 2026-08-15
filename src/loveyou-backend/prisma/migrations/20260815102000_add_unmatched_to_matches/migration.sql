@@ -1,0 +1,3 @@
+-- AlterTable
+ALTER TABLE "matches" ADD COLUMN IF NOT EXISTS "is_unmatched" BOOLEAN NOT NULL DEFAULT false,
+ADD COLUMN IF NOT EXISTS "unmatched_by" INTEGER;

@@ -5,9 +5,10 @@ import { userApi } from '../utils/api';
 import { Field } from '../components/shared';
 
 const PRESET_INTERESTS = [
-  '🎵 Music', '☕ Coffee', '✈️ Travel', '🏋️ Gym', '🎮 Gaming', 
-  '📚 Books', '🍳 Cooking', '🎬 Movies', '🐱 Pets', '🎨 Art', 
-  '💻 Coding', '⚽ Sports', '🍷 Wine', '📸 Photography', '🧘 Yoga'
+  '🎵 Âm nhạc', '☕ Cà phê', '✈️ Du lịch', '🏋️ Tập gym', '🎮 Chơi game',
+  '📚 Đọc sách', '🍳 Nấu ăn', '🎬 Xem phim', '🐱 Thú cưng', '🎨 Hội họa',
+  '💻 Công nghệ', '⚽ Thể thao', '🧋 Trà sữa', '📸 Nhiếp ảnh', '🧘 Yoga',
+  '🎸 Guitar', '🏕️ Cắm trại', '🏃 Chạy bộ', '🍲 Ẩm thực', '🏊 Bơi lội'
 ];
 
 export default function OnboardingWizard() {
@@ -17,6 +18,8 @@ export default function OnboardingWizard() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+  const [geoLoading, setGeoLoading] = useState(false);
+  const [geoSuccess, setGeoSuccess] = useState(false);
 
   const [form, setForm] = useState({
     fullName: '',
@@ -27,6 +30,8 @@ export default function OnboardingWizard() {
     bio: '',
     height: '',
     location: '',
+    latitude: null,
+    longitude: null,
     interests: [],
     photos: ['', '', '', ''], // 4 photo slots (2x2 grid)
   });
@@ -43,18 +48,23 @@ export default function OnboardingWizard() {
       if (p) {
         const existingPhotos = Array.isArray(p.photos) ? p.photos : [];
         const photosArray = [0, 1, 2, 3].map(i => existingPhotos[i] || (i === 0 ? p.profilePicture || '' : ''));
+        const rawGender = p.gender ? String(p.gender).toUpperCase() : '';
+        const normalizedGender = ['FEMALE', 'NỮ'].includes(rawGender) ? 'FEMALE' : (['MALE', 'NAM'].includes(rawGender) ? 'MALE' : (rawGender ? 'OTHER' : 'MALE'));
         setForm({
           fullName: p.fullName || '',
           phoneNumber: p.phoneNumber || '',
-          gender: p.gender || 'MALE',
+          gender: normalizedGender,
           dateOfBirth: p.dateOfBirth ? p.dateOfBirth.split('T')[0] : '',
           profilePicture: p.profilePicture || '',
           bio: p.bio || '',
-          height: p.height || '',
+          height: p.height ? String(p.height) : '',
           location: p.location || '',
+          latitude: p.latitude || null,
+          longitude: p.longitude || null,
           interests: Array.isArray(p.interests) ? p.interests : [],
           photos: photosArray,
         });
+        if (p.latitude && p.longitude) setGeoSuccess(true);
       }
     } catch {
       /* ignore */
@@ -132,20 +142,42 @@ export default function OnboardingWizard() {
     reader.readAsDataURL(file);
   };
 
+  const captureGeolocation = () => {
+    if (!navigator.geolocation) {
+      setError('Trình duyệt không hỗ trợ Geolocation');
+      return;
+    }
+    setGeoLoading(true);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setForm(prev => ({ ...prev, latitude: pos.coords.latitude, longitude: pos.coords.longitude }));
+        setGeoSuccess(true);
+        setGeoLoading(false);
+      },
+      () => {
+        setError('Không thể lấy vị trí. Vui lòng cho phép truy cập GPS.');
+        setGeoLoading(false);
+      },
+      { timeout: 10000 }
+    );
+  };
+
   const saveProfileData = async (isFinal = false) => {
     setSaving(true);
     setError('');
     try {
       const cleanedPhotos = form.photos.filter(p => p && p.trim() !== '');
+      const hasName = Boolean(form.fullName && form.fullName.trim().length > 0);
       const payload = {
         ...form,
         height: form.height ? Number(form.height) : null,
         photos: cleanedPhotos,
         profilePicture: cleanedPhotos[0] || form.profilePicture || '',
-        isProfileComplete: isFinal ? true : false,
+        isProfileComplete: isFinal || hasName,
       };
 
       await userApi.updateProfile(payload);
+
       if (isFinal) {
         navigate('/dashboard', { replace: true });
       }
@@ -210,7 +242,7 @@ export default function OnboardingWizard() {
 
   return (
     <div className="onboarding-wizard-container" style={{ minHeight: '100vh', background: '#0A0A14', color: '#fff', padding: '2rem 1rem', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-      
+
       {/* Top Header */}
       <div style={{ width: '100%', maxWidth: '640px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
@@ -218,8 +250,26 @@ export default function OnboardingWizard() {
             LoveYou
           </span>
         </div>
-        <button className="btn btn-ghost btn-sm" onClick={logout} style={{ fontSize: '0.85rem' }}>
-          Đăng xuất
+        <button
+          className="btn btn-ghost btn-sm"
+          onClick={async () => {
+            if (form.fullName && form.fullName.trim()) {
+              try {
+                const cleanedPhotos = form.photos.filter(p => p && p.trim() !== '');
+                await userApi.updateProfile({
+                  ...form,
+                  height: form.height ? Number(form.height) : null,
+                  photos: cleanedPhotos,
+                  profilePicture: cleanedPhotos[0] || form.profilePicture || '',
+                  isProfileComplete: true,
+                });
+              } catch { /* ignore */ }
+            }
+            navigate('/dashboard');
+          }}
+          style={{ fontSize: '0.85rem', color: 'rgba(255,255,255,0.8)', cursor: 'pointer' }}
+        >
+          ← Quay lại Dashboard
         </button>
       </div>
 
@@ -233,7 +283,7 @@ export default function OnboardingWizard() {
         padding: '2.2rem',
         boxShadow: '0 20px 60px rgba(0, 0, 0, 0.5), 0 0 40px rgba(255, 45, 85, 0.15)',
       }}>
-        
+
         {/* REAL-TIME COMPLETION PROGRESS BAR (0% TO 100%) */}
         <div style={{ marginBottom: '2rem' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.6rem' }}>
@@ -344,7 +394,7 @@ export default function OnboardingWizard() {
                 Sở thích cá nhân
               </h2>
               <p style={{ fontSize: '0.88rem', color: 'rgba(255,255,255,0.6)', marginBottom: '0.6rem' }}>
-                Chọn các thẻ sở thích để thuật toán AI ghép đôi bạn với người hợp cạ hơn.
+                Chọn các thẻ sở thích để thuật toán Smart Match ghép đôi bạn với người hợp cạ hơn.
               </p>
 
               <div>
@@ -411,18 +461,18 @@ export default function OnboardingWizard() {
             </div>
           )}
 
-          {/* ── STEP 3: BỘ SƯU TẬP ẢNH CÁ NHÂN (GRID 2x2 CÂN ĐỐI - TỐI ĐA 4 ẢNH) ── */}
+          {/* ── STEP 3: ẢNH ĐẠI DIỆN & VỊ TRÍ GPS ── */}
           {step === 3 && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
               <h2 style={{ fontSize: '1.4rem', fontWeight: 700, marginBottom: '0.2rem' }}>
-                Bộ sưu tập Ảnh cá nhân
+                Ảnh đại diện & Vị trí của bạn
               </h2>
-              <p style={{ fontSize: '0.88rem', color: 'rgba(255,255,255,0.6)', marginBottom: '0.6rem' }}>
-                Click vào ô bất kỳ để tải ảnh trực tiếp từ máy tính của bạn (tối đa 4 tấm ảnh).
+              <p style={{ fontSize: '0.88rem', color: 'rgba(255,255,255,0.6)', marginBottom: '0.4rem' }}>
+                Tải các hình ảnh ấn tượng nhất của bạn và cập nhật vị trí để sẵn sàng tìm kiếm một nửa yêu thương.
               </p>
 
-              {/* 2x2 Balanced Photo Slots Grid */}
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1rem', marginBottom: '1rem' }}>
+              {/* 2x2 Photo Grid */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1rem' }}>
                 {form.photos.map((url, idx) => (
                   <label key={idx} htmlFor={`wiz-file-upload-${idx}`} className="photo-slot-card" style={{
                     position: 'relative', height: '175px', borderRadius: '16px', overflow: 'hidden',
@@ -431,64 +481,58 @@ export default function OnboardingWizard() {
                     display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
                     cursor: 'pointer', transition: 'all 0.25s ease'
                   }}>
-                    <input
-                      id={`wiz-file-upload-${idx}`}
-                      type="file"
-                      accept="image/*"
-                      style={{ display: 'none' }}
-                      onChange={(e) => handleFileUpload(idx, e)}
-                    />
-
+                    <input id={`wiz-file-upload-${idx}`} type="file" accept="image/*" style={{ display: 'none' }} onChange={(e) => handleFileUpload(idx, e)} />
                     {url ? (
                       <>
                         <img src={url} alt={`Photo ${idx + 1}`} onError={(e) => { e.target.src = defaultAvatar; }} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                        <div className="photo-slot-overlay">
-                          📷 Đổi ảnh
-                        </div>
-                        {idx === 0 && (
-                          <span style={{ position: 'absolute', top: '8px', left: '8px', background: '#FF2D55', color: '#fff', fontSize: '10px', fontWeight: 800, padding: '3px 8px', borderRadius: '6px' }}>
-                            CHÍNH
-                          </span>
-                        )}
-                        <button
-                          type="button"
-                          onClick={(e) => { e.preventDefault(); e.stopPropagation(); handlePhotoChange(idx, ''); }}
-                          style={{
-                            position: 'absolute', top: '8px', right: '8px', background: 'rgba(0,0,0,0.75)',
-                            color: '#fff', border: 'none', borderRadius: '50%', width: '24px', height: '24px',
-                            cursor: 'pointer', fontSize: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center'
-                          }}
-                        >
-                          ✕
-                        </button>
+                        <div className="photo-slot-overlay">📷 Đổi ảnh</div>
+                        {idx === 0 && <span style={{ position: 'absolute', top: '8px', left: '8px', background: '#FF2D55', color: '#fff', fontSize: '10px', fontWeight: 800, padding: '3px 8px', borderRadius: '6px' }}>CHÍNH</span>}
+                        <button type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); handlePhotoChange(idx, ''); }} style={{ position: 'absolute', top: '8px', right: '8px', background: 'rgba(0,0,0,0.75)', color: '#fff', border: 'none', borderRadius: '50%', width: '24px', height: '24px', cursor: 'pointer', fontSize: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
                       </>
                     ) : (
                       <div style={{ textAlign: 'center', color: 'rgba(255,255,255,0.5)', padding: '0.6rem' }}>
                         <div style={{ fontSize: '1.8rem', marginBottom: '4px' }}>📷</div>
-                        <div style={{ fontSize: '0.85rem', fontWeight: 700, color: 'rgba(255,255,255,0.8)' }}>
-                          {idx === 0 ? 'Ảnh đại diện chính' : `Tải ảnh phụ #${idx + 1}`}
-                        </div>
-                        <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.4)', marginTop: '2px' }}>
-                          Click để tải từ máy
-                        </div>
+                        <div style={{ fontSize: '0.85rem', fontWeight: 700, color: 'rgba(255,255,255,0.8)' }}>{idx === 0 ? 'Ảnh đại diện chính' : `Tải ảnh phụ #${idx + 1}`}</div>
+                        <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.4)', marginTop: '2px' }}>Click để tải từ máy</div>
                       </div>
                     )}
                   </label>
                 ))}
               </div>
 
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '1.5rem' }}>
-                <button type="button" className="btn btn-ghost" onClick={() => setStep(2)}>
-                  ← Quay lại
+              {/* GEOLOCATION */}
+              <div style={{ background: 'rgba(255,255,255,0.04)', borderRadius: '16px', padding: '1.2rem', border: '1px solid rgba(255,255,255,0.08)' }}>
+                <div style={{ fontWeight: 700, fontSize: '0.92rem', marginBottom: '0.4rem' }}>📍 Vị trí GPS (Định vị khoảng cách)</div>
+                <div style={{ fontSize: '0.82rem', color: 'rgba(255,255,255,0.55)', marginBottom: '0.9rem', lineHeight: '1.4' }}>
+                  Vị trí của bạn giúp hệ thống tính toán khoảng cách và kết nối với những người ở gần bạn nhất.
+                </div>
+                <button
+                  type="button"
+                  onClick={captureGeolocation}
+                  disabled={geoLoading}
+                  style={{
+                    padding: '0.7rem 1.4rem', borderRadius: '12px', fontWeight: 700, fontSize: '0.88rem', cursor: 'pointer', border: 'none',
+                    background: geoSuccess ? 'rgba(52,211,153,0.2)' : 'rgba(253,38,125,0.2)',
+                    color: geoSuccess ? '#34D399' : '#fd267d',
+                    border: `1px solid ${geoSuccess ? 'rgba(52,211,153,0.4)' : 'rgba(253,38,125,0.4)'}`,
+                    transition: 'all 0.2s ease',
+                  }}
+                >
+                  {geoLoading ? '⏳ Đang lấy vị trí...' : geoSuccess ? `✅ Đã lưu vị trí (${form.latitude?.toFixed(3)}, ${form.longitude?.toFixed(3)})` : '📡 Bấm để lấy vị trí GPS hiện tại'}
                 </button>
-                <button type="submit" className="btn btn-primary" disabled={saving} style={{ padding: '0.8rem 2.2rem', background: 'linear-gradient(135deg, #FF2D55, #FF6B8A)', fontWeight: 800 }}>
-                  {saving ? <span className="spinner" /> : 'Hoàn tất & Bắt đầu Hẹn hò 💖'}
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '0.5rem' }}>
+                <button type="button" className="btn btn-ghost" onClick={() => setStep(2)}>← Quay lại</button>
+                <button type="submit" className="btn btn-primary" disabled={saving} style={{ padding: '0.85rem 2.4rem', background: 'linear-gradient(135deg, #FF2D55, #FF6B8A)', fontWeight: 800, fontSize: '1rem', boxShadow: '0 6px 20px rgba(255,45,85,0.4)' }}>
+                  {saving ? <span className="spinner" /> : 'Hoàn tất & Bắt đầu 💖'}
                 </button>
               </div>
             </div>
           )}
 
         </form>
+
       </div>
     </div>
   );

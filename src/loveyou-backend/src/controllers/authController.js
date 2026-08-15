@@ -37,8 +37,18 @@ async function login(req, res, next) {
         error: { message: 'Invalid credentials', code: 'INVALID_CREDENTIALS' },
       });
     }
-    const token = createAccessToken({ userId: user.userId, role: user.role });
+    const token = createAccessToken({
+      userId: user.userId,
+      role: user.role,
+      email: user.email,
+      username: user.username,
+      fullName: user.fullName,
+    });
     const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
+
+    // Update lastActiveAt on login
+    authService.updateLastActive?.(user.userId).catch(() => {});
+
     return success(res, { token, expiresAt });
   } catch (err) {
     return next(err);
@@ -69,9 +79,9 @@ async function verifyOtp(req, res, next) {
     const { email, otp } = req.body;
     const result = await authService.verifyPasswordResetOtp(email, otp);
     if (!result) {
-      return res.status(401).json({
+      return res.status(400).json({
         success: false,
-        error: { message: 'Invalid or expired code', code: 'INVALID_OTP' },
+        error: { message: 'Mã xác thực không đúng hoặc đã hết hạn', code: 'INVALID_OTP' },
       });
     }
     return success(res, { resetToken: result.resetToken, expiresAt: result.expiresAt });
@@ -85,12 +95,35 @@ async function resetPassword(req, res, next) {
     const { resetToken, newPassword } = req.body;
     const ok = await authService.resetPassword(resetToken, newPassword);
     if (!ok) {
-      return res.status(401).json({
+      return res.status(400).json({
         success: false,
-        error: { message: 'Invalid or expired token', code: 'INVALID_TOKEN' },
+        error: { message: 'Mã ủy quyền không hợp lệ hoặc đã hết hạn', code: 'INVALID_TOKEN' },
       });
     }
     return success(res, { message: 'Password updated' });
+  } catch (err) {
+    return next(err);
+  }
+}
+
+async function changePassword(req, res, next) {
+  try {
+    const userId = req.user.userId;
+    const { currentPassword, newPassword } = req.body;
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({
+        success: false,
+        error: { message: 'Vui lòng nhập đầy đủ mật khẩu hiện tại và mật khẩu mới', code: 'INVALID_INPUT' },
+      });
+    }
+    if (newPassword.length < 6) {
+      return res.status(400).json({
+        success: false,
+        error: { message: 'Mật khẩu mới phải có ít nhất 6 ký tự', code: 'INVALID_INPUT' },
+      });
+    }
+    const result = await authService.changePassword(userId, currentPassword, newPassword);
+    return success(res, result);
   } catch (err) {
     return next(err);
   }
@@ -103,4 +136,5 @@ module.exports = {
   forgotPassword,
   verifyOtp,
   resetPassword,
+  changePassword,
 };

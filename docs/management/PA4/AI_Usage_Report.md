@@ -2,6 +2,7 @@
 
 - **Project:** LoveYou Dating Application
 - **Student Name:** Nguyen Minh Hoang
+- **Git Branch:** `Hoang---Tan`
 
 ---
 

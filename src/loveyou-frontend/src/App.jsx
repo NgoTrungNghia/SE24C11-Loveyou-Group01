@@ -6,6 +6,7 @@ import Signup         from './pages/Signup';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword  from './pages/ResetPassword';
 import Dashboard        from './pages/Dashboard';
+import AdminDashboard    from './pages/AdminDashboard';
 import OnboardingWizard from './pages/OnboardingWizard';
 
 export default function App() {
@@ -20,6 +21,7 @@ export default function App() {
           <Route path="/reset-password" element={<ResetPassword />} />
 
           {/* Protected routes */}
+          <Route path="/admin"      element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
           <Route path="/dashboard"  element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
           <Route path="/onboarding" element={<ProtectedRoute><OnboardingWizard /></ProtectedRoute>} />
 

@@ -18,31 +18,75 @@ enum Status {
   DELETED
 }
 
+enum MessageType {
+  TEXT
+  IMAGE
+  GAME_INVITE
+  GAME_RESULT
+}
+
+enum ReportStatus {
+  PENDING
+  REVIEWED
+  RESOLVED
+}
+
 model User {
-  userId         Int       @id @default(autoincrement()) @map("user_id")
-  username       String    @unique @db.VarChar(50)
-  email          String    @unique @db.VarChar(100)
-  passwordHash   String    @map("password_hash") @db.VarChar(255)
-  phoneNumber    String?   @map("phone_number") @db.VarChar(20)
-  fullName       String?   @map("full_name") @db.VarChar(100)
-  gender         String?   @db.VarChar(10)
-  dateOfBirth    DateTime? @map("date_of_birth") @db.Date
+  userId            Int       @id @default(autoincrement()) @map("user_id")
+  username          String    @unique @db.VarChar(50)
+  email             String    @unique @db.VarChar(100)
+  passwordHash      String    @map("password_hash") @db.VarChar(255)
+  phoneNumber       String?   @map("phone_number") @db.VarChar(20)
+  fullName          String?   @map("full_name") @db.VarChar(100)
+  gender            String?   @db.VarChar(10)
+  dateOfBirth       DateTime? @map("date_of_birth") @db.Date
   profilePicture    String?   @map("profile_picture") @db.Text
   bio               String?
   height            Int?      @db.Integer
   location          String?   @db.VarChar(100)
+  latitude          Float?
+  longitude         Float?
   interests         String?   @db.Text
   photos            String?   @db.Text
   isProfileComplete Boolean   @default(false) @map("is_profile_complete")
+  isVip             Boolean   @default(false) @map("is_vip")
+  vipUntil          DateTime? @map("vip_until")
+  isEmailVerified   Boolean   @default(false) @map("is_email_verified")
+  emailVerifyCode   String?   @map("email_verify_code") @db.VarChar(255)
+  emailVerifyExp    DateTime? @map("email_verify_exp")
+  isCitizenVerified Boolean   @default(false) @map("is_citizen_verified")
+  citizenIdNumber   String?   @map("citizen_id_number") @db.VarChar(50)
+  citizenName       String?   @map("citizen_name") @db.VarChar(100)
+  citizenDob        String?   @map("citizen_dob") @db.VarChar(20)
+  citizenGender     String?   @map("citizen_gender") @db.VarChar(20)
+  citizenAddress    String?   @map("citizen_address") @db.Text
+  citizenIssueDate  String?   @map("citizen_issue_date") @db.VarChar(20)
+  citizenFrontPhoto         String?   @map("citizen_front_photo") @db.Text
+  citizenBackPhoto          String?   @map("citizen_back_photo") @db.Text
+  citizenVerificationStatus String?   @default("NONE") @map("citizen_verification_status") @db.VarChar(20)
+  citizenRejectReason       String?   @map("citizen_reject_reason") @db.Text
+  citizenVerifiedAt         DateTime? @map("citizen_verified_at")
+  lastActiveAt      DateTime? @map("last_active_at")
   role              Role      @default(USER)
-  status         Status    @default(ACTIVE)
-  createdAt      DateTime  @default(now()) @map("created_at")
-  updatedAt      DateTime  @updatedAt @map("updated_at")
-  resetTokens    PasswordResetToken[]
-  swipesSent     Swipe[]   @relation("SwiperUser")
-  swipesReceived Swipe[]   @relation("TargetUser")
-  matches1       Match[]   @relation("MatchUser1")
-  matches2       Match[]   @relation("MatchUser2")
+  status            Status    @default(ACTIVE)
+  createdAt         DateTime  @default(now()) @map("created_at")
+  updatedAt         DateTime  @updatedAt @map("updated_at")
+
+  resetTokens         PasswordResetToken[]
+  swipesSent          Swipe[]              @relation("SwiperUser")
+  swipesReceived      Swipe[]              @relation("TargetUser")
+  matches1            Match[]              @relation("MatchUser1")
+  matches2            Match[]              @relation("MatchUser2")
+  messagesSent        Message[]            @relation("MessageSender")
+  preferences         UserPreferences?
+  reportsGiven        Report[]             @relation("ReporterUser")
+  reportsReceived     Report[]             @relation("ReportedUser")
+  blocksGiven         UserBlock[]          @relation("BlockerUser")
+  blocksReceived      UserBlock[]          @relation("BlockedUser")
+  conversationClears  UserConversationClear[]
+  payments            Payment[]
+  supportConversation SupportConversation? @relation("UserSupportConversation")
+  supportMessagesSent SupportMessage[]      @relation("SupportMessageSender")
 
   @@map("users")
 }
@@ -62,6 +106,18 @@ model PasswordResetToken {
   @@map("password_reset_tokens")
 }
 
+model UserPreferences {
+  id                Int     @id @default(autoincrement())
+  userId            Int     @unique @map("user_id")
+  user              User    @relation(fields: [userId], references: [userId], onDelete: Cascade)
+  genderPreference  String? @map("gender_preference") @db.VarChar(20)
+  minAge            Int?    @default(18) @map("min_age")
+  maxAge            Int?    @default(45) @map("max_age")
+  maxDistance       Int?    @default(50) @map("max_distance")
+
+  @@map("user_preferences")
+}
+
 model Swipe {
   swipeId   Int      @id @default(autoincrement()) @map("swipe_id")
   swiperId  Int      @map("swiper_id")
@@ -77,14 +133,139 @@ model Swipe {
 }
 
 model Match {
-  matchId   Int      @id @default(autoincrement()) @map("match_id")
-  user1Id   Int      @map("user1_id")
-  user2Id   Int      @map("user2_id")
-  createdAt DateTime @default(now()) @map("created_at")
+  matchId     Int       @id @default(autoincrement()) @map("match_id")
+  user1Id     Int       @map("user1_id")
+  user2Id     Int       @map("user2_id")
+  isUnmatched Boolean   @default(false) @map("is_unmatched")
+  unmatchedBy Int?      @map("unmatched_by")
+  createdAt   DateTime  @default(now()) @map("created_at")
 
-  user1 User @relation("MatchUser1", fields: [user1Id], references: [userId], onDelete: Cascade)
-  user2 User @relation("MatchUser2", fields: [user2Id], references: [userId], onDelete: Cascade)
+  user1        User          @relation("MatchUser1", fields: [user1Id], references: [userId], onDelete: Cascade)
+  user2        User          @relation("MatchUser2", fields: [user2Id], references: [userId], onDelete: Cascade)
+  conversation Conversation?
 
   @@unique([user1Id, user2Id])
   @@map("matches")
 }
+
+model Conversation {
+  id        Int       @id @default(autoincrement())
+  matchId   Int       @unique @map("match_id")
+  match     Match     @relation(fields: [matchId], references: [matchId], onDelete: Cascade)
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+
+  messages  Message[]
+  clears    UserConversationClear[]
+
+  @@map("conversations")
+}
+
+model Message {
+  id             Int         @id @default(autoincrement())
+  conversationId Int         @map("conversation_id")
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  senderId       Int         @map("sender_id")
+  sender         User        @relation("MessageSender", fields: [senderId], references: [userId], onDelete: Cascade)
+  content        String      @db.Text
+  type           MessageType @default(TEXT)
+  readAt         DateTime?   @map("read_at")
+  createdAt      DateTime    @default(now()) @map("created_at")
+
+  @@map("messages")
+}
+
+model Report {
+  id         Int          @id @default(autoincrement())
+  reporterId Int          @map("reporter_id")
+  reporter   User         @relation("ReporterUser", fields: [reporterId], references: [userId], onDelete: Cascade)
+  reportedId Int          @map("reported_id")
+  reported   User         @relation("ReportedUser", fields: [reportedId], references: [userId], onDelete: Cascade)
+  reason     String       @db.VarChar(500)
+  status     ReportStatus @default(PENDING)
+  resolution String?      @db.VarChar(50)
+  createdAt  DateTime     @default(now()) @map("created_at")
+
+  @@map("reports")
+}
+
+model UserBlock {
+  id        Int      @id @default(autoincrement())
+  blockerId Int      @map("blocker_id")
+  blocker   User     @relation("BlockerUser", fields: [blockerId], references: [userId], onDelete: Cascade)
+  blockedId Int      @map("blocked_id")
+  blocked   User     @relation("BlockedUser", fields: [blockedId], references: [userId], onDelete: Cascade)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@unique([blockerId, blockedId])
+  @@map("user_blocks")
+}
+
+model UserConversationClear {
+  id             Int          @id @default(autoincrement())
+  userId         Int          @map("user_id")
+  conversationId Int          @map("conversation_id")
+  clearedAt      DateTime     @default(now()) @map("cleared_at")
+
+  user         User         @relation(fields: [userId], references: [userId], onDelete: Cascade)
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, conversationId])
+  @@map("user_conversation_clears")
+}
+
+model SystemConfig {
+  key       String   @id
+  value     String   @db.Text
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at")
+
+  @@map("system_configs")
+}
+
+model Payment {
+  id          Int      @id @default(autoincrement())
+  orderCode   BigInt   @unique @map("order_code")
+  userId      Int      @map("user_id")
+  user        User     @relation(fields: [userId], references: [userId], onDelete: Cascade)
+  type        String   @default("VIP") @db.VarChar(50)
+  itemId      String?  @map("item_id") @db.VarChar(100)
+  amount      Int      @default(3000)
+  status      String   @default("PENDING") @db.VarChar(20)
+  payosLink   String?  @map("payos_link") @db.Text
+  description String?  @db.VarChar(255)
+  metadata    String?  @db.Text
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@map("payments")
+}
+
+model SupportConversation {
+  id               Int              @id @default(autoincrement())
+  userId           Int              @unique @map("user_id")
+  user             User             @relation("UserSupportConversation", fields: [userId], references: [userId], onDelete: Cascade)
+  lastMessageText  String?          @map("last_message_text")
+  lastMessageAt    DateTime         @default(now()) @map("last_message_at")
+  userUnreadCount  Int              @default(0) @map("user_unread_count")
+  adminUnreadCount Int              @default(0) @map("admin_unread_count")
+  createdAt        DateTime         @default(now()) @map("created_at")
+  updatedAt        DateTime         @updatedAt @map("updated_at")
+
+  messages         SupportMessage[]
+
+  @@map("support_conversations")
+}
+
+model SupportMessage {
+  id             Int                 @id @default(autoincrement())
+  conversationId Int                 @map("conversation_id")
+  conversation   SupportConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  senderId       Int                 @map("sender_id")
+  sender         User                @relation("SupportMessageSender", fields: [senderId], references: [userId], onDelete: Cascade)
+  senderRole     String              @default("USER") @map("sender_role") @db.VarChar(20)
+  content        String              @db.Text
+  readAt         DateTime?           @map("read_at")
+  createdAt      DateTime            @default(now()) @map("created_at")
+
+  @@map("support_messages")
+}

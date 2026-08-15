@@ -11,5 +11,7 @@ router.get('/candidates', controller.getCandidates);
 router.post('/swipe', validate(schemas.swipeSchema), controller.swipe);
 router.get('/matches', controller.getMatches);
 router.post('/unmatch', controller.unmatch);
+router.get('/who-liked-me', controller.getWhoLikedMe);
+router.get('/who-i-liked', controller.getWhoILiked);
 
 module.exports = router;

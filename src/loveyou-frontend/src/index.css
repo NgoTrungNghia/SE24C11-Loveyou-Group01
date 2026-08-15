@@ -531,3 +531,181 @@ input.error { border-color: var(--error); box-shadow: 0 0 0 3px rgba(248,113,113
   .welcome-banner { flex-direction: column; text-align: center; }
   .stats-grid { grid-template-columns: repeat(2, 1fr); }
 }
+
+/* ── Animations ── */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(30px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes slideIn {
+  from { opacity: 0; transform: translateX(20px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+@keyframes typingBounce {
+  0%, 60%, 100% { transform: translateY(0); }
+  30%           { transform: translateY(-6px); }
+}
+
+/* ── Chat input focus ── */
+input[type="text"]:focus {
+  border-color: rgba(253, 38, 125, 0.5) !important;
+  box-shadow: 0 0 0 2px rgba(253, 38, 125, 0.15) !important;
+}
+
+/* ── VIP Account Styling & Animations ── */
+@keyframes vipGlow {
+  0%   { background-position: 0% 50%; box-shadow: 0 0 15px rgba(255, 0, 128, 0.7), 0 0 30px rgba(0, 230, 255, 0.4); }
+  50%  { background-position: 100% 50%; box-shadow: 0 0 25px rgba(255, 215, 0, 0.85), 0 0 40px rgba(255, 0, 128, 0.6); }
+  100% { background-position: 0% 50%; box-shadow: 0 0 15px rgba(255, 0, 128, 0.7), 0 0 30px rgba(0, 230, 255, 0.4); }
+}
+
+.vip-avatar-glow {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3px;
+  border-radius: 50%;
+  background: linear-gradient(45deg, #ff007f, #ff00ff, #00e5ff, #ffb700, #ff007f);
+  background-size: 300% 300%;
+  animation: vipGlow 3s ease infinite;
+}
+
+.vip-avatar-glow img {
+  border-radius: 50%;
+  display: block;
+}
+
+.vip-card-glow {
+  border: 2px solid transparent !important;
+  background-image: linear-gradient(#12121f, #12121f), linear-gradient(135deg, #ff007f, #ffd700, #00e5ff, #ff007f) !important;
+  background-origin: border-box !important;
+  background-clip: padding-box, border-box !important;
+  box-shadow: 0 0 25px rgba(255, 0, 128, 0.4), 0 0 45px rgba(255, 215, 0, 0.25) !important;
+}
+
+@keyframes vipSparkle {
+  0% {
+    box-shadow: 0 0 25px rgba(255, 0, 128, 0.55), 0 0 50px rgba(255, 215, 0, 0.4), inset 0 0 20px rgba(255, 215, 0, 0.15);
+    border-color: rgba(255, 215, 0, 0.8);
+  }
+  50% {
+    box-shadow: 0 0 40px rgba(255, 215, 0, 0.75), 0 0 70px rgba(0, 229, 255, 0.45), inset 0 0 30px rgba(255, 0, 128, 0.2);
+    border-color: rgba(255, 0, 128, 0.9);
+  }
+  100% {
+    box-shadow: 0 0 25px rgba(255, 0, 128, 0.55), 0 0 50px rgba(255, 215, 0, 0.4), inset 0 0 20px rgba(255, 215, 0, 0.15);
+    border-color: rgba(255, 215, 0, 0.8);
+  }
+}
+
+.vip-profile-modal-glow {
+  border: 2.5px solid transparent !important;
+  background-image: linear-gradient(#181c22, #181c22), linear-gradient(135deg, #ff007f, #ffd700, #00e5ff, #ff007f, #ffd700) !important;
+  background-origin: border-box !important;
+  background-clip: padding-box, border-box !important;
+  background-size: 300% 300% !important;
+  animation: vipGlow 3.5s ease infinite, vipSparkle 3s ease-in-out infinite !important;
+}
+
+.vip-badge-gradient {
+  background: linear-gradient(135deg, #FFD700, #FF8C00, #FF007F) !important;
+  color: #000 !important;
+  font-weight: 800 !important;
+  box-shadow: 0 2px 12px rgba(255, 215, 0, 0.6) !important;
+}
+
+/* ── Spinner Loader ── */
+.spinner {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  border-top-color: #ffffff;
+  animation: spin 0.8s linear infinite;
+  vertical-align: middle;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ── Premium Custom Scrollbars ── */
+::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(18, 21, 27, 0.6);
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #fd267d, #ff6036);
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 0 10px rgba(253, 38, 125, 0.35);
+  transition: all 0.2s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, #ff2d55, #ff7a50);
+  box-shadow: 0 0 15px rgba(253, 38, 125, 0.75);
+}
+
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+/* Firefox standard scrollbar support */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #fd267d rgba(18, 21, 27, 0.6);
+}
+
+/* VIP / Royal Gold Scrollbar */
+.vip-scrollbar::-webkit-scrollbar,
+.vip-profile-modal-glow::-webkit-scrollbar,
+.vip-modal-body::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
+}
+
+.vip-scrollbar::-webkit-scrollbar-track,
+.vip-profile-modal-glow::-webkit-scrollbar-track,
+.vip-modal-body::-webkit-scrollbar-track {
+  background: rgba(13, 10, 21, 0.8);
+  border-radius: 10px;
+}
+
+.vip-scrollbar::-webkit-scrollbar-thumb,
+.vip-profile-modal-glow::-webkit-scrollbar-thumb,
+.vip-modal-body::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #FFD700, #FF007F, #FF8C00);
+  border-radius: 10px;
+  box-shadow: 0 0 12px rgba(255, 215, 0, 0.6);
+}
+
+.vip-scrollbar::-webkit-scrollbar-thumb:hover,
+.vip-profile-modal-glow::-webkit-scrollbar-thumb:hover,
+.vip-modal-body::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, #FFE033, #FF2D55, #FFA500);
+  box-shadow: 0 0 18px rgba(255, 215, 0, 0.9);
+}
+
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: #fd267d rgba(18, 21, 27, 0.6);
+}
+
+

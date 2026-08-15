@@ -39,8 +39,25 @@ function failNextDelivery() {
 }
 
 async function cleanupAuthData() {
-  await prisma.passwordResetToken.deleteMany({});
-  await prisma.user.deleteMany({});
+  const testUsers = await prisma.user.findMany({
+    where: {
+      OR: [
+        { email: { contains: '@example.com' } },
+        { email: { startsWith: 'reset.' } },
+        { email: { startsWith: 'user.' } },
+        { email: { startsWith: 'unknown.' } },
+        { username: { startsWith: 'u_' } },
+      ],
+    },
+    select: { userId: true },
+  });
+
+  const testUserIds = testUsers.map((u) => u.userId);
+  if (testUserIds.length > 0) {
+    await prisma.passwordResetToken.deleteMany({ where: { userId: { in: testUserIds } } });
+    await prisma.user.deleteMany({ where: { userId: { in: testUserIds } } });
+  }
+
   rateLimiter.clearAll();
   resetMailState();
 }
