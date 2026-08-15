@@ -526,7 +526,7 @@ export default function UserSettingsModal({ profile, onProfileUpdated, onLogout,
 
   return (
     <div style={styles.overlay} onClick={onClose}>
-      <div style={styles.modalBody} onClick={e => e.stopPropagation()}>
+      <div className="custom-scrollbar" style={styles.modalBody} onClick={e => e.stopPropagation()}>
         {/* Header */}
         <div style={styles.header}>
           <h2 style={styles.title}>⚙️ Cài Đặt Hệ Thống</h2>

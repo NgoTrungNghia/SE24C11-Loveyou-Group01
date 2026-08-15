@@ -1110,7 +1110,7 @@ export default function Dashboard() {
       {selectedProfile && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 1000, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(16px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1.5rem', animation: 'fadeIn 0.25s ease' }}>
           <div
-            className={selectedProfile.isVip ? 'vip-profile-modal-glow' : ''}
+            className={selectedProfile.isVip ? 'vip-profile-modal-glow custom-scrollbar' : 'custom-scrollbar'}
             style={{
               width: '100%', maxWidth: '480px', maxHeight: '90vh', overflowY: 'auto', background: '#181c22',
               borderRadius: '24px',

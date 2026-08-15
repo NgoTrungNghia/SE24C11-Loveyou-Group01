@@ -113,7 +113,7 @@ export default function VipModal({ isVip, onClose, onVipSuccess, setToast }) {
 
   return (
     <div style={styles.overlay} onClick={onClose}>
-      <div style={styles.modalBody} onClick={e => e.stopPropagation()}>
+      <div className="vip-modal-body custom-scrollbar" style={styles.modalBody} onClick={e => e.stopPropagation()}>
         {/* Close Button */}
         <button style={styles.closeBtn} onClick={onClose} title="Đóng">✕</button>
 

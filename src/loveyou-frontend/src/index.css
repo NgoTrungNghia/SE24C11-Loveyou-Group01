@@ -639,3 +639,73 @@ input[type="text"]:focus {
   to { transform: rotate(360deg); }
 }
 
+/* ── Premium Custom Scrollbars ── */
+::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(18, 21, 27, 0.6);
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #fd267d, #ff6036);
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 0 10px rgba(253, 38, 125, 0.35);
+  transition: all 0.2s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, #ff2d55, #ff7a50);
+  box-shadow: 0 0 15px rgba(253, 38, 125, 0.75);
+}
+
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+/* Firefox standard scrollbar support */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #fd267d rgba(18, 21, 27, 0.6);
+}
+
+/* VIP / Royal Gold Scrollbar */
+.vip-scrollbar::-webkit-scrollbar,
+.vip-profile-modal-glow::-webkit-scrollbar,
+.vip-modal-body::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
+}
+
+.vip-scrollbar::-webkit-scrollbar-track,
+.vip-profile-modal-glow::-webkit-scrollbar-track,
+.vip-modal-body::-webkit-scrollbar-track {
+  background: rgba(13, 10, 21, 0.8);
+  border-radius: 10px;
+}
+
+.vip-scrollbar::-webkit-scrollbar-thumb,
+.vip-profile-modal-glow::-webkit-scrollbar-thumb,
+.vip-modal-body::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #FFD700, #FF007F, #FF8C00);
+  border-radius: 10px;
+  box-shadow: 0 0 12px rgba(255, 215, 0, 0.6);
+}
+
+.vip-scrollbar::-webkit-scrollbar-thumb:hover,
+.vip-profile-modal-glow::-webkit-scrollbar-thumb:hover,
+.vip-modal-body::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, #FFE033, #FF2D55, #FFA500);
+  box-shadow: 0 0 18px rgba(255, 215, 0, 0.9);
+}
+
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: #fd267d rgba(18, 21, 27, 0.6);
+}
+
+
