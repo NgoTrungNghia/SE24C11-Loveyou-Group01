@@ -852,10 +852,10 @@ export default function Dashboard() {
             )}
           </button>
 
-          {/* AI Mode Toggle */}
+          {/* Smart Match Toggle */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'rgba(255,255,255,0.06)', padding: '4px 10px', borderRadius: '18px', border: '1px solid rgba(255,255,255,0.1)' }}>
             <span style={{ fontSize: '0.78rem', color: 'rgba(255,255,255,0.8)', fontWeight: 600 }}>
-              {useAI ? '🤖 AI Match' : '📋 Normal'}
+              {useAI ? '✨ Smart Match' : '📋 Normal'}
             </span>
             <div
               onClick={() => {
@@ -864,7 +864,7 @@ export default function Dashboard() {
                 setCandidateIdx(0);
                 loadCandidates(nextUseAI);
               }}
-              title={useAI ? 'Tắt AI Match để xem danh sách ngẫu nhiên' : 'Bật AI Match để gợi ý đối tượng ăn ý nhất'}
+              title={useAI ? 'Tắt Smart Match để xem danh sách ngẫu nhiên' : 'Bật Smart Match để gợi ý đối tượng ăn ý nhất'}
               style={{
                 width: '38px', height: '20px', borderRadius: '10px', cursor: 'pointer',
                 background: useAI ? '#fd267d' : 'rgba(255,255,255,0.2)',
@@ -1012,7 +1012,7 @@ export default function Dashboard() {
           <div style={{ textAlign: 'center' }}>
             <div className="spinner" style={{ margin: '0 auto 1rem auto', width: '36px', height: '36px' }} />
             <p style={{ color: 'rgba(255,255,255,0.5)' }}>
-              {useAI ? '🤖 AI đang tìm người phù hợp...' : 'Đang tìm kiếm đối tượng...'}
+              {useAI ? '✨ Smart Match đang tìm người phù hợp...' : 'Đang tìm kiếm đối tượng...'}
             </p>
           </div>
         ) : (!currentCandidate || candidateIdx >= candidates.length) ? (
@@ -1028,7 +1028,7 @@ export default function Dashboard() {
               Hết hồ sơ gợi ý rồi!
             </h2>
             <p style={{ fontSize: '0.88rem', color: 'rgba(255,255,255,0.6)', lineHeight: '1.6', marginBottom: '1.8rem' }}>
-              {useAI ? 'AI đã gợi ý hết những người phù hợp nhất!' : 'Bạn đã xem hết danh sách hôm nay.'}
+              {useAI ? 'Smart Match đã gợi ý hết những người phù hợp nhất!' : 'Bạn đã xem hết danh sách hôm nay.'}
             </p>
             <button
               onClick={() => { setCandidateIdx(0); loadCandidates(); }}

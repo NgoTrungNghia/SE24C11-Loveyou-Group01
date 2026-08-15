@@ -394,7 +394,7 @@ export default function OnboardingWizard() {
                 Sở thích cá nhân
               </h2>
               <p style={{ fontSize: '0.88rem', color: 'rgba(255,255,255,0.6)', marginBottom: '0.6rem' }}>
-                Chọn các thẻ sở thích để thuật toán AI ghép đôi bạn với người hợp cạ hơn.
+                Chọn các thẻ sở thích để thuật toán Smart Match ghép đôi bạn với người hợp cạ hơn.
               </p>
 
               <div>

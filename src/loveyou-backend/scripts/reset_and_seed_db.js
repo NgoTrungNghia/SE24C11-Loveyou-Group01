@@ -8,7 +8,7 @@ const ADMIN_ACCOUNTS = [
   {
     username: 'admin1',
     email: 'admin1@gmail.com',
-    fullName: 'Quản Trị Viên 1 (Admin 1)',
+    fullName: 'Quản Trị Viên 1',
     gender: 'female',
     role: 'ADMIN',
     profilePicture: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=600',
@@ -27,7 +27,7 @@ const ADMIN_ACCOUNTS = [
   {
     username: 'admin2',
     email: 'admin2@gmail.com',
-    fullName: 'Quản Trị Viên 2 (Admin 2)',
+    fullName: 'Quản Trị Viên 2',
     gender: 'male',
     role: 'ADMIN',
     profilePicture: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=600',

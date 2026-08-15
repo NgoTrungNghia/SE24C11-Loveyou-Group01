@@ -14,8 +14,8 @@ const { seedAdmin } = require('./src/services/adminService');
 const { seedTestUsers } = require('./seedUsers');
 const prisma = require('./src/utils/prismaClient');
 
-seedAdmin();
-seedTestUsers();
+// seedAdmin();
+// seedTestUsers();
 
 if (!config.EMAIL_USER || !config.EMAIL_APP_PASSWORD) {
   console.warn('Warning: EMAIL_USER or EMAIL_APP_PASSWORD is not set — OTP email will not work');
