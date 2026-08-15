@@ -2,7 +2,7 @@
 
 > **Author:** Thành viên 5 (Frontend & Spec Kit Lead Frontend)  
 > **Reviewer:** Tuong Huy (Software Architect)  
-> **Editor:** ____________________
+> **Editor:** Trung Nghia
 
 ## Overview
 
