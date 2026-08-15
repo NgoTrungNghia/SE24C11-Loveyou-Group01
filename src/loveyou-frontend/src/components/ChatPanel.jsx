@@ -18,13 +18,6 @@ export default function ChatPanel({ match, currentUserId, currentUserProfile, is
   const [sending, setSending] = useState(false);
 
   // Helper getters to safely extract boolean flags without `||` falsy fallthrough bugs
-  const getIsBlocked = (m) => {
-    if (!m) return false;
-    if (m.partner && typeof m.partner.isBlocked === 'boolean') return m.partner.isBlocked;
-    if (typeof m.isBlocked === 'boolean') return m.isBlocked;
-    return false;
-  };
-
   const getIsBlockedByMe = (m) => {
     if (!m) return false;
     if (m.partner && typeof m.partner.isBlockedByMe === 'boolean') return m.partner.isBlockedByMe;
@@ -39,6 +32,10 @@ export default function ChatPanel({ match, currentUserId, currentUserProfile, is
     return false;
   };
 
+  const getIsBlocked = (m) => {
+    return Boolean(getIsBlockedByMe(m) || getIsBlockedByPartner(m));
+  };
+
   const getIsUnmatched = (m) => {
     if (!m) return false;
     if (m.partner && typeof m.partner.isUnmatched === 'boolean') return m.partner.isUnmatched;
@@ -47,9 +44,9 @@ export default function ChatPanel({ match, currentUserId, currentUserProfile, is
   };
 
   // 3-dots menu & action states
-  const [isBlockedState, setIsBlockedState] = useState(() => getIsBlocked(match));
   const [isBlockedByMeState, setIsBlockedByMeState] = useState(() => getIsBlockedByMe(match));
   const [isBlockedByPartnerState, setIsBlockedByPartnerState] = useState(() => getIsBlockedByPartner(match));
+  const [isBlockedState, setIsBlockedState] = useState(() => getIsBlocked(match));
   const [isUnmatchedState, setIsUnmatchedState] = useState(() => getIsUnmatched(match));
   const [showMenu, setShowMenu] = useState(false);
   const [showBlockConfirm, setShowBlockConfirm] = useState(false);
@@ -65,9 +62,11 @@ export default function ChatPanel({ match, currentUserId, currentUserProfile, is
   const [toast, setToast] = useState(null);
 
   useEffect(() => {
-    setIsBlockedState(getIsBlocked(match));
-    setIsBlockedByMeState(getIsBlockedByMe(match));
-    setIsBlockedByPartnerState(getIsBlockedByPartner(match));
+    const byMe = getIsBlockedByMe(match);
+    const byPartner = getIsBlockedByPartner(match);
+    setIsBlockedByMeState(byMe);
+    setIsBlockedByPartnerState(byPartner);
+    setIsBlockedState(Boolean(byMe || byPartner));
     setIsUnmatchedState(getIsUnmatched(match));
   }, [match]);
 

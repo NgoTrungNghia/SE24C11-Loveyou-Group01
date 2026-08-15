@@ -150,19 +150,15 @@ async function blockUser(blockerId, blockedId) {
     throw err;
   }
 
-  const existingBlock = await prisma.userBlock.findUnique({
+  const existingBlock = await prisma.userBlock.findFirst({
     where: {
-      blockerId_blockedId: {
-        blockerId: blocker,
-        blockedId: blocked,
-      },
+      blockerId: blocker,
+      blockedId: blocked,
     },
   });
 
   if (existingBlock) {
-    const err = new Error('Người dùng này đã bị chặn từ trước');
-    err.status = 400;
-    throw err;
+    return existingBlock;
   }
 
   return prisma.userBlock.create({
@@ -218,12 +214,13 @@ async function getBlockedUsers(userId) {
 }
 
 async function unblockUser(blockerId, blockedId) {
-  return prisma.userBlock.delete({
+  const blocker = Number(blockerId);
+  const blocked = Number(blockedId);
+
+  return prisma.userBlock.deleteMany({
     where: {
-      blockerId_blockedId: {
-        blockerId: Number(blockerId),
-        blockedId: Number(blockedId),
-      },
+      blockerId: blocker,
+      blockedId: blocked,
     },
   });
 }
