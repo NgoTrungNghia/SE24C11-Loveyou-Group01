@@ -142,11 +142,15 @@ export default function UserSettingsModal({ profile, onProfileUpdated, onLogout,
   };
 
   const handleUnblock = async (targetId) => {
+    if (!targetId) return;
     setUnblockingId(targetId);
     try {
       await userApi.unblockUser(targetId);
       setToast({ type: 'success', message: 'Đã bỏ chặn tài khoản thành công!' });
-      setBlockedUsers(prev => prev.filter(b => b.user?.userId !== targetId));
+      setBlockedUsers(prev => prev.filter(b => {
+        const uId = b.blockedUser?.userId || b.user?.userId || b.blocked?.userId || b.blockedId;
+        return Number(uId) !== Number(targetId);
+      }));
     } catch (err) {
       setToast({ type: 'error', message: err.response?.data?.error?.message || 'Thao tác bỏ chặn thất bại' });
     } finally {
@@ -921,48 +925,64 @@ export default function UserSettingsModal({ profile, onProfileUpdated, onLogout,
           <div style={{ minHeight: '220px' }}>
             {loadingBlocked ? (
               <div style={{ textAlign: 'center', color: 'rgba(255,255,255,0.5)', padding: '2rem' }}>
-                Đang tải...
+                ⏳ Đang tải danh sách chặn...
               </div>
             ) : blockedUsers.length === 0 ? (
               <div style={{ textAlign: 'center', color: 'rgba(255,255,255,0.4)', padding: '3rem 1rem', background: 'rgba(255,255,255,0.02)', borderRadius: '16px', fontSize: '0.95rem' }}>
-                Danh sách trống
+                🕊️ Bạn chưa chặn tài khoản nào
               </div>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem', maxHeight: '300px', overflowY: 'auto', paddingRight: '4px' }}>
-                {blockedUsers.map(b => (
-                  <div
-                    key={b.blockId}
-                    style={{
-                      display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                      padding: '0.6rem 0.9rem', borderRadius: '12px', background: 'rgba(255,255,255,0.04)',
-                      border: '1px solid rgba(255,255,255,0.08)'
-                    }}
-                  >
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.7rem' }}>
-                      <img
-                        src={b.user?.profilePicture || defaultAvatar}
-                        alt=""
-                        style={{ width: '36px', height: '36px', borderRadius: '50%', objectFit: 'cover' }}
-                      />
-                      <div style={{ fontWeight: 600, fontSize: '0.88rem', color: '#fff' }}>
-                        {b.user?.fullName || b.user?.username || `Tài khoản #${b.user?.userId}`}
-                      </div>
-                    </div>
+                {blockedUsers.map(b => {
+                  const userObj = b.blockedUser || b.user || b.blocked || {};
+                  const targetId = userObj.userId || userObj.id || b.blockedId;
+                  const name = userObj.fullName || userObj.username || `Tài khoản #${targetId}`;
+                  const avatar = userObj.profilePicture || getDefaultAvatar(userObj.gender);
 
-                    <button
-                      onClick={() => handleUnblock(b.user?.userId)}
-                      disabled={unblockingId === b.user?.userId}
+                  return (
+                    <div
+                      key={b.blockId || targetId}
                       style={{
-                        padding: '5px 12px', borderRadius: '8px',
-                        background: '#10b981', border: 'none', color: '#fff',
-                        fontWeight: 600, fontSize: '0.78rem', cursor: 'pointer',
-                        whiteSpace: 'nowrap', boxShadow: '0 2px 8px rgba(16,185,129,0.3)'
+                        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                        padding: '0.7rem 0.9rem', borderRadius: '12px', background: 'rgba(255,255,255,0.04)',
+                        border: '1px solid rgba(255,255,255,0.08)'
                       }}
                     >
-                      {unblockingId === b.user?.userId ? 'Đang bỏ chặn...' : 'Bỏ chặn'}
-                    </button>
-                  </div>
-                ))}
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.7rem' }}>
+                        <img
+                          src={avatar}
+                          alt=""
+                          onError={e => { e.target.src = getDefaultAvatar('OTHER'); }}
+                          style={{ width: '38px', height: '38px', borderRadius: '50%', objectFit: 'cover' }}
+                        />
+                        <div>
+                          <div style={{ fontWeight: 600, fontSize: '0.88rem', color: '#fff' }}>
+                            {name}
+                          </div>
+                          {b.createdAt && (
+                            <div style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,0.4)' }}>
+                              Đã chặn ngày {new Date(b.createdAt).toLocaleDateString('vi-VN')}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      <button
+                        onClick={() => handleUnblock(targetId)}
+                        disabled={unblockingId === targetId}
+                        style={{
+                          padding: '6px 14px', borderRadius: '8px',
+                          background: '#10b981', border: 'none', color: '#fff',
+                          fontWeight: 700, fontSize: '0.8rem', cursor: 'pointer',
+                          whiteSpace: 'nowrap', boxShadow: '0 2px 8px rgba(16,185,129,0.3)',
+                          transition: 'all 0.2s ease',
+                        }}
+                      >
+                        {unblockingId === targetId ? 'Đang bỏ chặn...' : '🔓 Bỏ chặn'}
+                      </button>
+                    </div>
+                  );
+                })}
               </div>
             )}
           </div>

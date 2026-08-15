@@ -1945,7 +1945,7 @@ export default function AdminDashboard() {
 
       {/* ── PROFILE DETAIL MODAL ── */}
       {selectedUser && (
-        <div style={styles.modalOverlay} onClick={() => setSelectedUser(null)}>
+        <div style={{ ...styles.modalOverlay, zIndex: 10005 }} onClick={() => setSelectedUser(null)}>
           <div style={styles.modalBody} onClick={e => e.stopPropagation()}>
             <div style={styles.modalHeader}>
               <h3 style={{ margin: 0, fontSize: '1.2rem', color: '#ffffff' }}>Chi tiết hồ sơ tài khoản #{selectedUser.userId}</h3>

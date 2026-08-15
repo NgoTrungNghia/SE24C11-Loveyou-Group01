@@ -532,15 +532,63 @@ export default function Dashboard() {
   };
 
   const openChat = async (match) => {
-    setActiveChatMatch(match);
+    if (!match) {
+      setActiveChatMatch(null);
+      return;
+    }
+    const targetUserId = Number(match.partner?.id || match.id || match.userId);
+    const matchedObj = matches.find(m => Number(m.id) === targetUserId);
+    const convObj = conversations.find(c => Number(c.partner?.id) === targetUserId);
+
+    const isBlockedByMe = Boolean(match.partner?.isBlockedByMe ?? match.isBlockedByMe ?? matchedObj?.isBlockedByMe ?? convObj?.partner?.isBlockedByMe ?? convObj?.isBlockedByMe);
+    const isBlockedByPartner = Boolean(match.partner?.isBlockedByPartner ?? match.isBlockedByPartner ?? matchedObj?.isBlockedByPartner ?? convObj?.partner?.isBlockedByPartner ?? convObj?.isBlockedByPartner);
+    const isBlocked = isBlockedByMe || isBlockedByPartner || Boolean(match.partner?.isBlocked ?? match.isBlocked ?? matchedObj?.isBlocked ?? convObj?.isBlocked);
+
+    const isUnmatched = Boolean(match.partner?.isUnmatched ?? match.isUnmatched ?? matchedObj?.isUnmatched ?? convObj?.partner?.isUnmatched ?? convObj?.isUnmatched);
+
+    const normalizedMatch = {
+      ...match,
+      matchId: match.matchId || convObj?.matchId || matchedObj?.matchId || targetUserId,
+      id: targetUserId,
+      isBlocked,
+      isBlockedByMe,
+      isBlockedByPartner,
+      isUnmatched,
+      partner: {
+        ...(match.partner || {}),
+        id: targetUserId,
+        name: match.partner?.name || match.name || matchedObj?.name || convObj?.partner?.name,
+        photo: match.partner?.photo || match.photo || matchedObj?.photo || convObj?.partner?.photo,
+        isBlocked,
+        isBlockedByMe,
+        isBlockedByPartner,
+        isUnmatched,
+        isVip: Boolean(match.partner?.isVip ?? match.isVip ?? matchedObj?.isVip ?? convObj?.partner?.isVip),
+        isCitizenVerified: Boolean(match.partner?.isCitizenVerified ?? match.isCitizenVerified ?? matchedObj?.isCitizenVerified ?? convObj?.partner?.isCitizenVerified),
+        isEmailVerified: Boolean(match.partner?.isEmailVerified ?? match.isEmailVerified ?? matchedObj?.isEmailVerified ?? convObj?.partner?.isEmailVerified),
+      },
+    };
+
+    setActiveChatMatch(normalizedMatch);
     setActiveTab('messages');
   };
 
   const openDetailProfile = (person) => {
-    const matchedObj = matches.find(m => Number(m.id) === Number(person.id || person.userId));
+    const targetUserId = Number(person.id || person.userId);
+    const matchedObj = matches.find(m => Number(m.id) === targetUserId);
+    const convObj = conversations.find(c => Number(c.partner?.id) === targetUserId);
+
+    const isBlockedByMe = Boolean(matchedObj?.isBlockedByMe ?? convObj?.partner?.isBlockedByMe ?? convObj?.isBlockedByMe ?? person?.isBlockedByMe);
+    const isBlockedByPartner = Boolean(matchedObj?.isBlockedByPartner ?? convObj?.partner?.isBlockedByPartner ?? convObj?.isBlockedByPartner ?? person?.isBlockedByPartner);
+    const isBlocked = isBlockedByMe || isBlockedByPartner || Boolean(matchedObj?.isBlocked || convObj?.isBlocked || person?.isBlocked);
+
     setSelectedProfile({
       ...person,
-      isBlocked: matchedObj?.isBlocked || person?.isBlocked || false,
+      id: targetUserId,
+      matchId: matchedObj?.matchId || convObj?.matchId || person?.matchId,
+      isBlocked,
+      isBlockedByMe,
+      isBlockedByPartner,
     });
     setActivePhotoIdx(0);
   };
@@ -1436,11 +1484,8 @@ export default function Dashboard() {
                 <div style={{ display: 'flex', gap: '0.8rem' }}>
                   <button
                     onClick={() => {
-                      const matchedObj = matches.find(m => m.id === selectedProfile.id);
-                      const isBlocked = matchedObj?.isBlocked || selectedProfile?.isBlocked || false;
-                      openChat({ matchId: matchedObj?.matchId || selectedProfile.id, isBlocked, partner: { id: selectedProfile.id, name: selectedProfile.name, photo: selectedProfile.photo, isBlocked } });
+                      openChat(selectedProfile);
                       setSelectedProfile(null);
-                      setActiveTab('messages');
                     }}
                     style={{ flex: 1, padding: '0.8rem', borderRadius: '14px', background: 'linear-gradient(135deg, #fd267d, #ff6036)', border: 'none', color: '#fff', fontWeight: 700, cursor: 'pointer' }}
                   >💬 Nhắn tin</button>

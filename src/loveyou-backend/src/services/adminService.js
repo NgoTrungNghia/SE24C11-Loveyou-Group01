@@ -178,28 +178,38 @@ async function toggleBanStatus(adminUserId, targetUserId) {
 }
 
 async function getReports() {
+  const userSelect = {
+    userId: true,
+    username: true,
+    email: true,
+    fullName: true,
+    phoneNumber: true,
+    profilePicture: true,
+    photos: true,
+    gender: true,
+    dateOfBirth: true,
+    height: true,
+    location: true,
+    bio: true,
+    interests: true,
+    role: true,
+    isVip: true,
+    isEmailVerified: true,
+    isCitizenVerified: true,
+    citizenVerificationStatus: true,
+    status: true,
+    createdAt: true,
+    lastActiveAt: true,
+  };
+
   const reports = await prisma.report.findMany({
     orderBy: { createdAt: 'desc' },
     include: {
       reporter: {
-        select: {
-          userId: true,
-          username: true,
-          email: true,
-          fullName: true,
-          profilePicture: true,
-          status: true,
-        },
+        select: userSelect,
       },
       reported: {
-        select: {
-          userId: true,
-          username: true,
-          email: true,
-          fullName: true,
-          profilePicture: true,
-          status: true,
-        },
+        select: userSelect,
       },
     },
   });
