@@ -53,6 +53,10 @@ async function getCandidates(userId) {
     select: { latitude: true, longitude: true },
   });
 
+  const prefs = await prisma.userPreferences.findUnique({
+    where: { userId: currentUserId },
+  });
+
   let swipedTargetIds = [currentUserId];
   try {
     const existingSwipes = await prisma.swipe.findMany({
@@ -80,13 +84,19 @@ async function getCandidates(userId) {
 
   let realCandidates = [];
   try {
+    const whereClause = {
+      userId: { notIn: swipedTargetIds },
+      status: 'ACTIVE',
+      role: { not: 'ADMIN' },
+    };
+
+    if (prefs?.genderPreference && prefs.genderPreference !== 'all') {
+      whereClause.gender = { equals: prefs.genderPreference, mode: 'insensitive' };
+    }
+
     const usersInDb = await prisma.user.findMany({
-      where: {
-        userId: { notIn: swipedTargetIds },
-        status: 'ACTIVE',
-        role: { not: 'ADMIN' },
-      },
-      take: 30,
+      where: whereClause,
+      take: 50,
       select: {
         userId: true,
         username: true,
@@ -105,7 +115,20 @@ async function getCandidates(userId) {
       },
     });
 
-    realCandidates = usersInDb.map(u => {
+    const filteredUsers = usersInDb.filter(u => {
+      const age = calculateAge(u.dateOfBirth);
+      const minAge = prefs?.minAge ?? 18;
+      const maxAge = prefs?.maxAge ?? 100;
+      if (age < minAge || age > maxAge) return false;
+
+      if (prefs?.maxDistance && currentUser?.latitude && currentUser?.longitude && u.latitude && u.longitude) {
+        const dist = haversineDistance(currentUser.latitude, currentUser.longitude, u.latitude, u.longitude);
+        if (dist !== null && dist > prefs.maxDistance) return false;
+      }
+      return true;
+    });
+
+    realCandidates = filteredUsers.map(u => {
       const photosList = parseJsonField(u.photos);
       const primaryPhoto = photosList[0] || u.profilePicture || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=600';
       return {
@@ -170,8 +193,8 @@ async function handleSwipe(swiperId, targetId, action) {
       try {
         await prisma.match.upsert({
           where: { user1Id_user2Id: { user1Id: u1, user2Id: u2 } },
-          update: {},
-          create: { user1Id: u1, user2Id: u2 },
+          update: { isUnmatched: false, unmatchedBy: null },
+          create: { user1Id: u1, user2Id: u2, isUnmatched: false },
         });
       } catch {
         /* ignore */
@@ -223,7 +246,7 @@ async function handleSwipe(swiperId, targetId, action) {
 }
 
 /**
- * Lấy danh sách Matches của user (bao gồm cả khi bị chặn để không bị ẩn tin nhắn)
+ * Lấy danh sách Matches của user (chỉ lấy các match active, loại trừ match đã hủy)
  */
 async function getUserMatches(userId) {
   const currentUserId = Number(userId);
@@ -240,6 +263,7 @@ async function getUserMatches(userId) {
           { user1Id: currentUserId },
           { user2Id: currentUserId },
         ],
+        isUnmatched: false,
       },
       include: {
         user1: { select: { userId: true, username: true, fullName: true, profilePicture: true, photos: true, dateOfBirth: true, height: true, location: true, latitude: true, longitude: true, bio: true, interests: true, isVip: true } },
@@ -289,22 +313,28 @@ async function getUserMatches(userId) {
 }
 
 /**
- * Hủy ghép đôi giữa 2 tài khoản thực
+ * Hủy ghép đôi giữa 2 tài khoản thực (Giữ lại cuộc trò chuyện và tin nhắn, chỉ đánh dấu isUnmatched)
  */
 async function unmatchUser(currentUserId, targetId) {
   const userId = Number(currentUserId);
   const targetUserId = Number(targetId);
 
   try {
-    await prisma.match.deleteMany({
+    // 1. Đánh dấu match đã hủy ghép đôi (không xóa Match / Conversation / Messages)
+    await prisma.match.updateMany({
       where: {
         OR: [
           { user1Id: userId, user2Id: targetUserId },
           { user1Id: targetUserId, user2Id: userId },
         ],
       },
+      data: {
+        isUnmatched: true,
+        unmatchedBy: userId,
+      },
     });
 
+    // 2. Xóa các lượt Swipe để 2 người có thể thấy nhau và quẹt lại nếu muốn
     await prisma.swipe.deleteMany({
       where: {
         OR: [

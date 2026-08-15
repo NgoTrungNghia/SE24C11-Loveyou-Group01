@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useCallback, useEffect } from 'react';
 import { authApi } from '../utils/api';
+import { disconnectSocket } from '../utils/socket';
 
 const AuthContext = createContext(null);
 
@@ -8,15 +9,20 @@ export function AuthProvider({ children }) {
   const [token, setToken]     = useState(() => localStorage.getItem('ly_token'));
   const [loading, setLoading] = useState(false);
 
-  // Decode JWT payload (no verify — just read claims)
+  // Decode JWT payload with proper UTF-8 support
   const decodeToken = (t) => {
     try {
-      const payload = JSON.parse(atob(t.split('.')[1]));
-      return payload;
+      const base64Url = t.split('.')[1];
+      if (!base64Url) return null;
+      const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+      const binaryStr = atob(base64);
+      const bytes = Uint8Array.from(binaryStr, c => c.charCodeAt(0));
+      const decodedString = new TextDecoder('utf-8').decode(bytes);
+      return JSON.parse(decodedString);
     } catch { return null; }
   };
 
-  // Restore user from token on mount
+  // Restore user from token on mount and listen to multi-tab storage changes
   useEffect(() => {
     if (token) {
       const payload = decodeToken(token);
@@ -28,6 +34,28 @@ export function AuthProvider({ children }) {
         setToken(null);
       }
     }
+
+    const handleStorageChange = (e) => {
+      if (e.key === 'ly_token') {
+        const newToken = e.newValue;
+        if (newToken) {
+          const payload = decodeToken(newToken);
+          if (payload && payload.exp * 1000 > Date.now()) {
+            setToken(newToken);
+            setUser(payload);
+          } else {
+            setToken(null);
+            setUser(null);
+          }
+        } else {
+          setToken(null);
+          setUser(null);
+        }
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
   }, []);
 
   const login = useCallback(async (email, password) => {
@@ -52,6 +80,7 @@ export function AuthProvider({ children }) {
 
   const logout = useCallback(async () => {
     try { await authApi.logout(); } catch { /* ignore */ }
+    disconnectSocket();
     localStorage.removeItem('ly_token');
     setToken(null);
     setUser(null);

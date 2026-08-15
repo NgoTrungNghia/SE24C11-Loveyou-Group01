@@ -37,7 +37,13 @@ async function login(req, res, next) {
         error: { message: 'Invalid credentials', code: 'INVALID_CREDENTIALS' },
       });
     }
-    const token = createAccessToken({ userId: user.userId, role: user.role });
+    const token = createAccessToken({
+      userId: user.userId,
+      role: user.role,
+      email: user.email,
+      username: user.username,
+      fullName: user.fullName,
+    });
     const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
 
     // Update lastActiveAt on login

@@ -11,13 +11,23 @@ async function authMiddleware(req, res, next) {
     const payload = verifyAccessToken(token);
     req.user = payload;
 
-    // Check if user is BANNED in database
+    // Check if user exists and status in database
     const dbUser = await prisma.user.findUnique({
       where: { userId: payload.userId },
-      select: { status: true },
+      select: { userId: true, role: true, status: true },
     });
 
-    if (dbUser && dbUser.status === 'BANNED') {
+    if (!dbUser) {
+      return res.status(401).json({
+        success: false,
+        error: {
+          message: 'Tài khoản không tồn tại hoặc phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.',
+          code: 'UNAUTHORIZED',
+        },
+      });
+    }
+
+    if (dbUser.status === 'BANNED') {
       return res.status(403).json({
         success: false,
         error: {
@@ -26,6 +36,8 @@ async function authMiddleware(req, res, next) {
         },
       });
     }
+
+    req.user = { ...payload, role: dbUser.role };
 
     // Update lastActiveAt asynchronously
     prisma.user.update({

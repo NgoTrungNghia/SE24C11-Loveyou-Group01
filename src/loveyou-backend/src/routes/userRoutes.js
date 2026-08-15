@@ -14,4 +14,9 @@ router.get('/blocked', controller.getBlockedUsers);
 router.post('/unblock', controller.unblockUser);
 router.post('/report', controller.reportUser);
 
+// Verification routes
+router.post('/send-email-verification', controller.sendEmailVerification);
+router.post('/verify-email', controller.verifyEmail);
+router.post('/verify-citizen', controller.verifyCitizen);
+
 module.exports = router;

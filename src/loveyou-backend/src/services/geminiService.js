@@ -138,6 +138,14 @@ function parseGeminiJson(text) {
   }
 }
 
+function stripEmojis(text) {
+  if (!text || typeof text !== 'string') return '';
+  return text
+    .replace(/[\u{1F300}-\u{1F9FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}\u{1F1E0}-\u{1F1FF}\u{1F600}-\u{1F64F}\u{1F680}-\u{1F6FF}\u{1FA70}-\u{1FAFF}\u{2300}-\u{23FF}\u{2B50}\u{2B55}\u{FE0F}]/gu, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
 /**
  * Tạo bộ câu hỏi game bằng Gemini AI (10 câu)
  * @param {string} gameType - 'WOULD_YOU_RATHER' | 'SPIN_THE_BOTTLE'
@@ -147,36 +155,44 @@ async function generateGameQuestions(gameType) {
   let prompt = '';
 
   if (gameType === 'WOULD_YOU_RATHER') {
-    prompt = `Bạn là trợ lý tạo câu hỏi cho ứng dụng hẹn hò LoveYou. Hãy tạo đúng 10 câu hỏi "Would You Rather" vô cùng thú vị, gần gũi, dành cho 2 người đang quen nhau.
+    prompt = `Bạn là trợ lý tạo câu hỏi cho ứng dụng hẹn hò LoveYou. Hãy tạo đúng 10 câu hỏi "Would You Rather" vô cùng thú vị, gần gũi, văn phong lịch thiệp và hiện đại dành cho 2 người đang tìm hiểu nhau.
 
-Yêu cầu:
-- Mỗi câu có 2 lựa chọn A và B hấp dẫn
-- Viết bằng tiếng Việt, kèm emoji sinh động
+Yêu cầu BẮT BUỘC:
+- Mỗi câu có 2 lựa chọn A và B
+- Viết bằng tiếng Việt tự nhiên, CHỈ DÙNG CHỮ THUẦN TÚY, TUYỆT ĐỐI KHÔNG sử dụng emoji, icon hay ký hiệu biểu cảm trong optionA và optionB.
 
-Trả về ĐÚNG 1 mảng JSON chứa 10 phần tử như sau, KHÔNG thêm chữ khác:
+Trả về ĐÚNG 1 mảng JSON chứa 10 phần tử như mẫu sau, KHÔNG thêm bất kỳ chữ nào khác ngoài JSON:
 [
-  {"id": 1, "optionA": "🎯 Lựa chọn A", "optionB": "🎲 Lựa chọn B"},
-  {"id": 2, "optionA": "🎯 Lựa chọn A", "optionB": "🎲 Lựa chọn B"},
-  {"id": 3, "optionA": "🎯 Lựa chọn A", "optionB": "🎲 Lựa chọn B"},
-  {"id": 4, "optionA": "🎯 Lựa chọn A", "optionB": "🎲 Lựa chọn B"},
-  {"id": 5, "optionA": "🎯 Lựa chọn A", "optionB": "🎲 Lựa chọn B"},
-  {"id": 6, "optionA": "🎯 Lựa chọn A", "optionB": "🎲 Lựa chọn B"},
-  {"id": 7, "optionA": "🎯 Lựa chọn A", "optionB": "🎲 Lựa chọn B"},
-  {"id": 8, "optionA": "🎯 Lựa chọn A", "optionB": "🎲 Lựa chọn B"},
-  {"id": 9, "optionA": "🎯 Lựa chọn A", "optionB": "🎲 Lựa chọn B"},
-  {"id": 10, "optionA": "🎯 Lựa chọn A", "optionB": "🎲 Lựa chọn B"}
+  {"id": 1, "optionA": "Đi du lịch biển mùa hè", "optionB": "Nghỉ dưỡng trên vùng núi cao"},
+  {"id": 2, "optionA": "Nấu ăn cùng nhau tại nhà", "optionB": "Đi ăn tại một nhà hàng lãng mạn"},
+  {"id": 3, "optionA": "Cùng nhau xem phim tại rạp", "optionB": "Cùng nhau đi dạo phố ban đêm"},
+  {"id": 4, "optionA": "Thức dậy sớm đón bình minh", "optionB": "Thức muộn ngắm sao đêm"},
+  {"id": 5, "optionA": "Nhận một món quà bất ngờ", "optionB": "Nhận một chuyến đi du lịch bất ngờ"},
+  {"id": 6, "optionA": "Học một sở thích mới cùng nhau", "optionB": "Cùng nhau trải nghiệm các món ăn đường phố mới"},
+  {"id": 7, "optionA": "Một buổi hẹn yên tĩnh trong quán cà phê sách", "optionB": "Một buổi hẹn sôi động tại sự kiện âm nhạc"},
+  {"id": 8, "optionA": "Cùng nhau nuôi thú cưng", "optionB": "Cùng nhau chăm sóc cây cảnh sân vườn"},
+  {"id": 9, "optionA": "Nói chuyện điện thoại thâu đêm", "optionB": "Gặp mặt trực tiếp dù chỉ nửa tiếng"},
+  {"id": 10, "optionA": "Một tình yêu bình yên và giản dị", "optionB": "Một tình yêu ngập tràn bất ngờ và phiêu lưu"}
 ]`;
   } else if (gameType === 'SPIN_THE_BOTTLE') {
     prompt = `Bạn là trợ lý tạo câu hỏi cho ứng dụng hẹn hò LoveYou. Hãy tạo đúng 10 câu hỏi chia sẻ bản thân sâu sắc, ấm áp, hóm hỉnh cho trò chơi xoay chai.
 
 Yêu cầu:
 - Gợi mở câu chuyện tình cảm và thấu hiểu
-- Viết bằng tiếng Việt, kèm emoji
+- Viết bằng tiếng Việt
 
 Trả về ĐÚNG 1 mảng JSON gồm 10 chuỗi câu hỏi như sau, KHÔNG thêm chữ khác:
 [
-  "🌟 Câu hỏi 1?", "💭 Câu hỏi 2?", "🎯 Câu hỏi 3?", "💖 Câu hỏi 4?", "🌙 Câu hỏi 5?",
-  "☕ Câu hỏi 6?", "🎨 Câu hỏi 7?", "🎵 Câu hỏi 8?", "🗺️ Câu hỏi 9?", "✨ Câu hỏi 10?"
+  "Kỷ niệm đáng nhớ nhất trong một chuyến đi của bạn là gì?",
+  "Điều gì ở một người sẽ ngay lập tức tạo thiện cảm lớn với bạn?",
+  "Mục tiêu cá nhân lớn nhất bạn muốn hoàn thành trong năm nay là gì?",
+  "Một thói quen nhỏ hàng ngày khiến bạn cảm thấy hạnh phúc?",
+  "Bộ phim hoặc cuốn sách nào có ảnh hưởng sâu sắc nhất đến cách bạn nhìn cuộc sống?",
+  "Khi gặp áp lực, cách tốt nhất để bạn thư giãn và lấy lại năng lượng là gì?",
+  "Một kỹ năng hoặc tài lẻ thú vị mà ít người biết về bạn?",
+  "Mẫu người lý tưởng mà bạn luôn trân trọng khi tìm hiểu là như thế nào?",
+  "Một món ăn hoặc quán ăn ruột mà bạn nhất định muốn dẫn người ấy tới?",
+  "Điều điên rồ hoặc bất ngờ nhất bạn từng làm trong quá khứ là gì?"
 ]`;
   }
 
@@ -187,9 +203,13 @@ Trả về ĐÚNG 1 mảng JSON gồm 10 chuỗi câu hỏi như sau, KHÔNG th�
       throw new Error('Invalid questions format');
     }
     if (gameType === 'SPIN_THE_BOTTLE') {
-      return questions.map(q => typeof q === 'string' ? q : q.question || q.text || String(q));
+      return questions.map(q => stripEmojis(typeof q === 'string' ? q : q.question || q.text || String(q)));
     }
-    return questions;
+    return questions.map((q, idx) => ({
+      id: q.id || idx + 1,
+      optionA: stripEmojis(q.optionA || 'Lựa chọn A'),
+      optionB: stripEmojis(q.optionB || 'Lựa chọn B'),
+    }));
   } catch (err) {
     console.error('[Gemini] generateGameQuestions error:', err.message);
     return null;

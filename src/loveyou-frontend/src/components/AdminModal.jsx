@@ -1,5 +1,6 @@
-import { useState, useEffect } from 'react';
-import { adminApi } from '../utils/api';
+import { useState, useEffect, useRef } from 'react';
+import { adminApi, supportApi } from '../utils/api';
+import { getSocket } from '../utils/socket';
 import { useAuth } from '../context/AuthContext';
 import ToastNotification from './ToastNotification';
 
@@ -8,7 +9,7 @@ export default function AdminModal({ onClose }) {
   const [stats, setStats] = useState(null);
   const [users, setUsers] = useState([]);
   const [reports, setReports] = useState([]);
-  const [activeTab, setActiveTab] = useState('USERS'); // 'USERS' | 'REPORTS' | 'AI_CONFIG'
+  const [activeTab, setActiveTab] = useState('USERS'); // 'USERS' | 'REPORTS' | 'SUPPORT' | 'AI_CONFIG'
   const [loading, setLoading] = useState(true);
   const [selectedUser, setSelectedUser] = useState(null);
   const [actionLoading, setActionLoading] = useState(null);
@@ -16,6 +17,17 @@ export default function AdminModal({ onClose }) {
   const [search, setSearch] = useState('');
   const [roleFilter, setRoleFilter] = useState('ALL'); // 'ALL' | 'ADMIN' | 'USER_VIP' | 'USER_NORMAL'
   const [toast, setToast] = useState(null);
+
+  // Support Chat state
+  const [supportConversations, setSupportConversations] = useState([]);
+  const [selectedSupportConv, setSelectedSupportConv] = useState(null);
+  const [supportMessages, setSupportMessages] = useState([]);
+  const [adminReplyText, setAdminReplyText] = useState('');
+  const [sendingAdminReply, setSendingAdminReply] = useState(false);
+  const [loadingSupportMessages, setLoadingSupportMessages] = useState(false);
+  const [supportSearch, setSupportSearch] = useState('');
+  const [showNewChatSelector, setShowNewChatSelector] = useState(false);
+  const supportChatEndRef = useRef(null);
 
   // AI Config state
   const [apiKeyInfo, setApiKeyInfo] = useState({ masked: null, hasKey: false });
@@ -27,24 +39,158 @@ export default function AdminModal({ onClose }) {
     loadAdminData();
   }, []);
 
+  // Realtime Socket listener for Admin Support
+  useEffect(() => {
+    const socket = getSocket();
+    if (!socket) return;
+
+    socket.emit('join_admin_support_channel');
+
+    const handleSupportUpdated = (payload) => {
+      const updated = payload.conversation;
+      if (!updated) return;
+      setSupportConversations(prev => {
+        const existingIndex = prev.findIndex(c => c.id === updated.id);
+        let newList;
+        if (existingIndex >= 0) {
+          newList = [...prev];
+          newList[existingIndex] = { ...newList[existingIndex], ...updated };
+        } else {
+          newList = [updated, ...prev];
+        }
+        return newList.sort((a, b) => {
+          const aUnread = (a.adminUnreadCount > 0 ? 1 : 0);
+          const bUnread = (b.adminUnreadCount > 0 ? 1 : 0);
+          if (aUnread !== bUnread) return bUnread - aUnread;
+          return new Date(b.lastMessageAt || 0) - new Date(a.lastMessageAt || 0);
+        });
+      });
+    };
+
+    const handleNewSupportMsg = (payload) => {
+      if (selectedSupportConv && payload.conversationId === selectedSupportConv.id) {
+        setSupportMessages(prev => {
+          if (prev.some(m => m.id === payload.message.id)) return prev;
+          return [...prev, payload.message];
+        });
+        setTimeout(() => supportChatEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
+      }
+    };
+
+    socket.on('admin_support_updated', handleSupportUpdated);
+    socket.on('new_support_message', handleNewSupportMsg);
+
+    return () => {
+      socket.emit('leave_admin_support_channel');
+      socket.off('admin_support_updated', handleSupportUpdated);
+      socket.off('new_support_message', handleNewSupportMsg);
+    };
+  }, [selectedSupportConv?.id]);
+
   const loadAdminData = async () => {
     setLoading(true);
     setError('');
     try {
-      const [statsRes, usersRes, reportsRes, apiKeyRes] = await Promise.all([
+      const [statsRes, usersRes, reportsRes, supportRes, apiKeyRes] = await Promise.all([
         adminApi.stats(),
         adminApi.getUsers(),
         adminApi.getReports(),
+        supportApi.getAdminConversations().catch(() => ({ data: { data: { conversations: [] } } })),
         adminApi.getApiKey().catch(() => ({ data: { data: { masked: null, hasKey: false } } })),
       ]);
       setStats(statsRes.data.data.stats);
       setUsers(usersRes.data.data.users || []);
       setReports(reportsRes.data.data.reports || []);
+      setSupportConversations(supportRes.data.data.conversations || []);
       setApiKeyInfo(apiKeyRes.data.data);
     } catch (err) {
       setError(err.response?.data?.error?.message || 'Không thể tải dữ liệu quản trị');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleSelectSupportConversation = async (conv) => {
+    setSelectedSupportConv(conv);
+    setLoadingSupportMessages(true);
+    try {
+      const res = await supportApi.getAdminConversationMessages(conv.id);
+      setSupportMessages(res.data.data.messages || []);
+      // Reset unread count locally in list
+      setSupportConversations(prev => prev.map(c => c.id === conv.id ? { ...c, adminUnreadCount: 0 } : c));
+      const socket = getSocket();
+      if (socket) {
+        socket.emit('join_support_conversation', conv.id);
+        socket.emit('mark_support_read', { conversationId: conv.id });
+      }
+      setTimeout(() => supportChatEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
+    } catch (err) {
+      console.error('Failed to load support messages:', err);
+      setToast({ type: 'error', message: 'Không thể tải tin nhắn hỗ trợ' });
+    } finally {
+      setLoadingSupportMessages(false);
+    }
+  };
+
+  const handleOpenSupportWithUser = async (targetUser) => {
+    if (!targetUser?.userId) return;
+    setSelectedUser(null);
+    setActiveTab('SUPPORT');
+    setLoadingSupportMessages(true);
+    try {
+      const res = await supportApi.getAdminConversationByUserId(targetUser.userId);
+      const conv = res.data.data.conversation;
+      const msgs = res.data.data.messages || [];
+      setSelectedSupportConv(conv);
+      setSupportMessages(msgs);
+      setSupportConversations(prev => {
+        const exists = prev.some(c => c.id === conv.id);
+        if (!exists) {
+          return [conv, ...prev];
+        }
+        return prev.map(c => c.id === conv.id ? { ...c, adminUnreadCount: 0 } : c);
+      });
+      const socket = getSocket();
+      if (socket) {
+        socket.emit('join_support_conversation', conv.id);
+        socket.emit('mark_support_read', { conversationId: conv.id });
+      }
+      setTimeout(() => supportChatEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
+    } catch (err) {
+      console.error('Failed to open support chat with user:', err);
+      setToast({ type: 'error', message: 'Không thể mở hội thoại hỗ trợ' });
+    } finally {
+      setLoadingSupportMessages(false);
+    }
+  };
+
+  const handleSendAdminReply = async (e) => {
+    if (e) e.preventDefault();
+    if (!selectedSupportConv || !adminReplyText.trim() || sendingAdminReply) return;
+    const text = adminReplyText.trim();
+    setSendingAdminReply(true);
+    setAdminReplyText('');
+
+    try {
+      const socket = getSocket();
+      if (socket && socket.connected) {
+        socket.emit('send_support_message', {
+          conversationId: selectedSupportConv.id,
+          content: text,
+        });
+      } else {
+        const res = await supportApi.sendAdminMessage(selectedSupportConv.id, text);
+        const newMsg = res.data.data.message;
+        setSupportMessages(prev => [...prev, newMsg]);
+        const updatedConv = res.data.data.conversation;
+        setSupportConversations(prev => prev.map(c => c.id === updatedConv.id ? updatedConv : c));
+      }
+      setTimeout(() => supportChatEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
+    } catch (err) {
+      console.error('Failed to send admin reply:', err);
+      setToast({ type: 'error', message: 'Không thể gửi phản hồi' });
+    } finally {
+      setSendingAdminReply(false);
     }
   };
 
@@ -119,11 +265,12 @@ export default function AdminModal({ onClose }) {
   };
 
   const getOnlineStatus = (u) => {
-    if (u?.isOnline || u?.userId === user?.userId || u?.role === 'ADMIN') return { isOnline: true, text: 'Online' };
+    if (!u) return { isOnline: false, text: 'Ngoại tuyến' };
+    if (u?.isOnline || u?.userId === user?.userId) return { isOnline: true, text: 'Online' };
     if (!u?.lastActiveAt) return { isOnline: false, text: 'Chưa online' };
     const diffMs = Date.now() - new Date(u.lastActiveAt).getTime();
     const diffMin = Math.floor(diffMs / 60000);
-    if (diffMin < 5) return { isOnline: true, text: 'Online' };
+    if (diffMin < 1) return { isOnline: false, text: 'Vừa mới' };
     if (diffMin < 60) return { isOnline: false, text: `${diffMin}m trước` };
     const diffHours = Math.floor(diffMin / 60);
     if (diffHours < 24) return { isOnline: false, text: `${diffHours}h trước` };
@@ -194,7 +341,7 @@ export default function AdminModal({ onClose }) {
             )}
 
             {/* Tab Navigation */}
-            <div style={{ display: 'flex', gap: '0.8rem', marginBottom: '1.2rem' }}>
+            <div style={{ display: 'flex', gap: '0.8rem', marginBottom: '1.2rem', flexWrap: 'wrap' }}>
               <button
                 onClick={() => setActiveTab('USERS')}
                 style={{
@@ -204,7 +351,7 @@ export default function AdminModal({ onClose }) {
                   color: activeTab === 'USERS' ? '#fff' : '#374151',
                 }}
               >
-                Quản lý tài khoản ({users.length})
+                Quản lý tài khoản
               </button>
               <button
                 onClick={() => setActiveTab('REPORTS')}
@@ -215,7 +362,19 @@ export default function AdminModal({ onClose }) {
                   color: activeTab === 'REPORTS' ? '#fff' : '#374151',
                 }}
               >
-                Báo cáo từ người dùng ({reports.filter(r => r.status === 'PENDING').length > 0 ? `${reports.filter(r => r.status === 'PENDING').length} mới` : reports.length})
+                Báo cáo ({reports.filter(r => r.status === 'PENDING').length})
+              </button>
+              <button
+                onClick={() => setActiveTab('SUPPORT')}
+                style={{
+                  padding: '0.6rem 1.2rem', borderRadius: '10px', fontWeight: 700, fontSize: '0.88rem',
+                  cursor: 'pointer', border: 'none', transition: 'all 0.2s ease',
+                  background: activeTab === 'SUPPORT' ? '#10b981' : '#e5e7eb',
+                  color: activeTab === 'SUPPORT' ? '#fff' : '#374151',
+                  display: 'flex', alignItems: 'center', gap: '0.4rem',
+                }}
+              >
+                💬 Hỗ trợ người dùng ({supportConversations.filter(c => (c.adminUnreadCount || 0) > 0).length})
               </button>
               <button
                 onClick={() => setActiveTab('AI_CONFIG')}
@@ -356,7 +515,26 @@ export default function AdminModal({ onClose }) {
                               </span>
                             </td>
                             <td style={styles.td}>
-                              <div style={{ display: 'flex', gap: '8px' }}>
+                              <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                                <button
+                                  style={{
+                                    padding: '6px 10px',
+                                    borderRadius: '8px',
+                                    background: 'linear-gradient(135deg, #10b981, #059669)',
+                                    color: '#fff',
+                                    fontWeight: 700,
+                                    fontSize: '0.78rem',
+                                    border: 'none',
+                                    cursor: 'pointer',
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    gap: '4px',
+                                  }}
+                                  onClick={() => handleOpenSupportWithUser(u)}
+                                  title="Mở khung chat hỗ trợ với người dùng này"
+                                >
+                                  💬 Chat
+                                </button>
                                 <button
                                   style={styles.viewBtn}
                                   onClick={() => setSelectedUser(u)}
@@ -505,6 +683,359 @@ export default function AdminModal({ onClose }) {
                     </tbody>
                   </table>
                 )}
+              </div>
+            )}
+
+            {/* Support Chat Tab */}
+            {activeTab === 'SUPPORT' && (
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: '320px 1fr',
+                gap: '16px',
+                height: '540px',
+                background: '#f9fafb',
+                borderRadius: '16px',
+                border: '1px solid #e5e7eb',
+                overflow: 'hidden',
+                padding: '12px',
+                boxSizing: 'border-box',
+              }}>
+                {/* Left Column: List of conversations */}
+                <div style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  background: '#fff',
+                  borderRadius: '12px',
+                  border: '1px solid #e5e7eb',
+                  overflow: 'hidden',
+                }}>
+                  {/* Search and New Chat button */}
+                  <div style={{ padding: '10px', borderBottom: '1px solid #f3f4f6', display: 'flex', gap: '6px', flexDirection: 'column' }}>
+                    <div style={{ display: 'flex', gap: '6px' }}>
+                      <input
+                        type="text"
+                        placeholder="🔍 Tìm theo tên/email..."
+                        value={supportSearch}
+                        onChange={e => setSupportSearch(e.target.value)}
+                        style={{
+                          flex: 1,
+                          padding: '8px 10px',
+                          borderRadius: '8px',
+                          border: '1px solid #d1d5db',
+                          fontSize: '0.82rem',
+                          outline: 'none',
+                          boxSizing: 'border-box',
+                        }}
+                      />
+                      <button
+                        onClick={() => setShowNewChatSelector(!showNewChatSelector)}
+                        style={{
+                          padding: '6px 10px',
+                          borderRadius: '8px',
+                          background: showNewChatSelector ? '#e5e7eb' : 'linear-gradient(135deg, #10b981, #059669)',
+                          color: showNewChatSelector ? '#374151' : '#fff',
+                          border: 'none',
+                          fontSize: '0.78rem',
+                          fontWeight: 700,
+                          cursor: 'pointer',
+                          whiteSpace: 'nowrap',
+                        }}
+                        title="Bắt đầu nhắn tin với người dùng mới"
+                      >
+                        {showNewChatSelector ? '✕ Đóng' : '➕ Chat mới'}
+                      </button>
+                    </div>
+
+                    {showNewChatSelector && (
+                      <div style={{
+                        marginTop: '4px',
+                        padding: '8px',
+                        background: '#f8fafc',
+                        border: '1px solid #cbd5e1',
+                        borderRadius: '8px',
+                      }}>
+                        <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#334155', marginBottom: '4px' }}>
+                          Chọn tài khoản muốn nhắn tin:
+                        </div>
+                        <select
+                          onChange={(e) => {
+                            const u = users.find(usr => usr.userId === Number(e.target.value));
+                            if (u) {
+                              handleOpenSupportWithUser(u);
+                              setShowNewChatSelector(false);
+                            }
+                          }}
+                          defaultValue=""
+                          style={{
+                            width: '100%',
+                            padding: '6px 8px',
+                            borderRadius: '6px',
+                            border: '1px solid #d1d5db',
+                            fontSize: '0.8rem',
+                            outline: 'none',
+                          }}
+                        >
+                          <option value="" disabled>-- Chọn người dùng ({users.filter(u => u.role !== 'ADMIN').length} user) --</option>
+                          {users.filter(u => u.role !== 'ADMIN').map(u => (
+                            <option key={u.userId} value={u.userId}>
+                              {u.fullName || u.username} ({u.email})
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Conversation List */}
+                  <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
+                    {(() => {
+                      const filtered = supportConversations.filter(c => {
+                        const q = supportSearch.toLowerCase();
+                        if (!q) return true;
+                        const u = c.user || {};
+                        return (
+                          (u.fullName && u.fullName.toLowerCase().includes(q)) ||
+                          (u.username && u.username.toLowerCase().includes(q)) ||
+                          (u.email && u.email.toLowerCase().includes(q))
+                        );
+                      });
+
+                      if (filtered.length === 0) {
+                        return (
+                          <div style={{ padding: '30px 16px', textAlign: 'center', color: '#9ca3af', fontSize: '0.85rem' }}>
+                            <p style={{ margin: '0 0 10px 0' }}>Chưa có cuộc trò chuyện hỗ trợ nào.</p>
+                            <button
+                              onClick={() => setShowNewChatSelector(true)}
+                              style={{
+                                padding: '6px 14px',
+                                borderRadius: '8px',
+                                background: 'linear-gradient(135deg, #10b981, #059669)',
+                                color: '#fff',
+                                border: 'none',
+                                fontWeight: 700,
+                                fontSize: '0.8rem',
+                                cursor: 'pointer',
+                              }}
+                            >
+                              ➕ Bắt đầu chat với người dùng
+                            </button>
+                          </div>
+                        );
+                      }
+
+                      return filtered.map(conv => {
+                        const u = conv.user || {};
+                        const isSelected = selectedSupportConv?.id === conv.id;
+                        const hasUnread = (conv.adminUnreadCount || 0) > 0;
+
+                        return (
+                          <div
+                            key={conv.id}
+                            onClick={() => handleSelectSupportConversation(conv)}
+                            style={{
+                              padding: '12px',
+                              borderBottom: '1px solid #f3f4f6',
+                              cursor: 'pointer',
+                              backgroundColor: isSelected ? '#eff6ff' : hasUnread ? '#fffbeb' : '#fff',
+                              borderLeft: isSelected ? '4px solid #3b82f6' : hasUnread ? '4px solid #ef4444' : '4px solid transparent',
+                              transition: 'all 0.15s ease',
+                              display: 'flex',
+                              gap: '10px',
+                              alignItems: 'center',
+                            }}
+                            onMouseEnter={e => { if (!isSelected) e.currentTarget.style.backgroundColor = '#f8fafc'; }}
+                            onMouseLeave={e => { if (!isSelected) e.currentTarget.style.backgroundColor = hasUnread ? '#fffbeb' : '#fff'; }}
+                          >
+                            <img
+                              src={u.profilePicture || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150'}
+                              alt=""
+                              style={{ width: '40px', height: '40px', borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }}
+                            />
+                            <div style={{ flex: 1, minWidth: 0 }}>
+                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                <div style={{ fontWeight: hasUnread ? 800 : 600, color: '#111827', fontSize: '0.85rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                  {u.fullName || u.username}
+                                </div>
+                                {hasUnread && (
+                                  <span style={{
+                                    background: '#ef4444', color: '#fff', borderRadius: '10px',
+                                    padding: '1px 6px', fontSize: '0.68rem', fontWeight: 800, flexShrink: 0,
+                                  }}>
+                                    {conv.adminUnreadCount}
+                                  </span>
+                                )}
+                              </div>
+                              <div style={{
+                                fontSize: '0.76rem',
+                                color: hasUnread ? '#b45309' : '#6b7280',
+                                fontWeight: hasUnread ? 700 : 400,
+                                whiteSpace: 'nowrap',
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis',
+                                marginTop: '2px',
+                              }}>
+                                {conv.lastMessageText || 'Đã tạo phiên hỗ trợ'}
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      });
+                    })()}
+                  </div>
+                </div>
+
+                {/* Right Column: Chat Console */}
+                <div style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  background: '#fff',
+                  borderRadius: '12px',
+                  border: '1px solid #e5e7eb',
+                  overflow: 'hidden',
+                }}>
+                  {selectedSupportConv ? (
+                    <>
+                      {/* Active Chat Header */}
+                      <div style={{
+                        padding: '10px 16px',
+                        borderBottom: '1px solid #e5e7eb',
+                        backgroundColor: '#f8fafc',
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                      }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                          <img
+                            src={selectedSupportConv.user?.profilePicture || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150'}
+                            alt=""
+                            style={{ width: '36px', height: '36px', borderRadius: '50%', objectFit: 'cover' }}
+                          />
+                          <div>
+                            <div style={{ fontWeight: 700, fontSize: '0.9rem', color: '#111827', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                              <span>{selectedSupportConv.user?.fullName || selectedSupportConv.user?.username}</span>
+                              {selectedSupportConv.user?.isVip && (
+                                <span style={{ background: '#fef3c7', color: '#d97706', fontSize: '0.68rem', fontWeight: 800, padding: '1px 5px', borderRadius: '6px' }}>
+                                  👑 VIP
+                                </span>
+                              )}
+                              {selectedSupportConv.user?.isCitizenVerified && (
+                                <span style={{ background: '#ecfdf5', color: '#059669', fontSize: '0.68rem', fontWeight: 800, padding: '1px 5px', borderRadius: '6px' }}>
+                                  ✓ CCCD
+                                </span>
+                              )}
+                            </div>
+                            <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>
+                              {selectedSupportConv.user?.email} • ID: #{selectedSupportConv.user?.userId}
+                            </div>
+                          </div>
+                        </div>
+
+                        <button
+                          onClick={() => setSelectedUser(selectedSupportConv.user)}
+                          style={{
+                            padding: '4px 10px', borderRadius: '8px', border: '1px solid #d1d5db',
+                            background: '#fff', fontSize: '0.75rem', fontWeight: 600, color: '#374151', cursor: 'pointer',
+                          }}
+                        >
+                          Xem hồ sơ
+                        </button>
+                      </div>
+
+                      {/* Message Stream */}
+                      <div style={{ flex: 1, overflowY: 'auto', padding: '16px', display: 'flex', flexDirection: 'column', gap: '10px', backgroundColor: '#f9fafb' }}>
+                        {loadingSupportMessages ? (
+                          <div style={{ textAlign: 'center', padding: '30px', color: '#9ca3af', fontSize: '0.85rem' }}>
+                            Đang tải tin nhắn...
+                          </div>
+                        ) : supportMessages.length === 0 ? (
+                          <div style={{ textAlign: 'center', padding: '40px', color: '#9ca3af', fontSize: '0.85rem' }}>
+                            Chưa có tin nhắn nào trong hội thoại này.
+                          </div>
+                        ) : (
+                          supportMessages.map((msg, idx) => {
+                            const isAdmin = msg.senderRole === 'ADMIN';
+                            return (
+                              <div
+                                key={msg.id || idx}
+                                style={{
+                                  display: 'flex',
+                                  flexDirection: 'column',
+                                  alignItems: isAdmin ? 'flex-end' : 'flex-start',
+                                }}
+                              >
+                                <div style={{ fontSize: '0.7rem', color: '#9ca3af', marginBottom: '2px', marginLeft: isAdmin ? 0 : '4px', marginRight: isAdmin ? '4px' : 0 }}>
+                                  {isAdmin ? `👑 ${msg.sender?.fullName || msg.sender?.username || 'Admin'}` : (selectedSupportConv.user?.fullName || selectedSupportConv.user?.username)} • {formatDate(msg.createdAt)}
+                                </div>
+                                <div
+                                  style={{
+                                    maxWidth: '75%',
+                                    padding: '8px 14px',
+                                    borderRadius: '16px',
+                                    fontSize: '0.85rem',
+                                    lineHeight: 1.45,
+                                    backgroundColor: isAdmin ? '#3b82f6' : '#ffffff',
+                                    color: isAdmin ? '#ffffff' : '#111827',
+                                    border: isAdmin ? 'none' : '1px solid #e5e7eb',
+                                    boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
+                                    borderBottomRightRadius: isAdmin ? '4px' : '16px',
+                                    borderBottomLeftRadius: isAdmin ? '16px' : '4px',
+                                  }}
+                                >
+                                  {msg.content}
+                                </div>
+                              </div>
+                            );
+                          })
+                        )}
+                        <div ref={supportChatEndRef} />
+                      </div>
+
+                      {/* Reply Input Bar */}
+                      <form onSubmit={handleSendAdminReply} style={{ padding: '10px 14px', borderTop: '1px solid #e5e7eb', display: 'flex', gap: '8px', backgroundColor: '#fff' }}>
+                        <input
+                          type="text"
+                          placeholder="Nhập nội dung phản hồi cho người dùng (nhấn Enter để gửi)..."
+                          value={adminReplyText}
+                          onChange={e => setAdminReplyText(e.target.value)}
+                          disabled={sendingAdminReply}
+                          style={{
+                            flex: 1,
+                            padding: '8px 12px',
+                            borderRadius: '10px',
+                            border: '1px solid #d1d5db',
+                            fontSize: '0.85rem',
+                            outline: 'none',
+                          }}
+                        />
+                        <button
+                          type="submit"
+                          disabled={sendingAdminReply || !adminReplyText.trim()}
+                          style={{
+                            padding: '0 18px',
+                            borderRadius: '10px',
+                            background: !adminReplyText.trim() || sendingAdminReply ? '#9ca3af' : '#10b981',
+                            color: '#fff',
+                            fontWeight: 700,
+                            fontSize: '0.85rem',
+                            border: 'none',
+                            cursor: !adminReplyText.trim() || sendingAdminReply ? 'default' : 'pointer',
+                            whiteSpace: 'nowrap',
+                          }}
+                        >
+                          {sendingAdminReply ? 'Đang gửi...' : 'Phản hồi ➤'}
+                        </button>
+                      </form>
+                    </>
+                  ) : (
+                    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: '#9ca3af', padding: '30px' }}>
+                      <div style={{ fontSize: '3rem', marginBottom: '8px' }}>💬</div>
+                      <h4 style={{ margin: '0 0 4px 0', color: '#374151', fontSize: '1rem' }}>Chọn một cuộc hội thoại</h4>
+                      <p style={{ margin: 0, fontSize: '0.82rem', color: '#6b7280' }}>
+                        Chọn người dùng ở danh sách bên trái để xem tin nhắn và gửi phản hồi hỗ trợ.
+                      </p>
+                    </div>
+                  )}
+                </div>
               </div>
             )}
 
@@ -696,9 +1227,19 @@ export default function AdminModal({ onClose }) {
                   })()}
                 </div>
                 <div>
-                  <strong>Hồ sơ hoàn tất:</strong><br />
-                  <span style={{ color: '#374151', marginTop: '4px', display: 'inline-block' }}>
-                    {selectedUser.isProfileComplete ? '✅ Đã hoàn tất' : '⚠️ Chưa hoàn tất'}
+                  <strong>Hồ sơ xác thực:</strong><br />
+                  <span style={{
+                    marginTop: '4px',
+                    display: 'inline-block',
+                    padding: '3px 10px',
+                    borderRadius: '8px',
+                    fontSize: '0.82rem',
+                    fontWeight: 700,
+                    backgroundColor: (selectedUser.isEmailVerified && selectedUser.isCitizenVerified) ? '#d1fae5' : '#fef3c7',
+                    color: (selectedUser.isEmailVerified && selectedUser.isCitizenVerified) ? '#065f46' : '#b45309',
+                    border: (selectedUser.isEmailVerified && selectedUser.isCitizenVerified) ? '1px solid #a7f3d0' : '1px solid #fde68a',
+                  }}>
+                    {(selectedUser.isEmailVerified && selectedUser.isCitizenVerified) ? '✅ Đã xác thực' : '⚠️ Chưa xác thực'}
                   </span>
                 </div>
                 <div style={{ gridColumn: '1 / -1', marginTop: '6px', paddingTop: '8px', borderTop: '1px solid #e5e7eb' }}>
@@ -714,17 +1255,34 @@ export default function AdminModal({ onClose }) {
                     color: selectedUser.status === 'BANNED' ? '#991b1b' : '#065f46',
                     border: selectedUser.status === 'BANNED' ? '1px solid #fecaca' : '1px solid #a7f3d0',
                   }}>
-                    {selectedUser.status === 'BANNED' ? '⛔ Đã bị khóa' : '✅ Đang hoạt động'}
+                    {selectedUser.status === 'BANNED' ? '⛔ Đã bị khóa' : '✅ Bình thường'}
                   </span>
                 </div>
               </div>
 
-              <div style={{ marginTop: '20px', textAlign: 'right' }}>
+              <div style={{ marginTop: '20px', textAlign: 'right', display: 'flex', justifyContent: 'flex-end', gap: '10px', flexWrap: 'wrap' }}>
+                <button
+                  style={{
+                    padding: '8px 16px',
+                    borderRadius: '8px',
+                    border: 'none',
+                    color: '#fff',
+                    fontWeight: '700',
+                    cursor: 'pointer',
+                    background: 'linear-gradient(135deg, #10b981, #059669)',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                  }}
+                  onClick={() => handleOpenSupportWithUser(selectedUser)}
+                >
+                  💬 Nhắn tin hỗ trợ
+                </button>
                 {selectedUser.role !== 'ADMIN' && (
                   <button
                     style={{
                       padding: '8px 16px', borderRadius: '8px', border: 'none', color: '#fff', fontWeight: '600', cursor: 'pointer',
-                      backgroundColor: selectedUser.status === 'BANNED' ? '#10b981' : '#ef4444', marginRight: '10px'
+                      backgroundColor: selectedUser.status === 'BANNED' ? '#10b981' : '#ef4444',
                     }}
                     onClick={() => handleToggleBan(selectedUser)}
                   >

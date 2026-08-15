@@ -117,6 +117,8 @@ async function getUserConversations(userId) {
     return {
       matchId: m.matchId,
       conversationId: convId,
+      isUnmatched: Boolean(m.isUnmatched),
+      unmatchedBy: m.unmatchedBy || null,
       partner: {
         id: partner.userId,
         name: partner.fullName || partner.username,
@@ -125,6 +127,8 @@ async function getUserConversations(userId) {
         isBlocked,
         isBlockedByMe,
         isBlockedByPartner,
+        isUnmatched: Boolean(m.isUnmatched),
+        unmatchedBy: m.unmatchedBy || null,
       },
       lastMessage: lastMsg
         ? { content: lastMsg.content, type: lastMsg.type, createdAt: lastMsg.createdAt, senderId: lastMsg.senderId }
@@ -145,12 +149,20 @@ async function getMessages(conversationId, userId, page = 1, limit = 30) {
   const uid = Number(userId);
 
   // Xác minh user thuộc conversation
-  const conv = await prisma.conversation.findUnique({
+  let conv = await prisma.conversation.findUnique({
     where: { id: convId },
     include: {
-      match: { select: { user1Id: true, user2Id: true } },
+      match: { select: { user1Id: true, user2Id: true, isUnmatched: true } },
     },
   });
+  if (!conv) {
+    conv = await prisma.conversation.findUnique({
+      where: { matchId: convId },
+      include: {
+        match: { select: { user1Id: true, user2Id: true, isUnmatched: true } },
+      },
+    });
+  }
   if (!conv) throw new Error('Conversation not found');
   const { user1Id, user2Id } = conv.match;
   if (uid !== user1Id && uid !== user2Id) throw new Error('Unauthorized');
@@ -160,12 +172,12 @@ async function getMessages(conversationId, userId, page = 1, limit = 30) {
     where: {
       userId_conversationId: {
         userId: uid,
-        conversationId: convId,
+        conversationId: conv.id,
       },
     },
   });
 
-  const whereClause = { conversationId: convId };
+  const whereClause = { conversationId: conv.id };
   if (userClear && userClear.clearedAt) {
     whereClause.createdAt = { gt: userClear.clearedAt };
   }
@@ -185,18 +197,28 @@ async function getMessages(conversationId, userId, page = 1, limit = 30) {
 }
 
 /**
- * Lưu tin nhắn mới (Kiểm tra chặn)
+ * Lưu tin nhắn mới (Kiểm tra chặn & hủy match)
  */
 async function saveMessage(conversationId, senderId, content, type = 'TEXT') {
   const convId = Number(conversationId);
   const sid = Number(senderId);
 
-  // 1. Xác định partnerId trong conversation
-  const conv = await prisma.conversation.findUnique({
+  // 1. Xác định partnerId và kiểm tra match trong conversation
+  let conv = await prisma.conversation.findUnique({
     where: { id: convId },
-    include: { match: { select: { user1Id: true, user2Id: true } } },
+    include: { match: { select: { user1Id: true, user2Id: true, isUnmatched: true } } },
   });
+  if (!conv) {
+    conv = await prisma.conversation.findUnique({
+      where: { matchId: convId },
+      include: { match: { select: { user1Id: true, user2Id: true, isUnmatched: true } } },
+    });
+  }
   if (!conv) throw new Error('Cuộc trò chuyện không tồn tại');
+
+  if (conv.match?.isUnmatched) {
+    throw new Error('Hai bạn đã hủy ghép đôi. Vui lòng ghép đôi lại để tiếp tục nhắn tin.');
+  }
 
   const partnerId = conv.match.user1Id === sid ? conv.match.user2Id : conv.match.user1Id;
 

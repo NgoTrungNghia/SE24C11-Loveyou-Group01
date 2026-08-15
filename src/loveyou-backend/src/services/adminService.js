@@ -3,40 +3,30 @@ const { hashPassword } = require('../utils/password');
 
 async function seedAdmin() {
   try {
-    const adminEmail = 'admin@loveyou.com';
     const passwordHash = await hashPassword('123456');
+    const admins = [
+      { username: 'admin1', email: 'admin1@gmail.com', fullName: 'Quản Trị Viên 1 (Admin 1)', bio: 'Ban Quản Trị Hệ Thống LoveYou (Admin 1) 👑' },
+      { username: 'admin2', email: 'admin2@gmail.com', fullName: 'Quản Trị Viên 2 (Admin 2)', bio: 'Ban Quản Trị Hệ Thống LoveYou (Admin 2) 👑' },
+    ];
 
-    const existingAdmin = await prisma.user.findFirst({
-      where: {
-        OR: [
-          { email: adminEmail },
-          { email: 'admin@love.you' },
-          { username: 'admin' },
-        ],
-      },
-    });
-
-    if (!existingAdmin) {
-      await prisma.user.create({
-        data: {
-          username: 'admin',
-          email: adminEmail,
+    for (const adm of admins) {
+      await prisma.user.upsert({
+        where: { email: adm.email },
+        update: {
+          role: 'ADMIN',
+          status: 'ACTIVE',
+        },
+        create: {
+          username: adm.username,
+          email: adm.email,
           passwordHash,
-          fullName: 'System Administrator',
+          fullName: adm.fullName,
           role: 'ADMIN',
           status: 'ACTIVE',
           isProfileComplete: true,
-          bio: 'Hệ thống Quản trị viên LoveYou',
-        },
-      });
-    } else {
-      await prisma.user.update({
-        where: { userId: existingAdmin.userId },
-        data: {
-          email: adminEmail,
-          passwordHash,
-          role: 'ADMIN',
-          status: 'ACTIVE',
+          isEmailVerified: true,
+          isCitizenVerified: true,
+          bio: adm.bio,
         },
       });
     }
@@ -85,6 +75,15 @@ async function getAllUsers() {
       vipUntil: true,
       status: true,
       isProfileComplete: true,
+      isEmailVerified: true,
+      isCitizenVerified: true,
+      citizenIdNumber: true,
+      citizenName: true,
+      citizenDob: true,
+      citizenGender: true,
+      citizenAddress: true,
+      citizenIssueDate: true,
+      citizenVerifiedAt: true,
       profilePicture: true,
       gender: true,
       dateOfBirth: true,
@@ -113,6 +112,15 @@ async function getUserById(userId) {
       vipUntil: true,
       status: true,
       isProfileComplete: true,
+      isEmailVerified: true,
+      isCitizenVerified: true,
+      citizenIdNumber: true,
+      citizenName: true,
+      citizenDob: true,
+      citizenGender: true,
+      citizenAddress: true,
+      citizenIssueDate: true,
+      citizenVerifiedAt: true,
       profilePicture: true,
       gender: true,
       dateOfBirth: true,
@@ -190,10 +198,14 @@ async function getReports() {
   return reports;
 }
 
-async function updateReportStatus(reportId, status) {
+async function updateReportStatus(reportId, status, resolution = null) {
+  const data = { status };
+  if (resolution !== undefined) {
+    data.resolution = resolution;
+  }
   const updatedReport = await prisma.report.update({
     where: { id: Number(reportId) },
-    data: { status },
+    data,
     include: {
       reporter: {
         select: {
@@ -201,6 +213,8 @@ async function updateReportStatus(reportId, status) {
           username: true,
           email: true,
           fullName: true,
+          profilePicture: true,
+          status: true,
         },
       },
       reported: {
@@ -209,6 +223,7 @@ async function updateReportStatus(reportId, status) {
           username: true,
           email: true,
           fullName: true,
+          profilePicture: true,
           status: true,
         },
       },

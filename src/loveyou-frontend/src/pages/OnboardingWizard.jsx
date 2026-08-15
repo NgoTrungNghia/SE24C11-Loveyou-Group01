@@ -1,12 +1,12 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { userApi, aiMatchingApi } from '../utils/api';
+import { userApi } from '../utils/api';
 import { Field } from '../components/shared';
 
 const PRESET_INTERESTS = [
-  '🎵 Music', '☕ Coffee', '✈️ Travel', '🏋️ Gym', '🎮 Gaming', 
-  '📚 Books', '🍳 Cooking', '🎬 Movies', '🐱 Pets', '🎨 Art', 
+  '🎵 Music', '☕ Coffee', '✈️ Travel', '🏋️ Gym', '🎮 Gaming',
+  '📚 Books', '🍳 Cooking', '🎬 Movies', '🐱 Pets', '🎨 Art',
   '💻 Coding', '⚽ Sports', '🍷 Wine', '📸 Photography', '🧘 Yoga'
 ];
 
@@ -19,12 +19,6 @@ export default function OnboardingWizard() {
   const [error, setError] = useState('');
   const [geoLoading, setGeoLoading] = useState(false);
   const [geoSuccess, setGeoSuccess] = useState(false);
-  const [preferences, setPreferences] = useState({
-    genderPreference: 'all',
-    minAge: 18,
-    maxAge: 45,
-    maxDistance: 50,
-  });
 
   const [form, setForm] = useState({
     fullName: '',
@@ -71,17 +65,6 @@ export default function OnboardingWizard() {
         });
         if (p.latitude && p.longitude) setGeoSuccess(true);
       }
-      // Load preferences
-      try {
-        const prefRes = await aiMatchingApi.getPreferences();
-        const prefs = prefRes.data.data.preferences;
-        if (prefs) setPreferences({
-          genderPreference: prefs.genderPreference || 'all',
-          minAge: prefs.minAge || 18,
-          maxAge: prefs.maxAge || 45,
-          maxDistance: prefs.maxDistance || 50,
-        });
-      } catch { /* ignore */ }
     } catch {
       /* ignore */
     } finally {
@@ -194,13 +177,6 @@ export default function OnboardingWizard() {
 
       await userApi.updateProfile(payload);
 
-      // Save preferences
-      if (isFinal) {
-        try {
-          await aiMatchingApi.updatePreferences(preferences);
-        } catch { /* ignore */ }
-      }
-
       if (isFinal) {
         navigate('/dashboard', { replace: true });
       }
@@ -265,7 +241,7 @@ export default function OnboardingWizard() {
 
   return (
     <div className="onboarding-wizard-container" style={{ minHeight: '100vh', background: '#0A0A14', color: '#fff', padding: '2rem 1rem', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-      
+
       {/* Top Header */}
       <div style={{ width: '100%', maxWidth: '640px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
@@ -306,7 +282,7 @@ export default function OnboardingWizard() {
         padding: '2.2rem',
         boxShadow: '0 20px 60px rgba(0, 0, 0, 0.5), 0 0 40px rgba(255, 45, 85, 0.15)',
       }}>
-        
+
         {/* REAL-TIME COMPLETION PROGRESS BAR (0% TO 100%) */}
         <div style={{ marginBottom: '2rem' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.6rem' }}>
@@ -484,14 +460,14 @@ export default function OnboardingWizard() {
             </div>
           )}
 
-          {/* ── STEP 3: ẢNH + GEOLOCATION + PREFERENCES ── */}
+          {/* ── STEP 3: ẢNH ĐẠI DIỆN & VỊ TRÍ GPS ── */}
           {step === 3 && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
               <h2 style={{ fontSize: '1.4rem', fontWeight: 700, marginBottom: '0.2rem' }}>
-                Ảnh & Cài đặt tìm kiếm
+                Ảnh đại diện & Vị trí của bạn
               </h2>
               <p style={{ fontSize: '0.88rem', color: 'rgba(255,255,255,0.6)', marginBottom: '0.4rem' }}>
-                Tải ảnh cá nhân và cài đặt bộ lọc để AI ghép đôi chính xác hơn.
+                Tải các hình ảnh ấn tượng nhất của bạn và cập nhật vị trí để sẵn sàng tìm kiếm một nửa yêu thương.
               </p>
 
               {/* 2x2 Photo Grid */}
@@ -524,72 +500,31 @@ export default function OnboardingWizard() {
               </div>
 
               {/* GEOLOCATION */}
-              <div style={{ background: 'rgba(255,255,255,0.04)', borderRadius: '16px', padding: '1rem', border: '1px solid rgba(255,255,255,0.08)' }}>
-                <div style={{ fontWeight: 700, fontSize: '0.9rem', marginBottom: '0.5rem' }}>📍 Vị trí GPS (cho AI tính khoảng cách)</div>
-                <div style={{ fontSize: '0.82rem', color: 'rgba(255,255,255,0.5)', marginBottom: '0.8rem' }}>Vị trí của bạn giúp AI ghép đôi với người gần bạn chính xác hơn.</div>
+              <div style={{ background: 'rgba(255,255,255,0.04)', borderRadius: '16px', padding: '1.2rem', border: '1px solid rgba(255,255,255,0.08)' }}>
+                <div style={{ fontWeight: 700, fontSize: '0.92rem', marginBottom: '0.4rem' }}>📍 Vị trí GPS (Định vị khoảng cách)</div>
+                <div style={{ fontSize: '0.82rem', color: 'rgba(255,255,255,0.55)', marginBottom: '0.9rem', lineHeight: '1.4' }}>
+                  Vị trí của bạn giúp hệ thống tính toán khoảng cách và kết nối với những người ở gần bạn nhất.
+                </div>
                 <button
                   type="button"
                   onClick={captureGeolocation}
                   disabled={geoLoading}
                   style={{
-                    padding: '0.6rem 1.2rem', borderRadius: '12px', fontWeight: 600, fontSize: '0.85rem', cursor: 'pointer', border: 'none',
+                    padding: '0.7rem 1.4rem', borderRadius: '12px', fontWeight: 700, fontSize: '0.88rem', cursor: 'pointer', border: 'none',
                     background: geoSuccess ? 'rgba(52,211,153,0.2)' : 'rgba(253,38,125,0.2)',
                     color: geoSuccess ? '#34D399' : '#fd267d',
                     border: `1px solid ${geoSuccess ? 'rgba(52,211,153,0.4)' : 'rgba(253,38,125,0.4)'}`,
+                    transition: 'all 0.2s ease',
                   }}
                 >
-                  {geoLoading ? '⏳ Đang lấy vị trí...' : geoSuccess ? `✅ Đã lấy vị trí (${form.latitude?.toFixed(3)}, ${form.longitude?.toFixed(3)})` : '📡 Lấy vị trí GPS của tôi'}
+                  {geoLoading ? '⏳ Đang lấy vị trí...' : geoSuccess ? `✅ Đã lưu vị trí (${form.latitude?.toFixed(3)}, ${form.longitude?.toFixed(3)})` : '📡 Bấm để lấy vị trí GPS hiện tại'}
                 </button>
-              </div>
-
-              {/* PREFERENCES */}
-              <div style={{ background: 'rgba(255,255,255,0.04)', borderRadius: '16px', padding: '1rem', border: '1px solid rgba(255,255,255,0.08)' }}>
-                <div style={{ fontWeight: 700, fontSize: '0.9rem', marginBottom: '1rem' }}>🤖 Cài đặt AI Matching</div>
-
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                  {/* Gender preference */}
-                  <div>
-                    <label style={{ fontSize: '0.82rem', fontWeight: 600, color: 'rgba(255,255,255,0.7)', display: 'block', marginBottom: '0.5rem' }}>Tôi muốn tìm kiếm</label>
-                    <div style={{ display: 'flex', gap: '0.5rem' }}>
-                      {[{value:'all',label:'Tất cả'},{value:'MALE',label:'Nam'},{value:'FEMALE',label:'Nữ'},{value:'OTHER',label:'Khác'}].map(opt => (
-                        <button
-                          key={opt.value}
-                          type="button"
-                          onClick={() => setPreferences(p => ({ ...p, genderPreference: opt.value }))}
-                          style={{
-                            padding: '0.4rem 0.9rem', borderRadius: '20px', fontSize: '0.82rem', fontWeight: 600, cursor: 'pointer', border: 'none',
-                            background: preferences.genderPreference === opt.value ? '#fd267d' : 'rgba(255,255,255,0.08)',
-                            color: '#fff', border: `1px solid ${preferences.genderPreference === opt.value ? '#fd267d' : 'rgba(255,255,255,0.1)'}`,
-                          }}
-                        >{opt.label}</button>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Age range */}
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.8rem' }}>
-                    <div>
-                      <label style={{ fontSize: '0.82rem', fontWeight: 600, color: 'rgba(255,255,255,0.7)', display: 'block', marginBottom: '0.4rem' }}>Tuổi tối thiểu: {preferences.minAge}</label>
-                      <input type="range" min="18" max="60" value={preferences.minAge} onChange={e => setPreferences(p => ({ ...p, minAge: Number(e.target.value) }))} style={{ width: '100%', accentColor: '#fd267d' }} />
-                    </div>
-                    <div>
-                      <label style={{ fontSize: '0.82rem', fontWeight: 600, color: 'rgba(255,255,255,0.7)', display: 'block', marginBottom: '0.4rem' }}>Tuổi tối đa: {preferences.maxAge}</label>
-                      <input type="range" min="18" max="70" value={preferences.maxAge} onChange={e => setPreferences(p => ({ ...p, maxAge: Number(e.target.value) }))} style={{ width: '100%', accentColor: '#fd267d' }} />
-                    </div>
-                  </div>
-
-                  {/* Distance */}
-                  <div>
-                    <label style={{ fontSize: '0.82rem', fontWeight: 600, color: 'rgba(255,255,255,0.7)', display: 'block', marginBottom: '0.4rem' }}>Khoảng cách tối đa: {preferences.maxDistance} km</label>
-                    <input type="range" min="5" max="200" step="5" value={preferences.maxDistance} onChange={e => setPreferences(p => ({ ...p, maxDistance: Number(e.target.value) }))} style={{ width: '100%', accentColor: '#fd267d' }} />
-                  </div>
-                </div>
               </div>
 
               <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '0.5rem' }}>
                 <button type="button" className="btn btn-ghost" onClick={() => setStep(2)}>← Quay lại</button>
-                <button type="submit" className="btn btn-primary" disabled={saving} style={{ padding: '0.8rem 2.2rem', background: 'linear-gradient(135deg, #FF2D55, #FF6B8A)', fontWeight: 800 }}>
-                  {saving ? <span className="spinner" /> : 'Hoàn tất & Bắt đầu Hẹn hò 💖'}
+                <button type="submit" className="btn btn-primary" disabled={saving} style={{ padding: '0.85rem 2.4rem', background: 'linear-gradient(135deg, #FF2D55, #FF6B8A)', fontWeight: 800, fontSize: '1rem', boxShadow: '0 6px 20px rgba(255,45,85,0.4)' }}>
+                  {saving ? <span className="spinner" /> : 'Hoàn tất & Bắt đầu 💖'}
                 </button>
               </div>
             </div>

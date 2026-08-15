@@ -91,8 +91,8 @@ async function getReports(req, res, next) {
 async function updateReportStatus(req, res, next) {
   try {
     const { id } = req.params;
-    const { status } = req.body;
-    const report = await adminService.updateReportStatus(id, status);
+    const { status, resolution } = req.body;
+    const report = await adminService.updateReportStatus(id, status, resolution);
     return success(res, { report });
   } catch (err) {
     return next(err);

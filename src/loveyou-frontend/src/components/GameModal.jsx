@@ -462,7 +462,7 @@ export default function GameModal({ match, currentUserId, initialSession, onClos
                         boxShadow: myAnswer === opt ? '0 6px 20px rgba(253,38,125,0.4)' : 'none',
                       }}
                     >
-                      <span style={{ opacity: 0.7, marginRight: '0.5rem' }}>{idx === 0 ? '🅰️' : '🅱️'}</span>
+                      <span style={{ opacity: 0.85, marginRight: '0.6rem', fontWeight: 800, color: myAnswer === opt ? '#fff' : '#fd267d' }}>{idx === 0 ? 'A.' : 'B.'}</span>
                       {currentQ[opt]}
                     </button>
                   ))}

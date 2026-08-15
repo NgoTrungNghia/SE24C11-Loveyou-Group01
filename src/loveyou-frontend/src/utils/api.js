@@ -19,7 +19,7 @@ api.interceptors.request.use((cfg) => {
   return cfg;
 });
 
-// Auto-handle BANNED accounts across all API responses
+// Auto-handle BANNED and UNAUTHORIZED accounts across all API responses
 api.interceptors.response.use(
   (res) => res,
   (err) => {
@@ -28,6 +28,11 @@ api.interceptors.response.use(
     if (errCode === 'ACCOUNT_BANNED' || (err.response?.status === 403 && errMsg?.includes('khóa'))) {
       localStorage.removeItem('ly_token');
       window.location.href = '/login?banned=true';
+    } else if (err.response?.status === 401 && !err.config?.url?.includes('/auth/login')) {
+      localStorage.removeItem('ly_token');
+      if (typeof window !== 'undefined' && !['/login', '/signup'].includes(window.location.pathname)) {
+        window.location.href = '/login';
+      }
     }
     return Promise.reject(err);
   }
@@ -52,6 +57,9 @@ export const userApi = {
   getBlockedUsers: () => api.get('/users/blocked'),
   unblockUser: (targetId) => api.post('/users/unblock', { targetId }),
   reportUser: (targetId, reason) => api.post('/users/report', { targetId, reason }),
+  sendEmailVerification: () => api.post('/users/send-email-verification'),
+  verifyEmail: (code) => api.post('/users/verify-email', { code }),
+  verifyCitizen: (data) => api.post('/users/verify-citizen', data),
 };
 
 export const matchingApi = {
@@ -66,7 +74,6 @@ export const matchingApi = {
 export const paymentApi = {
   createPaymentLink: (returnUrl, cancelUrl) => api.post('/payment/create-payment-link', { returnUrl, cancelUrl }),
   getStatus: (orderCode) => api.get(`/payment/status/${orderCode}`),
-  toggleVipDemo: (isVip) => api.post('/payment/toggle-vip-demo', { isVip }),
 };
 
 export const aiMatchingApi = {
@@ -103,9 +110,19 @@ export const adminApi = {
   getUserById: (id) => api.get(`/admin/users/${id}`),
   toggleBan: (id) => api.put(`/admin/users/${id}/ban`),
   getReports: () => api.get('/admin/reports'),
-  updateReportStatus: (id, status) => api.put(`/admin/reports/${id}/status`, { status }),
+  updateReportStatus: (id, status, resolution) => api.put(`/admin/reports/${id}/status`, { status, resolution }),
   getApiKey: () => api.get('/admin/config/api-key'),
   setApiKey: (key) => api.put('/admin/config/api-key', { key }),
+};
+
+export const supportApi = {
+  getMyConversation: () => api.get('/support/my-conversation'),
+  sendUserMessage: (content) => api.post('/support/send', { content }),
+  getAdminConversations: (search = '') => api.get(`/support/admin/conversations?search=${encodeURIComponent(search)}`),
+  getAdminConversationMessages: (conversationId) => api.get(`/support/admin/conversations/${conversationId}/messages`),
+  getAdminConversationByUserId: (userId) => api.get(`/support/admin/conversations/user/${userId}`),
+  sendAdminMessage: (conversationId, content) => api.post(`/support/admin/conversations/${conversationId}/send`, { content }),
+  markAdminRead: (conversationId) => api.patch(`/support/admin/conversations/${conversationId}/read`),
 };
 
 export default api;

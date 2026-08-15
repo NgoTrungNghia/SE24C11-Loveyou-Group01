@@ -1,11 +1,13 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { chatApi, userApi } from '../utils/api';
 import { getSocket } from '../utils/socket';
+import { useAuth } from '../context/AuthContext';
 import ToastNotification from './ToastNotification';
 
 const defaultAvatar = 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=100';
 
-export default function ChatPanel({ match, currentUserId, isOnline, onClose, onInviteGame, onBlockUser, onUnblockUser }) {
+export default function ChatPanel({ match, currentUserId, currentUserProfile, isOnline, onClose, onInviteGame, onBlockUser, onUnblockUser }) {
+  const { user } = useAuth();
   const [conversation, setConversation] = useState(null);
   const [messages, setMessages] = useState([]);
   const [inputText, setInputText] = useState('');
@@ -18,6 +20,7 @@ export default function ChatPanel({ match, currentUserId, isOnline, onClose, onI
   const [isBlockedState, setIsBlockedState] = useState(match?.partner?.isBlocked || match?.isBlocked || false);
   const [isBlockedByMeState, setIsBlockedByMeState] = useState(match?.partner?.isBlockedByMe || match?.isBlockedByMe || false);
   const [isBlockedByPartnerState, setIsBlockedByPartnerState] = useState(match?.partner?.isBlockedByPartner || match?.isBlockedByPartner || false);
+  const [isUnmatchedState, setIsUnmatchedState] = useState(Boolean(match?.partner?.isUnmatched || match?.isUnmatched));
   const [showMenu, setShowMenu] = useState(false);
   const [showBlockConfirm, setShowBlockConfirm] = useState(false);
   const [showUnblockConfirm, setShowUnblockConfirm] = useState(false);
@@ -35,6 +38,7 @@ export default function ChatPanel({ match, currentUserId, isOnline, onClose, onI
     setIsBlockedState(match?.partner?.isBlocked || match?.isBlocked || false);
     setIsBlockedByMeState(match?.partner?.isBlockedByMe || match?.isBlockedByMe || false);
     setIsBlockedByPartnerState(match?.partner?.isBlockedByPartner || match?.isBlockedByPartner || false);
+    setIsUnmatchedState(Boolean(match?.partner?.isUnmatched || match?.isUnmatched));
   }, [match]);
 
   const messagesEndRef = useRef(null);
@@ -122,7 +126,7 @@ export default function ChatPanel({ match, currentUserId, isOnline, onClose, onI
   async function handleSend(e) {
     e.preventDefault();
     const content = inputText.trim();
-    if (!content || !conversation?.id || sending) return;
+    if (!content || !conversation?.id || sending || isUnmatchedState) return;
 
     setSending(true);
     setInputText('');
@@ -310,30 +314,36 @@ export default function ChatPanel({ match, currentUserId, isOnline, onClose, onI
             {(match?.partner?.isVip || match?.isVip) && (
               <span className="vip-badge-gradient" style={{ fontSize: '0.68rem', padding: '1px 6px', borderRadius: '10px' }}>👑 VIP</span>
             )}
-            {isBlockedState && (
+            {isBlockedState ? (
               <span style={{ fontSize: '0.7rem', background: 'rgba(239,68,68,0.2)', color: '#ef4444', padding: '1px 6px', borderRadius: '6px', fontWeight: 600 }}>
                 Đã chặn
               </span>
-            )}
+            ) : isUnmatchedState ? (
+              <span style={{ fontSize: '0.7rem', background: 'rgba(255,68,88,0.2)', color: '#ff6b8a', padding: '1px 6px', borderRadius: '6px', fontWeight: 600 }}>
+                Đã hủy match
+              </span>
+            ) : null}
           </div>
-          <div style={{ fontSize: '0.75rem', color: (partnerTyping || isOnline) ? '#34D399' : 'rgba(255,255,255,0.5)' }}>
-            {partnerTyping ? '✍️ Đang gõ...' : isOnline ? '🟢 Đang hoạt động' : 'Đã match với bạn 💖'}
+          <div style={{ fontSize: '0.75rem', color: isUnmatchedState ? '#ff6b8a' : (partnerTyping || isOnline) ? '#34D399' : 'rgba(255,255,255,0.5)' }}>
+            {isUnmatchedState ? '💔 Đã hủy ghép đôi' : partnerTyping ? '✍️ Đang gõ...' : isOnline ? '🟢 Đang hoạt động' : 'Đã match với bạn 💖'}
           </div>
         </div>
 
-        {/* Invite Game Button */}
-        <button
-          onClick={() => onInviteGame && onInviteGame(match)}
-          title="Mời chơi game"
-          style={{
-            background: 'rgba(253,38,125,0.15)', border: '1px solid rgba(253,38,125,0.4)',
-            color: '#fd267d', borderRadius: '10px', padding: '0.4rem 0.8rem',
-            cursor: 'pointer', fontSize: '0.8rem', fontWeight: 600,
-            display: 'flex', alignItems: 'center', gap: '0.3rem',
-          }}
-        >
-          🎮 Chơi game
-        </button>
+        {/* Invite Game Button (only if actively matched) */}
+        {!isUnmatchedState && !isBlockedState && (
+          <button
+            onClick={() => onInviteGame && onInviteGame(match)}
+            title="Mời chơi game"
+            style={{
+              background: 'rgba(253,38,125,0.15)', border: '1px solid rgba(253,38,125,0.4)',
+              color: '#fd267d', borderRadius: '10px', padding: '0.4rem 0.8rem',
+              cursor: 'pointer', fontSize: '0.8rem', fontWeight: 600,
+              display: 'flex', alignItems: 'center', gap: '0.3rem',
+            }}
+          >
+            🎮 Chơi game
+          </button>
+        )}
 
         {/* 3-dots Menu Button */}
         <div style={{ position: 'relative' }}>
@@ -414,7 +424,18 @@ export default function ChatPanel({ match, currentUserId, isOnline, onClose, onI
               </button>
 
               <button
-                onClick={() => { setShowMenu(false); setShowReportModal(true); }}
+                onClick={() => {
+                  setShowMenu(false);
+                  const effectiveProfile = currentUserProfile || user;
+                  if (effectiveProfile?.role !== 'ADMIN' && (!effectiveProfile?.isEmailVerified || !effectiveProfile?.isCitizenVerified)) {
+                    setToast({
+                      type: 'warning',
+                      message: '⚠️ Chỉ những tài khoản đã xác thực đầy đủ (Email & CCCD) mới có thể gửi báo cáo người dùng. Vui lòng vào Cài Đặt để xác thực.',
+                    });
+                    return;
+                  }
+                  setShowReportModal(true);
+                }}
                 style={{
                   display: 'flex', alignItems: 'center', gap: '0.6rem', width: '100%',
                   padding: '0.6rem 0.8rem', background: 'transparent', border: 'none',
@@ -799,6 +820,30 @@ export default function ChatPanel({ match, currentUserId, isOnline, onClose, onI
             {isBlockedByMeState
               ? '🚫 Bạn đang chặn tài khoản này. Không thể gửi tin nhắn mới.'
               : '🚫 Đối phương đang chặn bạn. Không thể gửi tin nhắn mới.'}
+          </div>
+        ) : isUnmatchedState ? (
+          <div style={{
+            textAlign: 'center',
+            padding: '0.85rem 1rem',
+            background: 'linear-gradient(145deg, rgba(255, 68, 88, 0.12), rgba(253, 38, 125, 0.08))',
+            border: '1px solid rgba(255, 68, 88, 0.3)',
+            borderRadius: '16px',
+            color: '#ff6b8a',
+            fontSize: '0.85rem',
+            fontWeight: 600,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '0.35rem',
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: '#ff4458', fontWeight: 700 }}>
+              <span>💔</span>
+              <span>Hai bạn đã hủy ghép đôi. Không thể gửi tin nhắn mới.</span>
+            </div>
+            <div style={{ fontSize: '0.78rem', color: 'rgba(255,255,255,0.6)', fontWeight: 500 }}>
+              Cần ghép đôi lại trên LoveYou để tiếp tục trò chuyện cùng nhau.
+            </div>
           </div>
         ) : (
           <form onSubmit={handleSend} style={{ display: 'flex', gap: '0.6rem', alignItems: 'center' }}>

@@ -125,12 +125,10 @@ async function getAICandidates(userId) {
     role: { not: 'ADMIN' },
   };
 
-  if (prefs?.genderPreference) {
-    if (prefs.genderPreference !== 'all') {
-      where.gender = prefs.genderPreference;
-    }
-  } else if (currentUser.gender) {
-    where.gender = currentUser.gender === 'female' ? 'male' : 'female';
+  if (prefs?.genderPreference && prefs.genderPreference !== 'all') {
+    where.gender = { equals: prefs.genderPreference, mode: 'insensitive' };
+  } else if (currentUser.gender && !prefs?.genderPreference) {
+    where.gender = { equals: currentUser.gender.toLowerCase() === 'female' ? 'male' : 'female', mode: 'insensitive' };
   }
 
   const realCandidates = await prisma.user.findMany({
@@ -145,7 +143,20 @@ async function getAICandidates(userId) {
     },
   });
 
-  const realScored = realCandidates.map(c => {
+  const filteredCandidates = realCandidates.filter(c => {
+    const age = calculateAge(c.dateOfBirth);
+    const minAge = prefs?.minAge ?? 18;
+    const maxAge = prefs?.maxAge ?? 100;
+    if (age < minAge || age > maxAge) return false;
+
+    if (prefs?.maxDistance && currentUser.latitude && currentUser.longitude && c.latitude && c.longitude) {
+      const dist = haversineDistance(currentUser.latitude, currentUser.longitude, c.latitude, c.longitude);
+      if (dist !== null && dist > prefs.maxDistance) return false;
+    }
+    return true;
+  });
+
+  const realScored = filteredCandidates.map(c => {
     const score = calculateCompatibilityScore(currentUser, c, prefs);
     const photosList = parseJson(c.photos);
     const primaryPhoto = photosList[0] || c.profilePicture || null;

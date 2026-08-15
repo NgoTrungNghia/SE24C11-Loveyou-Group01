@@ -57,21 +57,8 @@ async function getStatus(req, res, next) {
   }
 }
 
-async function toggleVipDemo(req, res, next) {
-  try {
-    const userId = req.user.userId;
-    const { isVip } = req.body;
-    const targetVipState = isVip !== undefined ? Boolean(isVip) : true;
-    const updatedUser = await paymentService.setVipStatus(userId, targetVipState);
-    return success(res, { user: updatedUser, message: `VIP state set to ${targetVipState}` });
-  } catch (err) {
-    return next(err);
-  }
-}
-
 module.exports = {
   createPaymentLink,
   handleWebhook,
   getStatus,
-  toggleVipDemo,
 };

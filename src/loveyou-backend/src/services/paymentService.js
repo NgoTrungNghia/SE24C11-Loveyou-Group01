@@ -73,6 +73,10 @@ async function createVipPaymentLink(userId, returnUrl, cancelUrl, options = {}) 
     type,
     itemId,
     qrCode: paymentLinkRes.qrCode || null,
+    accountNumber: paymentLinkRes.accountNumber || null,
+    accountName: paymentLinkRes.accountName || null,
+    bin: paymentLinkRes.bin || null,
+    description: paymentLinkRes.description || description,
   };
 }
 

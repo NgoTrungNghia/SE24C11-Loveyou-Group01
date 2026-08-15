@@ -6,6 +6,7 @@ const { Server } = require('socket.io');
 const app = require('./src/app');
 const config = require('./src/config');
 const chatService = require('./src/services/chatService');
+const supportService = require('./src/services/supportService');
 const gameService = require('./src/services/gameService');
 const geminiService = require('./src/services/geminiService');
 const { verifyAccessToken } = require('./src/utils/token');
@@ -111,6 +112,68 @@ io.on('connection', (socket) => {
     try {
       await chatService.markMessagesRead(conversationId, uid);
       socket.to(`conv_${conversationId}`).emit('messages_read', { conversationId, readBy: uid });
+    } catch { /* ignore */ }
+  });
+
+  // ── SUPPORT CHAT EVENTS ──
+  socket.on('join_support_conversation', (conversationId) => {
+    socket.join(`support_conv_${conversationId}`);
+  });
+
+  socket.on('leave_support_conversation', (conversationId) => {
+    socket.leave(`support_conv_${conversationId}`);
+  });
+
+  socket.on('join_admin_support_channel', () => {
+    if (socket.user?.role === 'ADMIN') {
+      socket.join('admin_support_feed');
+    }
+  });
+
+  socket.on('leave_admin_support_channel', () => {
+    socket.leave('admin_support_feed');
+  });
+
+  socket.on('send_support_message', async ({ conversationId, content }) => {
+    try {
+      if (!content?.trim()) return;
+      const isAdmin = socket.user?.role === 'ADMIN';
+
+      if (isAdmin && conversationId) {
+        const data = await supportService.sendAdminMessage(conversationId, uid, content.trim());
+        io.to(`support_conv_${conversationId}`).emit('new_support_message', {
+          message: data.message,
+          conversationId,
+        });
+        io.to('admin_support_feed').emit('admin_support_updated', {
+          conversation: data.conversation,
+        });
+        // Push direct notification to user
+        emitToUser(data.targetUserId, 'support_notification', {
+          message: data.message,
+          conversation: data.conversation,
+        });
+      } else {
+        const data = await supportService.sendUserMessage(uid, content.trim());
+        io.to(`support_conv_${data.conversation.id}`).emit('new_support_message', {
+          message: data.message,
+          conversationId: data.conversation.id,
+        });
+        io.to('admin_support_feed').emit('admin_support_updated', {
+          conversation: data.conversation,
+        });
+      }
+    } catch (err) {
+      socket.emit('support_error', { message: err.message });
+    }
+  });
+
+  socket.on('mark_support_read', async ({ conversationId }) => {
+    try {
+      if (socket.user?.role === 'ADMIN' && conversationId) {
+        await supportService.markAdminRead(conversationId);
+        io.to('admin_support_feed').emit('admin_support_marked_read', { conversationId });
+      }
     } catch { /* ignore */ }
   });
 

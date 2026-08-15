@@ -88,6 +88,44 @@ async function unblockUser(req, res, next) {
   }
 }
 
+async function sendEmailVerification(req, res, next) {
+  try {
+    const userId = req.user.userId;
+    const result = await userService.sendEmailVerificationCode(userId);
+    return success(res, result);
+  } catch (err) {
+    return next(err);
+  }
+}
+
+async function verifyEmail(req, res, next) {
+  try {
+    const userId = req.user.userId;
+    const { code } = req.body;
+    if (!code) {
+      return res.status(400).json({
+        success: false,
+        error: { message: 'Vui lòng nhập mã xác thực 6 chữ số', code: 'INVALID_INPUT' },
+      });
+    }
+    const result = await userService.verifyEmailCode(userId, code);
+    return success(res, result);
+  } catch (err) {
+    return next(err);
+  }
+}
+
+async function verifyCitizen(req, res, next) {
+  try {
+    const userId = req.user.userId;
+    const { frontPhoto, backPhoto, qrData, parsedInfo } = req.body;
+    const result = await userService.verifyCitizenIdentity(userId, { frontPhoto, backPhoto, qrData, parsedInfo });
+    return success(res, result);
+  } catch (err) {
+    return next(err);
+  }
+}
+
 module.exports = {
   getProfile,
   updateProfile,
@@ -95,5 +133,8 @@ module.exports = {
   reportUser,
   getBlockedUsers,
   unblockUser,
+  sendEmailVerification,
+  verifyEmail,
+  verifyCitizen,
 };
 

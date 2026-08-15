@@ -8,6 +8,7 @@ import GameModal from '../components/GameModal';
 import AdminModal from '../components/AdminModal';
 import UserSettingsModal from '../components/UserSettingsModal';
 import VipModal from '../components/VipModal';
+import SupportChatModal from '../components/SupportChatModal';
 import ToastNotification from '../components/ToastNotification';
 
 
@@ -46,6 +47,7 @@ export default function Dashboard() {
   const [unmatchedNotice, setUnmatchedNotice] = useState(null);
   const [showAdminModal, setShowAdminModal] = useState(false);
   const [showSettingsModal, setShowSettingsModal] = useState(false);
+  const [showSupportModal, setShowSupportModal] = useState(false);
   const [isSidebarExpanded, setIsSidebarExpanded] = useState(false);
 
   // Profile Report modal
@@ -61,6 +63,16 @@ export default function Dashboard() {
   // Notifications
   const [gameInviteNotif, setGameInviteNotif] = useState(null);
   const [matchNotif, setMatchNotif] = useState(null);
+
+  // Discovery filter state
+  const [showFilterModal, setShowFilterModal] = useState(false);
+  const [filters, setFilters] = useState({
+    genderPreference: 'all',
+    minAge: 18,
+    maxAge: 45,
+    maxDistance: 50,
+  });
+  const [savingFilters, setSavingFilters] = useState(false);
 
   // AI mode toggle
   const [useAI, setUseAI] = useState(true);
@@ -115,7 +127,6 @@ export default function Dashboard() {
     });
     socket.on('game_invite_received', ({ session, inviterName, inviterPhoto }) => {
       setGameInviteNotif({ session, inviterName, inviterPhoto });
-      setTimeout(() => setGameInviteNotif(null), 10000);
     });
 
     socket.on('vip_upgraded', ({ isVip, message }) => {
@@ -193,6 +204,20 @@ export default function Dashboard() {
       const token = localStorage.getItem('ly_token');
       if (token) setupSocket(token);
 
+      // Load Discovery Preferences
+      try {
+        const prefRes = await aiMatchingApi.getPreferences();
+        const p = prefRes.data?.data?.preferences;
+        if (p) {
+          setFilters({
+            genderPreference: p.genderPreference || 'all',
+            minAge: p.minAge || 18,
+            maxAge: p.maxAge || 45,
+            maxDistance: p.maxDistance || 50,
+          });
+        }
+      } catch { /* ignore */ }
+
       // Load AI candidates
       await loadCandidates();
 
@@ -236,10 +261,47 @@ export default function Dashboard() {
   const handleUnmatch = async (targetId, name) => {
     try { await matchingApi.unmatch(targetId); } catch { /* ignore */ }
     setMatches(prev => prev.filter(m => m.id !== targetId));
-    if (activeChatMatch?.partner?.id === targetId) setActiveChatMatch(null);
+    // Giữ lại cuộc trò chuyện trong danh sách tin nhắn nhưng đánh dấu isUnmatched
+    setConversations(prev => prev.map(c => {
+      if (Number(c.partner?.id) === Number(targetId) || Number(c.matchId) === Number(targetId)) {
+        return {
+          ...c,
+          isUnmatched: true,
+          partner: { ...c.partner, isUnmatched: true },
+        };
+      }
+      return c;
+    }));
+    setActiveChatMatch(prev => {
+      if (!prev) return null;
+      if (Number(prev.partner?.id || prev.id) === Number(targetId)) {
+        return {
+          ...prev,
+          isUnmatched: true,
+          partner: { ...prev.partner, isUnmatched: true },
+        };
+      }
+      return prev;
+    });
     if (selectedProfile?.id === targetId) setSelectedProfile(null);
     setUnmatchedNotice(`💔 Đã hủy ghép đôi với ${name}`);
     setTimeout(() => setUnmatchedNotice(null), 3000);
+  };
+
+  const handleApplyFilters = async (newFilters) => {
+    setSavingFilters(true);
+    try {
+      await aiMatchingApi.updatePreferences(newFilters);
+      setFilters(newFilters);
+      setShowFilterModal(false);
+      setToast({ type: 'success', message: '✅ Đã lưu và áp dụng bộ lọc tìm kiếm!' });
+      setCandidateIdx(0);
+      loadCandidates();
+    } catch {
+      setToast({ type: 'error', message: 'Không thể cập nhật bộ lọc' });
+    } finally {
+      setSavingFilters(false);
+    }
   };
 
   const handleSwipe = async (action, targetCandidate = null) => {
@@ -463,6 +525,20 @@ export default function Dashboard() {
           </div>
           <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
             <button
+              onClick={() => setShowSupportModal(true)}
+              style={{
+                background: 'rgba(59, 130, 246, 0.25)',
+                color: '#93C5FD', border: '1px solid rgba(59, 130, 246, 0.4)', borderRadius: '14px',
+                padding: '6px 10px', fontWeight: '700', fontSize: '0.78rem',
+                cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px',
+                transition: 'all 0.2s ease',
+              }}
+              title="Liên hệ hỗ trợ Admin"
+            >
+              🎧 Hỗ trợ
+            </button>
+
+            <button
               onClick={() => setShowSettingsModal(true)}
               style={{
                 background: 'rgba(255,255,255,0.18)',
@@ -592,6 +668,7 @@ export default function Dashboard() {
                   <ChatPanel
                     match={activeChatMatch}
                     currentUserId={profile?.userId || user?.userId}
+                    currentUserProfile={profile}
                     isOnline={onlineUsers.has(Number(activeChatMatch?.partner?.id || activeChatMatch?.id))}
                     onClose={() => setActiveChatMatch(null)}
                     onInviteGame={openGame}
@@ -622,7 +699,7 @@ export default function Dashboard() {
                             onError={e => { e.target.src = getDefaultAvatar(conv.partner?.gender); }}
                             style={{ width: '44px', height: '44px', borderRadius: '50%', objectFit: 'cover' }}
                           />
-                          {isOnline && (
+                          {isOnline && !conv.isUnmatched && (
                             <div style={{
                               position: 'absolute', bottom: '1px', right: '1px',
                               width: '10px', height: '10px', borderRadius: '50%',
@@ -631,9 +708,16 @@ export default function Dashboard() {
                           )}
                         </div>
                         <div style={{ flex: 1, minWidth: 0 }}>
-                          <div style={{ fontWeight: 700, fontSize: '0.88rem', color: '#fff' }}>{conv.partner?.name}</div>
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '2px' }}>
+                            <div style={{ fontWeight: 700, fontSize: '0.88rem', color: '#fff' }}>{conv.partner?.name}</div>
+                            {conv.isUnmatched && (
+                              <span style={{ fontSize: '0.68rem', padding: '2px 6px', borderRadius: '6px', background: 'rgba(255,68,88,0.2)', color: '#ff6b8a', fontWeight: 600 }}>
+                                💔 Đã hủy match
+                              </span>
+                            )}
+                          </div>
                           <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.45)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                            {conv.lastMessage?.content || 'Bắt đầu trò chuyện nào!'}
+                            {conv.lastMessage?.content || (conv.isUnmatched ? 'Đã hủy ghép đôi' : 'Bắt đầu trò chuyện nào!')}
                           </div>
                         </div>
                       </div>
@@ -742,32 +826,60 @@ export default function Dashboard() {
         position: 'relative', padding: '2rem'
       }}>
 
-        {/* AI Mode Toggle */}
-        <div style={{ position: 'absolute', top: '1.2rem', right: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <span style={{ fontSize: '0.78rem', color: 'rgba(255,255,255,0.5)' }}>
-            {useAI ? '🤖 AI Match' : '📋 Normal'}
-          </span>
-          <div
-            onClick={() => {
-              const nextUseAI = !useAI;
-              setUseAI(nextUseAI);
-              setCandidateIdx(0);
-              loadCandidates(nextUseAI);
-            }}
-            title={useAI ? 'Tắt AI Match để xem danh sách ngẫu nhiên' : 'Bật AI Match để gợi ý đối tượng ăn ý nhất'}
+        {/* Top Controls: Filter & AI Mode Toggle */}
+        <div style={{ position: 'absolute', top: '1.2rem', right: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.8rem', zIndex: 50 }}>
+          {/* Discovery Filter Button */}
+          <button
+            onClick={() => setShowFilterModal(true)}
             style={{
-              width: '40px', height: '22px', borderRadius: '11px', cursor: 'pointer',
-              background: useAI ? '#fd267d' : 'rgba(255,255,255,0.2)',
-              position: 'relative', transition: 'background 0.3s ease',
+              display: 'flex', alignItems: 'center', gap: '6px',
+              padding: '6px 12px', borderRadius: '18px',
+              background: (filters.genderPreference !== 'all' || filters.minAge > 18 || filters.maxAge < 45 || filters.maxDistance < 50)
+                ? 'linear-gradient(135deg, #fd267d, #ff6036)'
+                : 'rgba(255,255,255,0.1)',
+              border: '1px solid rgba(255,255,255,0.18)',
+              color: '#fff', fontSize: '0.8rem', fontWeight: 700,
+              cursor: 'pointer', transition: 'all 0.2s ease',
+              boxShadow: (filters.genderPreference !== 'all' || filters.minAge > 18 || filters.maxAge < 45 || filters.maxDistance < 50)
+                ? '0 4px 12px rgba(253,38,125,0.4)'
+                : 'none',
             }}
+            title="Bộ lọc tìm kiếm (Giới tính, Độ tuổi, Khoảng cách)"
           >
-            <div style={{
-              position: 'absolute', top: '3px',
-              left: useAI ? '21px' : '3px',
-              width: '16px', height: '16px', borderRadius: '50%',
-              background: '#fff', transition: 'left 0.3s ease',
-              boxShadow: '0 1px 4px rgba(0,0,0,0.3)',
-            }} />
+            <span>🎯</span>
+            <span>Bộ lọc</span>
+            {(filters.genderPreference !== 'all' || filters.minAge > 18 || filters.maxAge < 45 || filters.maxDistance < 50) && (
+              <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#fff' }} />
+            )}
+          </button>
+
+          {/* AI Mode Toggle */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'rgba(255,255,255,0.06)', padding: '4px 10px', borderRadius: '18px', border: '1px solid rgba(255,255,255,0.1)' }}>
+            <span style={{ fontSize: '0.78rem', color: 'rgba(255,255,255,0.8)', fontWeight: 600 }}>
+              {useAI ? '🤖 AI Match' : '📋 Normal'}
+            </span>
+            <div
+              onClick={() => {
+                const nextUseAI = !useAI;
+                setUseAI(nextUseAI);
+                setCandidateIdx(0);
+                loadCandidates(nextUseAI);
+              }}
+              title={useAI ? 'Tắt AI Match để xem danh sách ngẫu nhiên' : 'Bật AI Match để gợi ý đối tượng ăn ý nhất'}
+              style={{
+                width: '38px', height: '20px', borderRadius: '10px', cursor: 'pointer',
+                background: useAI ? '#fd267d' : 'rgba(255,255,255,0.2)',
+                position: 'relative', transition: 'background 0.3s ease',
+              }}
+            >
+              <div style={{
+                position: 'absolute', top: '2px',
+                left: useAI ? '20px' : '2px',
+                width: '16px', height: '16px', borderRadius: '50%',
+                background: '#fff', transition: 'left 0.3s ease',
+                boxShadow: '0 1px 4px rgba(0,0,0,0.3)',
+              }} />
+            </div>
           </div>
         </div>
 
@@ -876,7 +988,13 @@ export default function Dashboard() {
                   ✓ Chấp nhận
                 </button>
                 <button
-                  onClick={() => setGameInviteNotif(null)}
+                  onClick={() => {
+                    const socket = getSocket();
+                    if (socket && gameInviteNotif?.session?.sessionId) {
+                      socket.emit('game_leave', { sessionId: gameInviteNotif.session.sessionId });
+                    }
+                    setGameInviteNotif(null);
+                  }}
                   style={{
                     padding: '0.6rem 0.9rem', borderRadius: '12px',
                     background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.15)',
@@ -1014,7 +1132,16 @@ export default function Dashboard() {
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
                 <button
-                  onClick={() => setShowProfileReportModal(true)}
+                  onClick={() => {
+                    if (profile?.role !== 'ADMIN' && (!profile?.isEmailVerified || !profile?.isCitizenVerified)) {
+                      setToast({
+                        type: 'warning',
+                        message: '⚠️ Chỉ những tài khoản đã xác thực đầy đủ (Email & CCCD) mới có thể gửi báo cáo người dùng. Vui lòng vào Cài Đặt để xác thực.',
+                      });
+                      return;
+                    }
+                    setShowProfileReportModal(true);
+                  }}
                   title="Báo cáo vi phạm hồ sơ"
                   style={{
                     background: 'rgba(245,158,11,0.15)', border: '1px solid rgba(245,158,11,0.4)',
@@ -1131,6 +1258,11 @@ export default function Dashboard() {
         <AdminModal onClose={() => setShowAdminModal(false)} />
       )}
 
+      {/* ── SUPPORT CHAT MODAL ── */}
+      {showSupportModal && (
+        <SupportChatModal onClose={() => setShowSupportModal(false)} currentUserProfile={profile} />
+      )}
+
       {/* ── PROFILE REPORT MODAL ── */}
       {showProfileReportModal && selectedProfile && (
         <div style={{
@@ -1214,6 +1346,151 @@ export default function Dashboard() {
                   color: '#fff', fontWeight: 600, cursor: 'pointer', fontSize: '0.85rem',
                 }}
               >{submittingProfileReport ? 'Đang gửi...' : 'Gửi báo cáo'}</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── DISCOVERY FILTER MODAL ── */}
+      {showFilterModal && (
+        <div style={{
+          position: 'fixed', inset: 0, zIndex: 2100,
+          background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(8px)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1.5rem',
+        }}>
+          <div style={{
+            background: 'linear-gradient(145deg, #181c24, #12151b)',
+            border: '1px solid rgba(253,38,125,0.3)',
+            borderRadius: '24px', padding: '1.8rem', width: '100%', maxWidth: '440px',
+            boxShadow: '0 25px 60px rgba(0,0,0,0.8), 0 0 30px rgba(253,38,125,0.15)',
+            color: '#fff',
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.4rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                <span style={{ fontSize: '1.4rem' }}>🎯</span>
+                <h3 style={{ margin: 0, fontSize: '1.15rem', fontWeight: 800, color: '#fff' }}>
+                  Bộ Lọc Tìm Kiếm Đối Tượng
+                </h3>
+              </div>
+              <button
+                onClick={() => setShowFilterModal(false)}
+                style={{
+                  background: 'rgba(255,255,255,0.08)', border: 'none', color: 'rgba(255,255,255,0.7)',
+                  borderRadius: '50%', width: '30px', height: '30px', cursor: 'pointer', fontSize: '0.9rem',
+                }}
+              >✕</button>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem' }}>
+              {/* Gender Preference */}
+              <div>
+                <label style={{ fontSize: '0.85rem', fontWeight: 700, color: 'rgba(255,255,255,0.85)', display: 'block', marginBottom: '0.6rem' }}>
+                  Tôi muốn tìm kiếm:
+                </label>
+                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                  {[
+                    { value: 'all', label: 'Tất cả' },
+                    { value: 'MALE', label: 'Nam' },
+                    { value: 'FEMALE', label: 'Nữ' },
+                    { value: 'OTHER', label: 'Khác' },
+                  ].map(opt => (
+                    <button
+                      key={opt.value}
+                      type="button"
+                      onClick={() => setFilters(f => ({ ...f, genderPreference: opt.value }))}
+                      style={{
+                        flex: 1, padding: '0.5rem 0.6rem', borderRadius: '12px', fontSize: '0.82rem', fontWeight: 700,
+                        cursor: 'pointer', border: 'none',
+                        background: filters.genderPreference === opt.value
+                          ? 'linear-gradient(135deg, #fd267d, #ff6036)'
+                          : 'rgba(255,255,255,0.08)',
+                        color: '#fff',
+                        border: `1px solid ${filters.genderPreference === opt.value ? 'transparent' : 'rgba(255,255,255,0.1)'}`,
+                        boxShadow: filters.genderPreference === opt.value ? '0 4px 12px rgba(253,38,125,0.4)' : 'none',
+                        transition: 'all 0.2s ease',
+                      }}
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Age Range */}
+              <div style={{ background: 'rgba(255,255,255,0.04)', padding: '1rem', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.06)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.6rem' }}>
+                  <span style={{ fontSize: '0.85rem', fontWeight: 700, color: 'rgba(255,255,255,0.85)' }}>Độ tuổi</span>
+                  <span style={{ fontSize: '0.85rem', fontWeight: 800, color: '#fd267d' }}>{filters.minAge} - {filters.maxAge} tuổi</span>
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.8rem' }}>
+                  <div>
+                    <label style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.5)', display: 'block', marginBottom: '0.3rem' }}>Tối thiểu: {filters.minAge}</label>
+                    <input
+                      type="range" min="18" max="60" value={filters.minAge}
+                      onChange={e => {
+                        const val = Number(e.target.value);
+                        setFilters(f => ({ ...f, minAge: val, maxAge: Math.max(val, f.maxAge) }));
+                      }}
+                      style={{ width: '100%', accentColor: '#fd267d' }}
+                    />
+                  </div>
+                  <div>
+                    <label style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.5)', display: 'block', marginBottom: '0.3rem' }}>Tối đa: {filters.maxAge}</label>
+                    <input
+                      type="range" min="18" max="70" value={filters.maxAge}
+                      onChange={e => {
+                        const val = Number(e.target.value);
+                        setFilters(f => ({ ...f, maxAge: val, minAge: Math.min(val, f.minAge) }));
+                      }}
+                      style={{ width: '100%', accentColor: '#fd267d' }}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Distance */}
+              <div style={{ background: 'rgba(255,255,255,0.04)', padding: '1rem', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.06)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.6rem' }}>
+                  <span style={{ fontSize: '0.85rem', fontWeight: 700, color: 'rgba(255,255,255,0.85)' }}>Khoảng cách tối đa</span>
+                  <span style={{ fontSize: '0.85rem', fontWeight: 800, color: '#34D399' }}>{filters.maxDistance} km</span>
+                </div>
+                <input
+                  type="range" min="5" max="200" step="5" value={filters.maxDistance}
+                  onChange={e => setFilters(f => ({ ...f, maxDistance: Number(e.target.value) }))}
+                  style={{ width: '100%', accentColor: '#34D399' }}
+                />
+              </div>
+
+              {/* Actions */}
+              <div style={{ display: 'flex', gap: '0.8rem', marginTop: '0.5rem' }}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const defaultFilters = { genderPreference: 'all', minAge: 18, maxAge: 45, maxDistance: 50 };
+                    handleApplyFilters(defaultFilters);
+                  }}
+                  style={{
+                    padding: '0.75rem 1rem', borderRadius: '12px',
+                    background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.15)',
+                    color: 'rgba(255,255,255,0.8)', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 600,
+                  }}
+                >
+                  Đặt lại
+                </button>
+                <button
+                  type="button"
+                  disabled={savingFilters}
+                  onClick={() => handleApplyFilters(filters)}
+                  style={{
+                    flex: 1, padding: '0.75rem 1.4rem', borderRadius: '12px',
+                    background: 'linear-gradient(135deg, #fd267d, #ff6036)', border: 'none',
+                    color: '#fff', cursor: 'pointer', fontSize: '0.88rem', fontWeight: 800,
+                    boxShadow: '0 4px 15px rgba(253,38,125,0.4)',
+                  }}
+                >
+                  {savingFilters ? 'Đang lưu...' : 'Áp dụng bộ lọc ✨'}
+                </button>
+              </div>
             </div>
           </div>
         </div>
