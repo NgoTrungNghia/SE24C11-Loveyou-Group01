@@ -1191,3 +1191,253 @@ PASS
 ...
 
 ---
+
+## Use Case 6: AI-Assisted User Interaction and Red Flag Evaluation
+
+### TC-AI-01 — Start an AI-assisted interaction game
+
+**Precondition:**
+- User is logged in.
+- User has been matched with another user.
+- The AI-assisted interaction game is available.
+
+**Test Steps:**
+1. Navigate to the **Game** or **AI Interaction** feature.
+2. Select the matched user.
+3. Start an interaction game.
+4. Follow the instructions provided by the AI.
+
+**Expected Result:**
+- The system successfully starts the interaction game.
+- The AI provides appropriate instructions or prompts.
+- Both users can participate in the game.
+
+**Actual Result:**
+- ...
+
+**Status:**
+...
+
+---
+
+### TC-AI-02 — AI generates an interaction prompt
+
+**Precondition:**
+- User is logged in.
+- User has started an AI-assisted interaction game.
+- The AI service is available.
+
+**Test Steps:**
+1. Start an AI-assisted interaction game.
+2. Wait for the AI to generate an interaction prompt.
+3. View the generated prompt.
+
+**Expected Result:**
+- The AI generates an appropriate interaction prompt.
+- The prompt is displayed correctly to the users.
+- The game can continue based on the generated prompt.
+
+**Actual Result:**
+- ...
+
+**Status:**
+...
+
+---
+
+### TC-AI-03 — Users respond to an AI-generated game prompt
+
+**Precondition:**
+- User is logged in.
+- Two matched users are participating in an AI-assisted interaction game.
+- An AI-generated prompt is available.
+
+**Test Steps:**
+1. Read the AI-generated prompt.
+2. Enter a response.
+3. Submit the response.
+4. Allow the other user to respond.
+
+**Expected Result:**
+- The system accepts the user's response.
+- The response is displayed correctly in the game.
+- The other user can view and respond to the interaction.
+
+**Actual Result:**
+- ...
+
+**Status:**
+...
+
+---
+
+### TC-AI-04 — AI generates a new prompt after an interaction
+
+**Precondition:**
+- Users are participating in an AI-assisted interaction game.
+- The current interaction has been completed.
+
+**Test Steps:**
+1. Complete the current game prompt.
+2. Submit the required responses.
+3. Continue to the next interaction.
+
+**Expected Result:**
+- The AI generates or provides the next appropriate interaction prompt.
+- The game continues without losing the previous interaction.
+
+**Actual Result:**
+- ...
+
+**Status:**
+...
+
+---
+
+### TC-AI-05 — AI identifies potential red flag behavior
+
+**Precondition:**
+- User is logged in.
+- Users have interacted through the supported game or interaction feature.
+- The AI red flag evaluation feature is available.
+
+**Test Steps:**
+1. Complete one or more interactions with another user.
+2. Submit the interaction data for AI evaluation.
+3. View the AI evaluation result.
+
+**Expected Result:**
+- The AI analyzes the available interaction information.
+- The system identifies potential red flag indicators when applicable.
+- The evaluation result is displayed clearly to the user.
+
+**Actual Result:**
+- ...
+
+**Status:**
+...
+
+---
+
+### TC-AI-06 — AI does not identify red flags when interaction is normal
+
+**Precondition:**
+- User is logged in.
+- The interaction does not contain behavior defined as a red flag by the system.
+- AI red flag evaluation is available.
+
+**Test Steps:**
+1. Complete a normal interaction with another user.
+2. Request an AI red flag evaluation.
+3. View the evaluation result.
+
+**Expected Result:**
+- The AI does not incorrectly identify normal interaction as a red flag.
+- The system provides an appropriate evaluation result.
+
+**Actual Result:**
+- ...
+
+**Status:**
+...
+
+---
+
+### TC-AI-07 — AI provides an explanation for a potential red flag
+
+**Precondition:**
+- User is logged in.
+- The AI has identified a potential red flag during an interaction.
+
+**Test Steps:**
+1. View the AI red flag evaluation.
+2. Select or expand the identified red flag.
+3. View the explanation provided by the AI.
+
+**Expected Result:**
+- The system displays the identified potential red flag.
+- The AI provides an understandable explanation based on the available interaction information.
+- The explanation does not present the AI's evaluation as a guaranteed judgment about the other user.
+
+**Actual Result:**
+- ...
+
+**Status:**
+...
+
+---
+
+### TC-AI-08 — AI handles insufficient interaction data
+
+**Precondition:**
+- User is logged in.
+- There is insufficient interaction data for a meaningful red flag evaluation.
+
+**Test Steps:**
+1. Start or complete only a small amount of interaction.
+2. Request an AI red flag evaluation.
+3. View the evaluation result.
+
+**Expected Result:**
+- The system informs the user that there is insufficient information for a reliable evaluation.
+- The AI does not make an unsupported red flag judgment.
+- The user can continue interacting or provide more information.
+
+**Actual Result:**
+- ...
+
+**Status:**
+...
+
+---
+
+### TC-AI-09 — AI service unavailable during interaction
+
+**Precondition:**
+- User is logged in.
+- User is participating in an AI-assisted interaction.
+- The AI service becomes unavailable.
+
+**Test Steps:**
+1. Start an AI-assisted interaction.
+2. Trigger an AI function while the AI service is unavailable.
+3. Observe the system response.
+
+**Expected Result:**
+- The system handles the AI service failure gracefully.
+- An appropriate error or unavailable-service message is displayed.
+- The user's existing interaction data is not lost.
+
+**Actual Result:**
+- ...
+
+**Status:**
+...
+
+---
+
+### TC-AI-10 — User continues interaction after receiving a red flag warning
+
+**Precondition:**
+- User is logged in.
+- The AI has identified a potential red flag during an interaction.
+- The system provides the user with a red flag warning.
+
+**Test Steps:**
+1. View the AI red flag warning.
+2. Review the explanation provided by the AI.
+3. Choose to continue the interaction.
+4. Continue the interaction with the other user.
+
+**Expected Result:**
+- The system allows the user to make their own decision about continuing the interaction.
+- The red flag warning remains available for reference.
+- The AI does not automatically block or make decisions on behalf of the user unless this behavior is explicitly defined by the system rules.
+
+**Actual Result:**
+- ...
+
+**Status:**
+...
+
+---
