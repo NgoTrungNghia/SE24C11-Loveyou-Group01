@@ -248,25 +248,21 @@ PASS
 
 ---
 
-## Use Case 2: Upgrade User Membership
+## Use Case 2: Admin User Management
 
-### TC-MEMBERSHIP-01 — Upgrade to a valid membership plan
+### TC-ADMIN-01 — View user list
 
 **Precondition:**
-- User is logged in.
-- User is currently using a free membership.
-- At least one paid membership plan is available.
+- Admin is logged in.
+- Admin has permission to manage users.
 
 **Test Steps:**
-1. Navigate to the **Membership** page.
-2. Select an available paid membership plan.
-3. Review the plan information.
-4. Click the **Upgrade** button.
+1. Navigate to the **User Management** page.
+2. View the list of users.
 
 **Expected Result:**
-- The system processes the upgrade request successfully.
-- The user's membership is upgraded to the selected plan.
-- The new membership status is displayed correctly.
+- The system displays the list of users.
+- The user information is displayed correctly.
 
 **Actual Result:**
 - ...
@@ -276,18 +272,21 @@ PASS
 
 ---
 
-### TC-MEMBERSHIP-02 — View available membership plans
+### TC-ADMIN-02 — Search for a specific user
 
 **Precondition:**
-- User is logged in.
+- Admin is logged in.
+- Admin has permission to manage users.
+- The target user exists in the system.
 
 **Test Steps:**
-1. Navigate to the **Membership** page.
-2. View the available membership plans.
+1. Navigate to the **User Management** page.
+2. Enter the user's name or email in the search field.
+3. Click the **Search** button.
 
 **Expected Result:**
-- The system displays the available membership plans.
-- Each plan displays its relevant information, such as membership name, price, and benefits.
+- The system displays the matching user.
+- The displayed user information is correct.
 
 **Actual Result:**
 - ...
@@ -297,20 +296,21 @@ PASS
 
 ---
 
-### TC-MEMBERSHIP-03 — Select a membership plan before upgrading
+### TC-ADMIN-03 — View user details
 
 **Precondition:**
-- User is logged in.
-- Multiple membership plans are available.
+- Admin is logged in.
+- Admin has permission to manage users.
+- The target user exists in the system.
 
 **Test Steps:**
-1. Navigate to the **Membership** page.
-2. Select one of the available membership plans.
-3. Review the selected plan.
+1. Navigate to the **User Management** page.
+2. Select a user from the user list.
+3. Open the user's details.
 
 **Expected Result:**
-- The selected membership plan is clearly identified.
-- The system displays the correct information for the selected plan.
+- The system displays the selected user's details.
+- The displayed information corresponds to the selected user.
 
 **Actual Result:**
 - ...
@@ -320,20 +320,23 @@ PASS
 
 ---
 
-### TC-MEMBERSHIP-04 — Attempt to upgrade without selecting a membership plan
+### TC-ADMIN-04 — Edit user information
 
 **Precondition:**
-- User is logged in.
-- Multiple membership plans are available.
+- Admin is logged in.
+- Admin has permission to manage users.
+- The target user exists in the system.
 
 **Test Steps:**
-1. Navigate to the **Membership** page.
-2. Do not select any membership plan.
-3. Attempt to click the **Upgrade** button.
+1. Navigate to the **User Management** page.
+2. Select a user.
+3. Open the user's details.
+4. Edit the user's information with valid data.
+5. Click the **Save** button.
 
 **Expected Result:**
-- The system does not process the upgrade.
-- The user is informed that a membership plan must be selected.
+- The system saves the updated user information successfully.
+- The updated information is displayed correctly.
 
 **Actual Result:**
 - ...
@@ -343,22 +346,23 @@ PASS
 
 ---
 
-### TC-MEMBERSHIP-05 — Enter invalid payment information
+### TC-ADMIN-05 — Disable a user account
 
 **Precondition:**
-- User is logged in.
-- User has selected a paid membership plan.
-- Payment information is required for the upgrade.
+- Admin is logged in.
+- Admin has permission to manage users.
+- The target user has an active account.
 
 **Test Steps:**
-1. Select a paid membership plan.
-2. Enter invalid payment information.
-3. Submit the upgrade request.
+1. Navigate to the **User Management** page.
+2. Select an active user.
+3. Choose the **Disable Account** action.
+4. Confirm the action.
 
 **Expected Result:**
-- The system rejects the invalid payment information.
-- The membership is not upgraded.
-- An appropriate error message is displayed.
+- The system disables the selected user account.
+- The user's account status is updated to disabled.
+- The user can no longer access features that require an active account.
 
 **Actual Result:**
 - ...
@@ -368,22 +372,23 @@ PASS
 
 ---
 
-### TC-MEMBERSHIP-06 — Submit upgrade with missing payment information
+### TC-ADMIN-06 — Enable a disabled user account
 
 **Precondition:**
-- User is logged in.
-- User has selected a paid membership plan.
-- Payment information is required.
+- Admin is logged in.
+- Admin has permission to manage users.
+- The target user's account is disabled.
 
 **Test Steps:**
-1. Select a paid membership plan.
-2. Leave the required payment fields empty.
-3. Submit the upgrade request.
+1. Navigate to the **User Management** page.
+2. Select a disabled user.
+3. Choose the **Enable Account** action.
+4. Confirm the action.
 
 **Expected Result:**
-- The system does not process the upgrade.
-- Validation messages are displayed for the required payment fields.
-- The user's membership remains unchanged.
+- The system enables the selected user account.
+- The user's account status is updated to active.
+- The user can access the system again according to the account rules.
 
 **Actual Result:**
 - ...
@@ -393,93 +398,95 @@ PASS
 
 ---
 
-### TC-MEMBERSHIP-07 — Cancel the membership upgrade process
+### TC-ADMIN-07 — Handle a reported user
+
+**Precondition:**
+- Admin is logged in.
+- Admin has permission to manage reported users.
+- At least one user report exists.
+
+**Test Steps:**
+1. Navigate to the **Reports** or **User Management** page.
+2. Select a reported user.
+3. Review the report information.
+4. Apply the appropriate administrative action.
+
+**Expected Result:**
+- The system displays the report information correctly.
+- The admin can process the report.
+- The selected administrative action is recorded successfully.
+
+**Actual Result:**
+- ...
+
+**Status:**
+...
+
+---
+
+### TC-ADMIN-08 — Access user management without admin permission
 
 **Precondition:**
 - User is logged in.
-- User has selected a membership plan.
-- The upgrade process has not been completed.
+- User does not have administrator permissions.
 
 **Test Steps:**
-1. Navigate to the **Membership** page.
-2. Select a paid membership plan.
-3. Start the upgrade process.
+1. Attempt to access the **User Management** page directly.
+2. Attempt to perform an administrative action.
+
+**Expected Result:**
+- The system prevents unauthorized access.
+- The user cannot perform administrative actions.
+- An appropriate authorization message is displayed or the user is redirected.
+
+**Actual Result:**
+- ...
+
+**Status:**
+...
+
+---
+
+### TC-ADMIN-09 — Search for a non-existing user
+
+**Precondition:**
+- Admin is logged in.
+- Admin has permission to manage users.
+
+**Test Steps:**
+1. Navigate to the **User Management** page.
+2. Enter a name or email that does not exist in the system.
+3. Click the **Search** button.
+
+**Expected Result:**
+- The system does not display unrelated users.
+- The system displays an appropriate message indicating that no matching user was found.
+
+**Actual Result:**
+- ...
+
+**Status:**
+...
+
+---
+
+### TC-ADMIN-10 — Cancel an administrative action
+
+**Precondition:**
+- Admin is logged in.
+- Admin has permission to manage users.
+- An administrative action is available for a user.
+
+**Test Steps:**
+1. Navigate to the **User Management** page.
+2. Select a user.
+3. Start an administrative action.
 4. Click the **Cancel** button.
 
 **Expected Result:**
-- The upgrade process is cancelled.
-- No membership upgrade is applied.
-- The user's current membership remains unchanged.
-
-**Actual Result:**
-- ...
-
-**Status:**
-...
-
----
-
-### TC-MEMBERSHIP-08 — Verify membership after successful upgrade
-
-**Precondition:**
-- User is logged in.
-- User has successfully completed a membership upgrade.
-
-**Test Steps:**
-1. Navigate to the **Profile** or **Membership** page.
-2. View the user's current membership status.
-
-**Expected Result:**
-- The system displays the newly upgraded membership.
-- The membership information matches the selected upgrade plan.
-
-**Actual Result:**
-- ...
-
-**Status:**
-...
-
----
-
-### TC-MEMBERSHIP-09 — Attempt to upgrade to an unavailable membership plan
-
-**Precondition:**
-- User is logged in.
-- The selected membership plan is unavailable or no longer offered.
-
-**Test Steps:**
-1. Navigate to the **Membership** page.
-2. Attempt to select or upgrade to the unavailable membership plan.
-3. Submit the upgrade request.
-
-**Expected Result:**
-- The system prevents the user from upgrading to the unavailable plan.
-- An appropriate message is displayed.
-- The user's current membership remains unchanged.
-
-**Actual Result:**
-- ...
-
-**Status:**
-...
-
----
-
-### TC-MEMBERSHIP-10 — Attempt to upgrade when the user already has an active membership
-
-**Precondition:**
-- User is logged in.
-- User already has an active paid membership.
-
-**Test Steps:**
-1. Navigate to the **Membership** page.
-2. Attempt to upgrade to another membership plan.
-3. Submit the upgrade request.
-
-**Expected Result:**
-- The system handles the existing membership according to the membership rules.
-- The system either prevents the upgrade or provides the available upgrade options.
-- The user's membership status is updated only if the upgrade is valid.
+- The administrative action is cancelled.
+- No changes are applied to the user's account.
+- The user's information remains unchanged.
 
 **Actual Result:**
 - ...
