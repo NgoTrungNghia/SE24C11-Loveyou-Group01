@@ -38,9 +38,12 @@ This document specifies the 56 use cases of the PA4 Use-Case Model. The specific
 
 * **Postconditions:** The requested sign up operation is completed successfully, or the system remains in a safe and recoverable state after an alternative flow.
 * **UI Prototype References:**
-  - Main Flow: `prototypes/uc01_sign_up.png`
-  - AF01.1: `prototypes/uc01_af1_invalid_registration_information.png`
-  - AF01.2: `prototypes/uc01_af2_email_already_registered.png`
+  - **Main Flow:**
+    ![Main Flow](prototypes/uc01_sign_up.png)
+  - **AF01.1:**
+    ![AF01.1](prototypes/uc01_af1_invalid_registration_information.png)
+  - **AF01.2:**
+    ![AF01.2](prototypes/uc01_af2_email_already_registered.png)
 
 ---
 
@@ -72,9 +75,12 @@ This document specifies the 56 use cases of the PA4 Use-Case Model. The specific
 
 * **Postconditions:** The requested log in operation is completed successfully, or the system remains in a safe and recoverable state after an alternative flow.
 * **UI Prototype References:**
-  - Main Flow: `prototypes/uc02_log_in.png`
-  - AF02.1: `prototypes/uc02_af1_invalid_credentials.png`
-  - AF02.2: `prototypes/uc02_af2_account_unavailable.png`
+  - **Main Flow:**
+    ![Main Flow](prototypes/uc02_log_in.png)
+  - **AF02.1:**
+    ![AF02.1](prototypes/uc02_af1_invalid_credentials.png)
+  - **AF02.2:**
+    ![AF02.2](prototypes/uc02_af2_account_unavailable.png)
 
 ---
 
@@ -101,8 +107,10 @@ This document specifies the 56 use cases of the PA4 Use-Case Model. The specific
 
 * **Postconditions:** The requested log out operation is completed successfully, or the system remains in a safe and recoverable state after an alternative flow.
 * **UI Prototype References:**
-  - Main Flow: `prototypes/uc03_logout_confirm.png`
-  - AF03.1: `prototypes/uc03_af1_logout_confirmation.png`
+  - **Main Flow:**
+    ![Main Flow](prototypes/uc03_logout_confirm.png)
+  - **AF03.1:**
+    ![AF03.1](prototypes/uc03_af1_logout_confirmation.png)
 
 ---
 
@@ -134,9 +142,12 @@ This document specifies the 56 use cases of the PA4 Use-Case Model. The specific
 
 * **Postconditions:** The requested reset password operation is completed successfully, or the system remains in a safe and recoverable state after an alternative flow.
 * **UI Prototype References:**
-  - Main Flow: `prototypes/uc04_reset_password.png`
-  - AF04.1: `prototypes/uc04_af1_unknown_account.png`
-  - AF04.2: `prototypes/uc04_af2_invalid_or_expired_reset_link.png`
+  - **Main Flow:**
+    ![Main Flow](prototypes/uc04_reset_password.png)
+  - **AF04.1:**
+    ![AF04.1](prototypes/uc04_af1_unknown_account.png)
+  - **AF04.2:**
+    ![AF04.2](prototypes/uc04_af2_invalid_or_expired_reset_link.png)
 
 ---
 
@@ -162,8 +173,10 @@ This document specifies the 56 use cases of the PA4 Use-Case Model. The specific
 
 * **Postconditions:** The requested manage session operation is completed successfully, or the system remains in a safe and recoverable state after an alternative flow.
 * **UI Prototype References:**
-  - Main Flow: `prototypes/uc02_log_in.png`
-  - AF05.1: `prototypes/uc05_af1_session_expired.png`
+  - **Main Flow:**
+    ![Main Flow](prototypes/uc02_log_in.png)
+  - **AF05.1:**
+    ![AF05.1](prototypes/uc05_af1_session_expired.png)
 
 ---
 
@@ -189,8 +202,10 @@ This document specifies the 56 use cases of the PA4 Use-Case Model. The specific
 
 * **Postconditions:** The requested authorize access by role operation is completed successfully, or the system remains in a safe and recoverable state after an alternative flow.
 * **UI Prototype References:**
-  - Main Flow: `prototypes/uc06_access_control.png`
-  - AF06.1: `prototypes/uc06_af1_insufficient_permission.png`
+  - **Main Flow:**
+    ![Main Flow](prototypes/uc06_access_control.png)
+  - **AF06.1:**
+    ![AF06.1](prototypes/uc06_af1_insufficient_permission.png)
 
 ---
 
@@ -224,9 +239,12 @@ This document specifies the 56 use cases of the PA4 Use-Case Model. The specific
 
 * **Postconditions:** The requested edit personal information operation is completed successfully, or the system remains in a safe and recoverable state after an alternative flow.
 * **UI Prototype References:**
-  - Main Flow: `prototypes/uc07_edit_profile.png`
-  - AF07.1: `prototypes/uc07_af1_invalid_profile_information.png`
-  - AF07.2: `prototypes/uc07_af2_save_operation_fails.png`
+  - **Main Flow:**
+    ![Main Flow](prototypes/uc07_edit_profile.png)
+  - **AF07.1:**
+    ![AF07.1](prototypes/uc07_af1_invalid_profile_information.png)
+  - **AF07.2:**
+    ![AF07.2](prototypes/uc07_af2_save_operation_fails.png)
 
 ---
 
@@ -258,9 +276,12 @@ This document specifies the 56 use cases of the PA4 Use-Case Model. The specific
 
 * **Postconditions:** The requested upload photos operation is completed successfully, or the system remains in a safe and recoverable state after an alternative flow.
 * **UI Prototype References:**
-  - Main Flow: `prototypes/uc08_upload_photos.png`
-  - AF08.1: `prototypes/uc08_af1_unsupported_or_oversized_photo.png`
-  - AF08.2: `prototypes/uc08_af2_upload_fails.png`
+  - **Main Flow:**
+    ![Main Flow](prototypes/uc08_upload_photos.png)
+  - **AF08.1:**
+    ![AF08.1](prototypes/uc08_af1_unsupported_or_oversized_photo.png)
+  - **AF08.2:**
+    ![AF08.2](prototypes/uc08_af2_upload_fails.png)
 
 ---
 
@@ -288,8 +309,10 @@ This document specifies the 56 use cases of the PA4 Use-Case Model. The specific
 
 * **Postconditions:** The requested manage interest tags operation is completed successfully, or the system remains in a safe and recoverable state after an alternative flow.
 * **UI Prototype References:**
-  - Main Flow: `prototypes/uc09_interest_tags.png`
-  - AF09.1: `prototypes/uc09_af1_invalid_number_of_selected_interests.png`
+  - **Main Flow:**
+    ![Main Flow](prototypes/uc09_interest_tags.png)
+  - **AF09.1:**
+    ![AF09.1](prototypes/uc09_af1_invalid_number_of_selected_interests.png)
 
 ---
 
@@ -321,9 +344,12 @@ This document specifies the 56 use cases of the PA4 Use-Case Model. The specific
 
 * **Postconditions:** The requested change password operation is completed successfully, or the system remains in a safe and recoverable state after an alternative flow.
 * **UI Prototype References:**
-  - Main Flow: `prototypes/uc10_change_password.png`
-  - AF10.1: `prototypes/uc10_af1_incorrect_current_password.png`
-  - AF10.2: `prototypes/uc10_af2_new_passwords_do_not_match.png`
+  - **Main Flow:**
+    ![Main Flow](prototypes/uc10_change_password.png)
+  - **AF10.1:**
+    ![AF10.1](prototypes/uc10_af1_incorrect_current_password.png)
+  - **AF10.2:**
+    ![AF10.2](prototypes/uc10_af2_new_passwords_do_not_match.png)
 
 ---
 
@@ -352,8 +378,10 @@ This document specifies the 56 use cases of the PA4 Use-Case Model. The specific
 
 * **Postconditions:** The requested complete onboarding operation is completed successfully, or the system remains in a safe and recoverable state after an alternative flow.
 * **UI Prototype References:**
-  - Main Flow: `prototypes/uc11_onboarding.png`
-  - AF11.1: `prototypes/uc11_af1_user_skips_onboarding.png`
+  - **Main Flow:**
+    ![Main Flow](prototypes/uc11_onboarding.png)
+  - **AF11.1:**
+    ![AF11.1](prototypes/uc11_af1_user_skips_onboarding.png)
 
 ---
 
@@ -380,8 +408,10 @@ This document specifies the 56 use cases of the PA4 Use-Case Model. The specific
 
 * **Postconditions:** The requested upload initial photo operation is completed successfully, or the system remains in a safe and recoverable state after an alternative flow.
 * **UI Prototype References:**
-  - Main Flow: `prototypes/uc12_initial_photo.png`
-  - AF12.1: `prototypes/uc12_af1_invalid_photo.png`
+  - **Main Flow:**
+    ![Main Flow](prototypes/uc12_initial_photo.png)
+  - **AF12.1:**
+    ![AF12.1](prototypes/uc12_af1_invalid_photo.png)
 
 ---
 
@@ -408,8 +438,10 @@ This document specifies the 56 use cases of the PA4 Use-Case Model. The specific
 
 * **Postconditions:** The requested set gender preference operation is completed successfully, or the system remains in a safe and recoverable state after an alternative flow.
 * **UI Prototype References:**
-  - Main Flow: `prototypes/uc13_gender_preference.png`
-  - AF13.1: `prototypes/uc13_af1_no_preference_selected.png`
+  - **Main Flow:**
+    ![Main Flow](prototypes/uc13_gender_preference.png)
+  - **AF13.1:**
+    ![AF13.1](prototypes/uc13_af1_no_preference_selected.png)
 
 ---
 
@@ -436,8 +468,10 @@ This document specifies the 56 use cases of the PA4 Use-Case Model. The specific
 
 * **Postconditions:** The requested set preferred age range operation is completed successfully, or the system remains in a safe and recoverable state after an alternative flow.
 * **UI Prototype References:**
-  - Main Flow: `prototypes/uc14_age_preference.png`
-  - AF14.1: `prototypes/uc14_af1_invalid_age_range.png`
+  - **Main Flow:**
+    ![Main Flow](prototypes/uc14_age_preference.png)
+  - **AF14.1:**
+    ![AF14.1](prototypes/uc14_af1_invalid_age_range.png)
 
 ---
 
@@ -464,8 +498,10 @@ This document specifies the 56 use cases of the PA4 Use-Case Model. The specific
 
 * **Postconditions:** The requested set home city operation is completed successfully, or the system remains in a safe and recoverable state after an alternative flow.
 * **UI Prototype References:**
-  - Main Flow: `prototypes/uc15_city.png`
-  - AF15.1: `prototypes/uc15_af1_city_not_found.png`
+  - **Main Flow:**
+    ![Main Flow](prototypes/uc15_city.png)
+  - **AF15.1:**
+    ![AF15.1](prototypes/uc15_af1_city_not_found.png)
 
 ---
 
@@ -492,8 +528,10 @@ This document specifies the 56 use cases of the PA4 Use-Case Model. The specific
 
 * **Postconditions:** The requested select initial interest tags operation is completed successfully, or the system remains in a safe and recoverable state after an alternative flow.
 * **UI Prototype References:**
-  - Main Flow: `prototypes/uc16_interests.png`
-  - AF16.1: `prototypes/uc16_af1_no_interests_selected.png`
+  - **Main Flow:**
+    ![Main Flow](prototypes/uc16_interests.png)
+  - **AF16.1:**
+    ![AF16.1](prototypes/uc16_af1_no_interests_selected.png)
 
 ---
 
@@ -520,8 +558,10 @@ This document specifies the 56 use cases of the PA4 Use-Case Model. The specific
 
 * **Postconditions:** The requested skip onboarding operation is completed successfully, or the system remains in a safe and recoverable state after an alternative flow.
 * **UI Prototype References:**
-  - Main Flow: `prototypes/uc11_onboarding_skip.png`
-  - AF17.1: `prototypes/uc17_af1_user_returns_to_onboarding_later.png`
+  - **Main Flow:**
+    ![Main Flow](prototypes/uc11_onboarding.png)
+  - **AF17.1:**
+    ![AF17.1](prototypes/uc11_af1_user_skips_onboarding.png)
 
 ---
 
@@ -554,9 +594,12 @@ This document specifies the 56 use cases of the PA4 Use-Case Model. The specific
 
 * **Postconditions:** The requested view ai match suggestions operation is completed successfully, or the system remains in a safe and recoverable state after an alternative flow.
 * **UI Prototype References:**
-  - Main Flow: `prototypes/uc18_ai_match_suggestions.png`
-  - AF18.1: `prototypes/uc18_af1_no_suitable_candidates.png`
-  - AF18.2: `prototypes/uc18_af2_ai_recommendation_unavailable.png`
+  - **Main Flow:**
+    ![Main Flow](prototypes/uc18_ai_match_suggestions.png)
+  - **AF18.1:**
+    ![AF18.1](prototypes/uc18_af1_no_suitable_candidates.png)
+  - **AF18.2:**
+    ![AF18.2](prototypes/uc18_af2_ai_recommendation_unavailable.png)
 
 ---
 
@@ -582,8 +625,10 @@ This document specifies the 56 use cases of the PA4 Use-Case Model. The specific
 
 * **Postconditions:** The requested calculate compatibility score operation is completed successfully, or the system remains in a safe and recoverable state after an alternative flow.
 * **UI Prototype References:**
-  - Main Flow: `prototypes/uc18_ai_match_suggestions.png`
-  - AF19.1: `prototypes/uc19_af1_insufficient_profile_data.png`
+  - **Main Flow:**
+    ![Main Flow](prototypes/uc18_ai_match_suggestions.png)
+  - **AF19.1:**
+    ![AF19.1](prototypes/uc19_af1_insufficient_profile_data.png)
 
 ---
 
@@ -608,8 +653,10 @@ This document specifies the 56 use cases of the PA4 Use-Case Model. The specific
 
 * **Postconditions:** The requested display match reasons operation is completed successfully, or the system remains in a safe and recoverable state after an alternative flow.
 * **UI Prototype References:**
-  - Main Flow: `prototypes/uc18_ai_match_suggestions.png`
-  - AF20.1: `prototypes/uc20_af1_no_strong_match_reason_available.png`
+  - **Main Flow:**
+    ![Main Flow](prototypes/uc18_ai_match_suggestions.png)
+  - **AF20.1:**
+    ![AF20.1](prototypes/uc18_af1_no_suitable_candidates.png)
 
 ---
 
@@ -635,8 +682,10 @@ This document specifies the 56 use cases of the PA4 Use-Case Model. The specific
 
 * **Postconditions:** The requested refresh suggestions operation is completed successfully, or the system remains in a safe and recoverable state after an alternative flow.
 * **UI Prototype References:**
-  - Main Flow: `prototypes/uc18_ai_match_suggestions.png`
-  - AF21.1: `prototypes/uc21_af1_refresh_unavailable.png`
+  - **Main Flow:**
+    ![Main Flow](prototypes/uc18_ai_match_suggestions.png)
+  - **AF21.1:**
+    ![AF21.1](prototypes/uc21_af1_refresh_unavailable.png)
 
 ---
 
@@ -665,8 +714,10 @@ This document specifies the 56 use cases of the PA4 Use-Case Model. The specific
 
 * **Postconditions:** The requested like candidate operation is completed successfully, or the system remains in a safe and recoverable state after an alternative flow.
 * **UI Prototype References:**
-  - Main Flow: `prototypes/uc22_swipe.png`
-  - AF22.1: `prototypes/uc22_af1_candidate_unavailable_or_blocked.png`
+  - **Main Flow:**
+    ![Main Flow](prototypes/uc18_ai_match_suggestions.png)
+  - **AF22.1:**
+    ![AF22.1](prototypes/uc18_af1_no_suitable_candidates.png)
 
 ---
 
@@ -692,8 +743,10 @@ This document specifies the 56 use cases of the PA4 Use-Case Model. The specific
 
 * **Postconditions:** The requested skip candidate operation is completed successfully, or the system remains in a safe and recoverable state after an alternative flow.
 * **UI Prototype References:**
-  - Main Flow: `prototypes/uc23_skip.png`
-  - AF23.1: `prototypes/uc23_af1_undo_skip_if_supported.png`
+  - **Main Flow:**
+    ![Main Flow](prototypes/uc18_ai_match_suggestions.png)
+  - **AF23.1:**
+    ![AF23.1](prototypes/uc18_af1_no_suitable_candidates.png)
 
 ---
 
@@ -720,8 +773,10 @@ This document specifies the 56 use cases of the PA4 Use-Case Model. The specific
 
 * **Postconditions:** The requested create mutual match operation is completed successfully, or the system remains in a safe and recoverable state after an alternative flow.
 * **UI Prototype References:**
-  - Main Flow: `prototypes/uc24_mutual_match.png`
-  - AF24.1: `prototypes/uc24_af1_target_account_becomes_unavailable.png`
+  - **Main Flow:**
+    ![Main Flow](prototypes/uc24_mutual_match_modal.png)
+  - **AF24.1:**
+    ![AF24.1](prototypes/uc18_af1_no_suitable_candidates.png)
 
 ---
 
@@ -747,8 +802,10 @@ This document specifies the 56 use cases of the PA4 Use-Case Model. The specific
 
 * **Postconditions:** The requested show match confirmation operation is completed successfully, or the system remains in a safe and recoverable state after an alternative flow.
 * **UI Prototype References:**
-  - Main Flow: `prototypes/uc24_mutual_match.png`
-  - AF25.1: `prototypes/uc25_af1_user_dismisses_match_confirmation.png`
+  - **Main Flow:**
+    ![Main Flow](prototypes/uc24_mutual_match_modal.png)
+  - **AF25.1:**
+    ![AF25.1](prototypes/uc18_ai_match_suggestions.png)
 
 ---
 
@@ -774,8 +831,10 @@ This document specifies the 56 use cases of the PA4 Use-Case Model. The specific
 
 * **Postconditions:** The requested view match history operation is completed successfully, or the system remains in a safe and recoverable state after an alternative flow.
 * **UI Prototype References:**
-  - Main Flow: `prototypes/uc26_match_history.png`
-  - AF26.1: `prototypes/uc26_af1_no_matches_yet.png`
+  - **Main Flow:**
+    ![Main Flow](prototypes/uc31_realtime_chat.png)
+  - **AF26.1:**
+    ![AF26.1](prototypes/uc37_af1_no_notifications.png)
 
 ---
 
@@ -804,8 +863,10 @@ This document specifies the 56 use cases of the PA4 Use-Case Model. The specific
 
 * **Postconditions:** The requested search profiles operation is completed successfully, or the system remains in a safe and recoverable state after an alternative flow.
 * **UI Prototype References:**
-  - Main Flow: `prototypes/uc27_search_profiles.png`
-  - AF27.1: `prototypes/uc27_af1_no_search_results.png`
+  - **Main Flow:**
+    ![Main Flow](prototypes/uc18_ai_match_suggestions.png)
+  - **AF27.1:**
+    ![AF27.1](prototypes/uc18_af1_no_suitable_candidates.png)
 
 ---
 
@@ -832,8 +893,10 @@ This document specifies the 56 use cases of the PA4 Use-Case Model. The specific
 
 * **Postconditions:** The requested apply search filters operation is completed successfully, or the system remains in a safe and recoverable state after an alternative flow.
 * **UI Prototype References:**
-  - Main Flow: `prototypes/uc28_search_filters.png`
-  - AF28.1: `prototypes/uc28_af1_reset_filters.png`
+  - **Main Flow:**
+    ![Main Flow](prototypes/uc18_ai_match_suggestions.png)
+  - **AF28.1:**
+    ![AF28.1](prototypes/uc18_af1_no_suitable_candidates.png)
 
 ---
 
@@ -859,8 +922,10 @@ This document specifies the 56 use cases of the PA4 Use-Case Model. The specific
 
 * **Postconditions:** The requested sort search results operation is completed successfully, or the system remains in a safe and recoverable state after an alternative flow.
 * **UI Prototype References:**
-  - Main Flow: `prototypes/uc29_sort_results.png`
-  - AF29.1: `prototypes/uc29_af1_default_sorting.png`
+  - **Main Flow:**
+    ![Main Flow](prototypes/uc18_ai_match_suggestions.png)
+  - **AF29.1:**
+    ![AF29.1](prototypes/uc18_af1_no_suitable_candidates.png)
 
 ---
 
@@ -886,8 +951,10 @@ This document specifies the 56 use cases of the PA4 Use-Case Model. The specific
 
 * **Postconditions:** The requested view paginated results operation is completed successfully, or the system remains in a safe and recoverable state after an alternative flow.
 * **UI Prototype References:**
-  - Main Flow: `prototypes/uc30_paginated_results.png`
-  - AF30.1: `prototypes/uc30_af1_end_of_result_set.png`
+  - **Main Flow:**
+    ![Main Flow](prototypes/uc18_ai_match_suggestions.png)
+  - **AF30.1:**
+    ![AF30.1](prototypes/uc18_af1_no_suitable_candidates.png)
 
 ---
 
@@ -915,8 +982,10 @@ This document specifies the 56 use cases of the PA4 Use-Case Model. The specific
 
 * **Postconditions:** The requested view conversations operation is completed successfully, or the system remains in a safe and recoverable state after an alternative flow.
 * **UI Prototype References:**
-  - Main Flow: `prototypes/uc31_realtime_chat.png`
-  - AF31.1: `prototypes/uc31_af1_no_active_conversations.png`
+  - **Main Flow:**
+    ![Main Flow](prototypes/uc31_realtime_chat.png)
+  - **AF31.1:**
+    ![AF31.1](prototypes/uc31_realtime_chat.png)
 
 ---
 
@@ -943,8 +1012,10 @@ This document specifies the 56 use cases of the PA4 Use-Case Model. The specific
 
 * **Postconditions:** The requested send message operation is completed successfully, or the system remains in a safe and recoverable state after an alternative flow.
 * **UI Prototype References:**
-  - Main Flow: `prototypes/uc31_realtime_chat.png`
-  - AF32.1: `prototypes/uc32_af1_message_cannot_be_sent.png`
+  - **Main Flow:**
+    ![Main Flow](prototypes/uc31_realtime_chat.png)
+  - **AF32.1:**
+    ![AF32.1](prototypes/uc31_realtime_chat.png)
 
 ---
 
@@ -970,8 +1041,10 @@ This document specifies the 56 use cases of the PA4 Use-Case Model. The specific
 
 * **Postconditions:** The requested receive message operation is completed successfully, or the system remains in a safe and recoverable state after an alternative flow.
 * **UI Prototype References:**
-  - Main Flow: `prototypes/uc31_realtime_chat.png`
-  - AF33.1: `prototypes/uc33_af1_message_arrives_while_user_is_offline.png`
+  - **Main Flow:**
+    ![Main Flow](prototypes/uc31_realtime_chat.png)
+  - **AF33.1:**
+    ![AF33.1](prototypes/uc41_message_notification.png)
 
 ---
 
@@ -997,8 +1070,10 @@ This document specifies the 56 use cases of the PA4 Use-Case Model. The specific
 
 * **Postconditions:** The requested view message history operation is completed successfully, or the system remains in a safe and recoverable state after an alternative flow.
 * **UI Prototype References:**
-  - Main Flow: `prototypes/uc31_realtime_chat.png`
-  - AF34.1: `prototypes/uc34_af1_no_older_messages.png`
+  - **Main Flow:**
+    ![Main Flow](prototypes/uc31_realtime_chat.png)
+  - **AF34.1:**
+    ![AF34.1](prototypes/uc31_realtime_chat.png)
 
 ---
 
@@ -1023,8 +1098,10 @@ This document specifies the 56 use cases of the PA4 Use-Case Model. The specific
 
 * **Postconditions:** The requested view online status operation is completed successfully, or the system remains in a safe and recoverable state after an alternative flow.
 * **UI Prototype References:**
-  - Main Flow: `prototypes/uc31_realtime_chat.png`
-  - AF35.1: `prototypes/uc35_af1_online_status_hidden.png`
+  - **Main Flow:**
+    ![Main Flow](prototypes/uc31_realtime_chat.png)
+  - **AF35.1:**
+    ![AF35.1](prototypes/uc31_realtime_chat.png)
 
 ---
 
@@ -1050,8 +1127,10 @@ This document specifies the 56 use cases of the PA4 Use-Case Model. The specific
 
 * **Postconditions:** The requested view typing indicator operation is completed successfully, or the system remains in a safe and recoverable state after an alternative flow.
 * **UI Prototype References:**
-  - Main Flow: `prototypes/uc31_realtime_chat.png`
-  - AF36.1: `prototypes/uc36_af1_typing_status_unavailable.png`
+  - **Main Flow:**
+    ![Main Flow](prototypes/uc31_realtime_chat.png)
+  - **AF36.1:**
+    ![AF36.1](prototypes/uc31_realtime_chat.png)
 
 ---
 
@@ -1079,8 +1158,10 @@ This document specifies the 56 use cases of the PA4 Use-Case Model. The specific
 
 * **Postconditions:** The requested view notifications operation is completed successfully, or the system remains in a safe and recoverable state after an alternative flow.
 * **UI Prototype References:**
-  - Main Flow: `prototypes/uc37_notifications.png`
-  - AF37.1: `prototypes/uc37_af1_no_notifications.png`
+  - **Main Flow:**
+    ![Main Flow](prototypes/uc37_notifications.png)
+  - **AF37.1:**
+    ![AF37.1](prototypes/uc37_af1_no_notifications.png)
 
 ---
 
@@ -1105,8 +1186,10 @@ This document specifies the 56 use cases of the PA4 Use-Case Model. The specific
 
 * **Postconditions:** The requested mark notification as read operation is completed successfully, or the system remains in a safe and recoverable state after an alternative flow.
 * **UI Prototype References:**
-  - Main Flow: `prototypes/uc37_notifications.png`
-  - AF38.1: `prototypes/uc38_af1_notification_already_read.png`
+  - **Main Flow:**
+    ![Main Flow](prototypes/uc37_notifications.png)
+  - **AF38.1:**
+    ![AF38.1](prototypes/uc38_af1_notification_already_read.png)
 
 ---
 
@@ -1131,8 +1214,10 @@ This document specifies the 56 use cases of the PA4 Use-Case Model. The specific
 
 * **Postconditions:** The requested mark all notifications as read operation is completed successfully, or the system remains in a safe and recoverable state after an alternative flow.
 * **UI Prototype References:**
-  - Main Flow: `prototypes/uc37_notifications.png`
-  - AF39.1: `prototypes/uc39_af1_no_unread_notifications.png`
+  - **Main Flow:**
+    ![Main Flow](prototypes/uc37_notifications.png)
+  - **AF39.1:**
+    ![AF39.1](prototypes/uc39_af1_no_unread_notifications.png)
 
 ---
 
@@ -1157,8 +1242,10 @@ This document specifies the 56 use cases of the PA4 Use-Case Model. The specific
 
 * **Postconditions:** The requested receive match notification operation is completed successfully, or the system remains in a safe and recoverable state after an alternative flow.
 * **UI Prototype References:**
-  - Main Flow: `prototypes/uc40_match_notification.png`
-  - AF40.1: `prototypes/uc40_af1_notification_delivery_unavailable.png`
+  - **Main Flow:**
+    ![Main Flow](prototypes/uc40_match_notification.png)
+  - **AF40.1:**
+    ![AF40.1](prototypes/uc40_af1_notification_delivery_unavailable.png)
 
 ---
 
@@ -1183,8 +1270,10 @@ This document specifies the 56 use cases of the PA4 Use-Case Model. The specific
 
 * **Postconditions:** The requested receive message notification operation is completed successfully, or the system remains in a safe and recoverable state after an alternative flow.
 * **UI Prototype References:**
-  - Main Flow: `prototypes/uc41_message_notification.png`
-  - AF41.1: `prototypes/uc40_af1_notification_delivery_unavailable.png`
+  - **Main Flow:**
+    ![Main Flow](prototypes/uc41_message_notification.png)
+  - **AF41.1:**
+    ![AF41.1](prototypes/uc40_af1_notification_delivery_unavailable.png)
 
 ---
 
@@ -1213,8 +1302,10 @@ This document specifies the 56 use cases of the PA4 Use-Case Model. The specific
 
 * **Postconditions:** The requested block user operation is completed successfully, or the system remains in a safe and recoverable state after an alternative flow.
 * **UI Prototype References:**
-  - Main Flow: `prototypes/uc42_block_user.png`
-  - AF42.1: `prototypes/uc42_af1_user_already_blocked.png`
+  - **Main Flow:**
+    ![Main Flow](prototypes/uc42_block_user.png)
+  - **AF42.1:**
+    ![AF42.1](prototypes/uc42_af1_user_already_blocked.png)
 
 ---
 
@@ -1241,8 +1332,10 @@ This document specifies the 56 use cases of the PA4 Use-Case Model. The specific
 
 * **Postconditions:** The requested report user operation is completed successfully, or the system remains in a safe and recoverable state after an alternative flow.
 * **UI Prototype References:**
-  - Main Flow: `prototypes/uc43_report_user.png`
-  - AF43.1: `prototypes/uc43_af1_report_submission_incomplete.png`
+  - **Main Flow:**
+    ![Main Flow](prototypes/uc43_report_user.png)
+  - **AF43.1:**
+    ![AF43.1](prototypes/uc43_af1_report_submission_incomplete.png)
 
 ---
 
@@ -1269,8 +1362,10 @@ This document specifies the 56 use cases of the PA4 Use-Case Model. The specific
 
 * **Postconditions:** The requested deactivate account operation is completed successfully, or the system remains in a safe and recoverable state after an alternative flow.
 * **UI Prototype References:**
-  - Main Flow: `prototypes/uc44_deactivate_account.png`
-  - AF44.1: `prototypes/uc44_af1_invalid_confirmation.png`
+  - **Main Flow:**
+    ![Main Flow](prototypes/uc44_deactivate_account.png)
+  - **AF44.1:**
+    ![AF44.1](prototypes/uc44_af1_invalid_confirmation.png)
 
 ---
 
@@ -1297,8 +1392,10 @@ This document specifies the 56 use cases of the PA4 Use-Case Model. The specific
 
 * **Postconditions:** The requested permanently delete account operation is completed successfully, or the system remains in a safe and recoverable state after an alternative flow.
 * **UI Prototype References:**
-  - Main Flow: `prototypes/uc45_delete_account.png`
-  - AF45.1: `prototypes/uc45_af1_confirmation_does_not_match.png`
+  - **Main Flow:**
+    ![Main Flow](prototypes/uc45_delete_account.png)
+  - **AF45.1:**
+    ![AF45.1](prototypes/uc45_af1_confirmation_does_not_match.png)
 
 ---
 
@@ -1326,8 +1423,10 @@ This document specifies the 56 use cases of the PA4 Use-Case Model. The specific
 
 * **Postconditions:** The requested view admin dashboard operation is completed successfully, or the system remains in a safe and recoverable state after an alternative flow.
 * **UI Prototype References:**
-  - Main Flow: `prototypes/uc46_admin_dashboard.png`
-  - AF46.1: `prototypes/uc46_af1_unauthorized_admin_access.png`
+  - **Main Flow:**
+    ![Main Flow](prototypes/uc46_admin_dashboard.png)
+  - **AF46.1:**
+    ![AF46.1](prototypes/uc46_af1_unauthorized_admin_access.png)
 
 ---
 
@@ -1353,8 +1452,10 @@ This document specifies the 56 use cases of the PA4 Use-Case Model. The specific
 
 * **Postconditions:** The requested view platform statistics operation is completed successfully, or the system remains in a safe and recoverable state after an alternative flow.
 * **UI Prototype References:**
-  - Main Flow: `prototypes/uc46_admin_dashboard.png`
-  - AF47.1: `prototypes/uc47_af1_statistics_temporarily_unavailable.png`
+  - **Main Flow:**
+    ![Main Flow](prototypes/uc46_admin_dashboard.png)
+  - **AF47.1:**
+    ![AF47.1](prototypes/uc47_af1_statistics_temporarily_unavailable.png)
 
 ---
 
@@ -1380,8 +1481,10 @@ This document specifies the 56 use cases of the PA4 Use-Case Model. The specific
 
 * **Postconditions:** The requested manage users operation is completed successfully, or the system remains in a safe and recoverable state after an alternative flow.
 * **UI Prototype References:**
-  - Main Flow: `prototypes/uc48_manage_users.png`
-  - AF48.1: `prototypes/uc48_af1_user_management_unavailable.png`
+  - **Main Flow:**
+    ![Main Flow](prototypes/uc48_manage_users.png)
+  - **AF48.1:**
+    ![AF48.1](prototypes/c48_af1_user_management_unavailable.png)
 
 ---
 
@@ -1407,8 +1510,10 @@ This document specifies the 56 use cases of the PA4 Use-Case Model. The specific
 
 * **Postconditions:** The requested search users operation is completed successfully, or the system remains in a safe and recoverable state after an alternative flow.
 * **UI Prototype References:**
-  - Main Flow: `prototypes/uc48_manage_users.png`
-  - AF49.1: `prototypes/uc49_af1_no_matching_users.png`
+  - **Main Flow:**
+    ![Main Flow](prototypes/uc48_manage_users.png)
+  - **AF49.1:**
+    ![AF49.1](prototypes/uc49_af1_no_matching_users.png)
 
 ---
 
@@ -1434,8 +1539,10 @@ This document specifies the 56 use cases of the PA4 Use-Case Model. The specific
 
 * **Postconditions:** The requested view user details operation is completed successfully, or the system remains in a safe and recoverable state after an alternative flow.
 * **UI Prototype References:**
-  - Main Flow: `prototypes/uc50_user_details.png`
-  - AF50.1: `prototypes/uc50_af1_user_details_unavailable.png`
+  - **Main Flow:**
+    ![Main Flow](prototypes/uc50_user_details.png)
+  - **AF50.1:**
+    ![AF50.1](prototypes/uc50_af1_user_details_unavailable.png)
 
 ---
 
@@ -1462,8 +1569,10 @@ This document specifies the 56 use cases of the PA4 Use-Case Model. The specific
 
 * **Postconditions:** The requested block user account operation is completed successfully, or the system remains in a safe and recoverable state after an alternative flow.
 * **UI Prototype References:**
-  - Main Flow: `prototypes/uc50_user_details.png`
-  - AF51.1: `prototypes/uc51_af1_account_cannot_be_blocked.png`
+  - **Main Flow:**
+    ![Main Flow](prototypes/uc50_user_details.png)
+  - **AF51.1:**
+    ![AF51.1](prototypes/uc51_af1_account_cannot_be_blocked.png)
 
 ---
 
@@ -1490,8 +1599,10 @@ This document specifies the 56 use cases of the PA4 Use-Case Model. The specific
 
 * **Postconditions:** The requested unblock user account operation is completed successfully, or the system remains in a safe and recoverable state after an alternative flow.
 * **UI Prototype References:**
-  - Main Flow: `prototypes/uc50_user_details.png`
-  - AF52.1: `prototypes/uc52_af1_account_is_not_blocked.png`
+  - **Main Flow:**
+    ![Main Flow](prototypes/uc50_user_details.png)
+  - **AF52.1:**
+    ![AF52.1](prototypes/uc52_af1_account_is_not_blocked.png)
 
 ---
 
@@ -1518,8 +1629,10 @@ This document specifies the 56 use cases of the PA4 Use-Case Model. The specific
 
 * **Postconditions:** The requested delete user account operation is completed successfully, or the system remains in a safe and recoverable state after an alternative flow.
 * **UI Prototype References:**
-  - Main Flow: `prototypes/uc50_user_details.png`
-  - AF53.1: `prototypes/uc53_af1_deletion_cannot_be_completed.png`
+  - **Main Flow:**
+    ![Main Flow](prototypes/uc50_user_details.png)
+  - **AF53.1:**
+    ![AF53.1](prototypes/uc50_af1_user_details_unavailable.png)
 
 ---
 
@@ -1544,8 +1657,10 @@ This document specifies the 56 use cases of the PA4 Use-Case Model. The specific
 
 * **Postconditions:** The requested manage interest tag catalogue operation is completed successfully, or the system remains in a safe and recoverable state after an alternative flow.
 * **UI Prototype References:**
-  - Main Flow: `prototypes/uc54_interest_catalogue.png`
-  - AF54.1: `prototypes/uc54_af1_catalogue_unavailable.png`
+  - **Main Flow:**
+    ![Main Flow](prototypes/uc54_interest_catalogue.png)
+  - **AF54.1:**
+    ![AF54.1](prototypes/uc54_af1_catalogue_unavailable.png)
 
 ---
 
@@ -1572,8 +1687,10 @@ This document specifies the 56 use cases of the PA4 Use-Case Model. The specific
 
 * **Postconditions:** The requested add interest tag operation is completed successfully, or the system remains in a safe and recoverable state after an alternative flow.
 * **UI Prototype References:**
-  - Main Flow: `prototypes/uc55_add_interest.png`
-  - AF55.1: `prototypes/uc55_af1_duplicate_interest_tag.png`
+  - **Main Flow:**
+    ![Main Flow](prototypes/uc55_add_interest.png)
+  - **AF55.1:**
+    ![AF55.1](prototypes/uc55_af1_duplicate_interest_tag.png)
 
 ---
 
@@ -1600,8 +1717,10 @@ This document specifies the 56 use cases of the PA4 Use-Case Model. The specific
 
 * **Postconditions:** The requested remove interest tag operation is completed successfully, or the system remains in a safe and recoverable state after an alternative flow.
 * **UI Prototype References:**
-  - Main Flow: `prototypes/uc56_remove_interest.png`
-  - AF56.1: `prototypes/uc56_af1_interest_tag_is_still_in_use.png`
+  - **Main Flow:**
+    ![Main Flow](prototypes/uc56_remove_interest.png)
+  - **AF56.1:**
+    ![AF56.1](prototypes/uc56_af1_interest_tag_is_still_in_use.png)
 
 ---
 
@@ -1619,7 +1738,8 @@ The two prototype screenshots already available in the project can be reused whe
 
 ## 58. Specification Quality Rules Applied
 
-- Actors are consistent with the revised Use-Case Model: `Guest User`, `User`, and `Admin`.
+- **Actors are consistent with the revised Use-Case Model:**
+    ![Actors are consistent with the revised Use-Case Model](Guest User), `User`, and `Admin`.
 - `UC01: Sign Up` uses `Guest User`, not registered `User`.
 - Every UC keeps its `UCxx` identifier.
 - Basic flows describe user goals and system behavior rather than implementation.
