@@ -2,52 +2,45 @@
 
 | Assignee | Reviewer | Editor |
 | :--- | :--- | :--- |
-| Hoàng Tấn | Minh Hoàng | Nghia |
----
+| Hoàng Tấn | Minh Hoàng | Ngô Trung Nghĩa |
 
-## 1. Authentication & Authorization (FG-01)
+## Purpose
 
+This document specifies the 56 use cases of the PA4 Use-Case Model. The specification is intentionally written from the **user/system behavior perspective**. Implementation details such as framework names, API endpoints, database queries, HTTP status codes, token formats, hashing algorithms, and socket event names are kept out of the use-case flows.
 
----
+## FG-01 Authentication & Authorization
 
 ### UC01: Sign Up
 
 * **Use Case ID:** UC01
 * **Use Case Name:** Sign Up
-* **Actor(s):** Guest User (Primary)
-* **Description:** Allows a guest user to create a new registered account on the LoveYou platform using an email address, password, full name, gender, and date of birth.
-* **Preconditions:** The guest user is not currently logged into any active account.
+* **Actor(s):** Guest User
+* **Description:** Allows a guest to create a LoveYou account and continue to onboarding.
+* **Preconditions:** Guest User is not logged in.
 
 #### Basic Flow (Main Success Scenario)
-1. The guest user navigates to the Sign-Up page.
-2. The system displays the account registration form requesting email, password, confirm password, display name, gender, and date of birth (must be 18+).
-3. The guest user enters the required registration details and submits the form.
-4. The system validates the input fields (email syntax, password complexity, age threshold $\ge 18$).
-5. The system checks whether the email is already registered in the system database.
-6. The system hashes the user's password using `bcrypt` with cost factor $\ge 12$.
-7. The system creates a new user account with state `PENDING_ONBOARDING` or `ACTIVE`.
-8. The system generates a JWT authentication token session and logs the user in automatically.
-9. The system redirects the user to the Onboarding wizard (`UC11`).
+1. Guest User opens the Sign Up page.
+2. System displays the registration form.
+3. Guest User enters the required information and submits the form.
+4. System validates the information.
+5. System creates the account and starts the authenticated session.
+6. System directs the user to onboarding (UC11).
 
 #### Alternative Flows
-* **AF01.1: Invalid Input Data**
-  * Step 4a: System detects invalid email syntax, weak password (under 8 characters, lacking required characters), or date of birth under 18 years old.
-  * Step 4b: System displays specific inline error messages explaining the validation rules.
-  * Step 4c: The user corrects the invalid inputs and resubmits.
-* **AF01.2: Email Already Registered**
-  * Step 5a: System finds an existing record with the provided email address.
-  * Step 5b: System alerts the user: "This email is already associated with an account."
-  * Step 5c: System provides options to log in or reset password (`UC04`).
-* **AF01.3: Password Confirmation Mismatch**
-  * Step 4a: Password and confirm password fields do not match.
-  * Step 4b: System displays an error message "Passwords do not match".
-  * Step 4c: User re-enters password confirmation.
+* **AF01.1: Invalid registration information**
+  * System detects the alternative condition.
+  * System displays the appropriate state or message.
+  * User can correct the input, retry, or leave the flow when applicable.
+* **AF01.2: Email already registered**
+  * System detects the alternative condition.
+  * System displays the appropriate state or message.
+  * User can correct the input, retry, or leave the flow when applicable.
 
-* **Postconditions:** A new user record is persisted in the database with hashed credentials, and the user is logged in with an active session.
-* **Special Requirements:**
-  * Password hashing must adhere to `SEC-01` (`bcrypt` cost factor 12).
-  * Rate limiting: max 10 sign-up requests per minute per IP (`SEC-17`).
-* **UI Prototype Reference:** `![Sign Up Screen](prototypes/uc01_sign_up.png)`
+* **Postconditions:** The requested sign up operation is completed successfully, or the system remains in a safe and recoverable state after an alternative flow.
+* **UI Prototype References:**
+  - Main Flow: `prototypes/uc01_sign_up.png`
+  - AF01.1: `prototypes/uc01_af1_invalid_registration_information.png`
+  - AF01.2: `prototypes/uc01_af2_email_already_registered.png`
 
 ---
 
@@ -55,37 +48,33 @@
 
 * **Use Case ID:** UC02
 * **Use Case Name:** Log In
-* **Actor(s):** Guest User / User / Admin (Primary)
-* **Description:** Authenticates a registered user or administrator using email and password, establishing an authenticated JWT session.
-* **Preconditions:** The user account exists in the database.
+* **Actor(s):** Guest User / User / Admin
+* **Description:** Allows a guest, registered user, or administrator to authenticate and enter the appropriate part of LoveYou.
+* **Preconditions:** A valid account exists for the person attempting to log in.
 
 #### Basic Flow (Main Success Scenario)
-1. The user opens the Log In page.
-2. The system renders the login form (email and password).
-3. The user enters their credentials and clicks "Log In".
-4. The system validates that input fields are non-empty.
-5. The system fetches the account record and verifies the password hash using `bcrypt`.
-6. The system triggers `UC05` (Manage Session) to issue a JWT access token (15-min TTL) and refresh token (7-day TTL).
-7. The system triggers `UC06` (Authorize Access by Role) to evaluate account role (`USER` vs `ADMIN`).
-8. If the user role is `USER`, system redirects to the Candidate Discovery feed or Onboarding if uncompleted. If `ADMIN`, system redirects to Admin Dashboard (`UC46`).
+1. User opens the Log In page.
+2. System displays the login form.
+3. User enters account credentials and submits the form.
+4. System validates the credentials.
+5. System starts the authenticated session.
+6. System directs the user to the appropriate application area.
 
 #### Alternative Flows
-* **AF02.1: Incorrect Credentials**
-  * Step 5a: Password hash verification fails or email does not exist.
-  * Step 5b: System increments the failed login attempt counter for the email/IP.
-  * Step 5c: System returns generic error: "Invalid email or password" (to prevent account enumeration).
-* **AF02.2: Account Locked (SEC-03)**
-  * Step 5a: System detects 5 consecutive failed login attempts within the window.
-  * Step 5b: System locks the account for 15 minutes and displays message: "Account temporarily locked due to multiple failed login attempts. Please try again in 15 minutes or reset your password."
-* **AF02.3: Account Blocked or Deactivated**
-  * Step 5a: Account status is `BLOCKED` or `DEACTIVATED`.
-  * Step 5b: System displays account status notification and denies session creation.
+* **AF02.1: Invalid credentials**
+  * System detects the alternative condition.
+  * System displays the appropriate state or message.
+  * User can correct the input, retry, or leave the flow when applicable.
+* **AF02.2: Account unavailable**
+  * System detects the alternative condition.
+  * System displays the appropriate state or message.
+  * User can correct the input, retry, or leave the flow when applicable.
 
-* **Postconditions:** The user is authenticated and issued a secure JWT token pair; session metrics are updated.
-* **Special Requirements:**
-  * JWT tokens must satisfy `SEC-02` (access token 15 min TTL, refresh token 7 days TTL).
-  * Enforce lockout after 5 failures (`SEC-03`).
-* **UI Prototype Reference:** `![Log In Screen](prototypes/uc02_log_in.png)`
+* **Postconditions:** The requested log in operation is completed successfully, or the system remains in a safe and recoverable state after an alternative flow.
+* **UI Prototype References:**
+  - Main Flow: `prototypes/uc02_log_in.png`
+  - AF02.1: `prototypes/uc02_af1_invalid_credentials.png`
+  - AF02.2: `prototypes/uc02_af2_account_unavailable.png`
 
 ---
 
@@ -93,25 +82,27 @@
 
 * **Use Case ID:** UC03
 * **Use Case Name:** Log Out
-* **Actor(s):** User / Admin (Primary)
-* **Description:** Terminate the active authenticated session, invalidating refresh tokens and clearing client session state.
-* **Preconditions:** User is currently logged into the system with an active session.
+* **Actor(s):** User / Admin
+* **Description:** Ends the current authenticated session and returns the user to the public entry screen.
+* **Preconditions:** User or Admin is currently authenticated.
 
 #### Basic Flow (Main Success Scenario)
-1. The user clicks the "Log Out" button from the main header or profile settings dropdown.
-2. The user client sends a request to the backend log-out endpoint with the refresh token.
-3. The backend invalidates/blacklists the refresh token in storage.
-4. The client clears JWT tokens from local storage / HTTP-only cookie storage.
-5. The system redirects the user to the Landing / Login page.
+1. User selects Log Out.
+2. System asks for confirmation when required.
+3. User confirms the action.
+4. System ends the current session.
+5. System returns the user to the public entry screen.
 
 #### Alternative Flows
-* **AF03.1: Network Connection Failure**
-  * Step 2a: Client network request fails before reaching server.
-  * Step 2b: Client clears local storage tokens locally, alerts user, and redirects to Login page.
+* **AF03.1: Logout confirmation**
+  * System detects the alternative condition.
+  * System displays the appropriate state or message.
+  * User can correct the input, retry, or leave the flow when applicable.
 
-* **Postconditions:** The user session is terminated; protected endpoints are no longer accessible without re-authentication.
-* **Special Requirements:** Response time < 500ms (`PERF-03`).
-* **UI Prototype Reference:** `![Log Out Screen](prototypes/uc02_log_in.png)`
+* **Postconditions:** The requested log out operation is completed successfully, or the system remains in a safe and recoverable state after an alternative flow.
+* **UI Prototype References:**
+  - Main Flow: `prototypes/uc03_logout_confirm.png`
+  - AF03.1: `prototypes/uc03_af1_logout_confirmation.png`
 
 ---
 
@@ -119,34 +110,33 @@
 
 * **Use Case ID:** UC04
 * **Use Case Name:** Reset Password
-* **Actor(s):** User (Primary)
-* **Description:** Allows a user who forgot their password to request a single-use reset token sent to their registered email and set a new password.
-* **Preconditions:** User account exists.
+* **Actor(s):** User
+* **Description:** Allows a registered user to recover access by requesting and completing a password reset.
+* **Preconditions:** The account exists and the user can access the recovery process.
 
 #### Basic Flow (Main Success Scenario)
-1. User selects "Forgot Password?" on the login page.
-2. System displays prompt for registered email address.
-3. User submits registered email address.
-4. System validates email format and verifies user existence.
-5. System generates a secure single-use reset token (30-minute expiration) and sends a reset link to the email.
-6. User opens email and clicks the reset link.
-7. System validates token authenticity and expiration.
-8. System renders "New Password" form.
-9. User inputs new password and password confirmation.
-10. System verifies password complexity, hashes password via `bcrypt`, updates user record, and invalidates reset token.
-11. System displays success message and redirects to Log In (`UC02`).
+1. User opens Reset Password.
+2. System asks for the account email.
+3. User submits the email.
+4. System provides a password-reset step.
+5. User chooses and confirms a new password.
+6. System confirms that access has been restored.
 
 #### Alternative Flows
-* **AF04.1: Non-Existent Email**
-  * Step 4a: Email address is not in system.
-  * Step 4b: System shows generic message: "If this email is registered, a password reset link has been sent" (prevents email enumeration).
-* **AF04.2: Expired or Invalid Reset Link (SEC-04)**
-  * Step 7a: Token is expired (> 30 mins) or already used.
-  * Step 7b: System displays error: "Reset link has expired or is invalid" and prompts user to request a new link.
+* **AF04.1: Unknown account**
+  * System detects the alternative condition.
+  * System displays the appropriate state or message.
+  * User can correct the input, retry, or leave the flow when applicable.
+* **AF04.2: Invalid or expired reset link**
+  * System detects the alternative condition.
+  * System displays the appropriate state or message.
+  * User can correct the input, retry, or leave the flow when applicable.
 
-* **Postconditions:** User password is updated in database; reset token is marked spent.
-* **Special Requirements:** Reset links expire within 30 mins (`SEC-04`).
-* **UI Prototype Reference:** `![Reset Password Screen](prototypes/uc02_log_in.png)`
+* **Postconditions:** The requested reset password operation is completed successfully, or the system remains in a safe and recoverable state after an alternative flow.
+* **UI Prototype References:**
+  - Main Flow: `prototypes/uc04_reset_password.png`
+  - AF04.1: `prototypes/uc04_af1_unknown_account.png`
+  - AF04.2: `prototypes/uc04_af2_invalid_or_expired_reset_link.png`
 
 ---
 
@@ -154,28 +144,26 @@
 
 * **Use Case ID:** UC05
 * **Use Case Name:** Manage Session
-* **Actor(s):** System (Primary), User / Admin (Secondary)
-* **Description:** Handles automatic JWT token validation, refresh, and session state maintenance across API requests. Included by `UC02`.
-* **Preconditions:** User initiates authentication or authorized API call.
+* **Actor(s):** User / Admin (supporting)
+* **Description:** Maintains the authenticated state while the user continues using the application.
+* **Preconditions:** A user or administrator has completed authentication.
 
 #### Basic Flow (Main Success Scenario)
-1. System receives API request containing JWT Access Token header.
-2. System validates JWT signature, issuer, and expiration time.
-3. If access token is valid, system permits API route execution.
-4. When access token expires, client issues token refresh request using valid Refresh Token.
-5. System verifies refresh token, issues new Access Token, and updates session metrics.
+1. The user completes authentication.
+2. System establishes the authenticated state.
+3. System keeps the state while the user continues to navigate.
+4. System ends the state when the user logs out or the session expires.
 
 #### Alternative Flows
-* **AF05.1: Expired Refresh Token**
-  * Step 5a: Refresh token has exceeded 7 days TTL.
-  * Step 5b: System rejects refresh request with 401 Unauthorized, forces log out (`UC03`).
-* **AF05.2: Invalid Token Signature**
-  * Step 2a: Token signature verification fails (tampering).
-  * Step 2b: System logs security warning and returns HTTP 401.
+* **AF05.1: Session expired**
+  * System detects the alternative condition.
+  * System displays the appropriate state or message.
+  * User can correct the input, retry, or leave the flow when applicable.
 
-* **Postconditions:** Active session maintained securely or cleanly terminated on invalid token.
-* **Special Requirements:** JWT verification < 50ms overhead.
-* **UI Prototype Reference:** `![Session State Screen](prototypes/uc02_log_in.png)`
+* **Postconditions:** The requested manage session operation is completed successfully, or the system remains in a safe and recoverable state after an alternative flow.
+* **UI Prototype References:**
+  - Main Flow: `prototypes/uc02_log_in.png`
+  - AF05.1: `prototypes/uc05_af1_session_expired.png`
 
 ---
 
@@ -183,57 +171,62 @@
 
 * **Use Case ID:** UC06
 * **Use Case Name:** Authorize Access by Role
-* **Actor(s):** System (Primary), User / Admin (Secondary)
-* **Description:** Enforces Role-Based Access Control (RBAC) preventing unauthorized access to role-restricted endpoints (e.g. Admin endpoints). Included by `UC02`.
-* **Preconditions:** Request has passed session token validation (`UC05`).
+* **Actor(s):** User / Admin (supporting)
+* **Description:** Checks whether the current user has permission to access a protected function.
+* **Preconditions:** The user has an authenticated session and requests a protected function.
 
 #### Basic Flow (Main Success Scenario)
-1. System reads target route permissions (e.g. `/api/v1/admin/*` requires `ROLE_ADMIN`).
-2. System extracts user role claim from validated JWT payload.
-3. System verifies that user role meets or exceeds required route role.
-4. System routes request to appropriate backend handler.
+1. User requests a protected function.
+2. System identifies the user's role.
+3. System compares the role with the required permission.
+4. System allows the operation when permission is sufficient.
 
 #### Alternative Flows
-* **AF06.1: Insufficient Permissions (SEC-11)**
-  * Step 3a: Non-admin user attempts access to admin endpoint.
-  * Step 3b: System rejects request with HTTP 403 Forbidden.
+* **AF06.1: Insufficient permission**
+  * System detects the alternative condition.
+  * System displays the appropriate state or message.
+  * User can correct the input, retry, or leave the flow when applicable.
 
-* **Postconditions:** Protected resources accessed only by authorized roles.
-* **Special Requirements:** RBAC enforcement on 100% of endpoints (`SEC-11`).
-* **UI Prototype Reference:** `![Access Control Screen](prototypes/uc02_log_in.png)`
+* **Postconditions:** The requested authorize access by role operation is completed successfully, or the system remains in a safe and recoverable state after an alternative flow.
+* **UI Prototype References:**
+  - Main Flow: `prototypes/uc06_access_control.png`
+  - AF06.1: `prototypes/uc06_af1_insufficient_permission.png`
 
 ---
 
-## 2. User Profile Management (FG-02)
----
+## FG-02 User Profile Management
+
 ### UC07: Edit Personal Information
 
 * **Use Case ID:** UC07
 * **Use Case Name:** Edit Personal Information
-* **Actor(s):** Registered User (Primary)
-* **Description:** Allows user to update profile details including display name, bio, home city, job title, and dating goals.
-* **Preconditions:** User is logged in with an active session.
+* **Actor(s):** User
+* **Description:** Allows the user to update personal profile information.
+* **Preconditions:** User is logged in.
 
 #### Basic Flow (Main Success Scenario)
-1. User navigates to "Edit Profile" screen.
-2. System loads and displays existing user profile data.
-3. User modifies display name, biography text (max 500 chars), home city, job title, or height.
-4. User clicks "Save Changes".
-5. System validates field formats and lengths.
-6. System updates profile record in database.
-7. System displays success toast: "Profile updated successfully".
+1. User opens Edit Profile.
+2. System displays current profile information.
+3. User changes one or more fields.
+4. User selects Save Changes.
+5. System validates and saves the changes.
+6. System confirms the update.
 
 #### Alternative Flows
-* **AF07.1: Exceeded Bio Length**
-  * Step 5a: Bio text exceeds 500 characters.
-  * Step 5b: System displays error: "Bio cannot exceed 500 characters".
-* **AF07.2: Database Persistence Error**
-  * Step 6a: System experiences database connection timeout.
-  * Step 6b: System displays error and prompts user to retry.
+* **AF07.1: Invalid profile information**
+  * System detects the alternative condition.
+  * System displays the appropriate state or message.
+  * User can correct the input, retry, or leave the flow when applicable.
+* **AF07.2: Save operation fails**
+  * System detects the alternative condition.
+  * System displays the appropriate state or message.
+  * User can correct the input, retry, or leave the flow when applicable.
 
-* **Postconditions:** Updated profile information saved and visible to potential matches.
-* **Special Requirements:** Response time < 1s (`PERF-04`).
-* **UI Prototype Reference:** `![Edit Personal Info Screen](prototypes/uc01_sign_up.png)`
+* **Postconditions:** The requested edit personal information operation is completed successfully, or the system remains in a safe and recoverable state after an alternative flow.
+* **UI Prototype References:**
+  - Main Flow: `prototypes/uc07_edit_profile.png`
+  - AF07.1: `prototypes/uc07_af1_invalid_profile_information.png`
+  - AF07.2: `prototypes/uc07_af2_save_operation_fails.png`
 
 ---
 
@@ -241,32 +234,33 @@
 
 * **Use Case ID:** UC08
 * **Use Case Name:** Upload Photos
-* **Actor(s):** Registered User (Primary)
-* **Description:** Allows user to upload, reorder, or delete up to 5 profile photos (max 5MB each, JPEG/PNG format).
-* **Preconditions:** User is logged in.
+* **Actor(s):** User
+* **Description:** Allows the user to add, reorder, or remove profile photos.
+* **Preconditions:** User is logged in and is viewing profile photo management.
 
 #### Basic Flow (Main Success Scenario)
-1. User opens photo gallery management tab under Edit Profile.
-2. User selects local photo file or drag-and-drops photo file.
-3. System checks MIME type (JPEG/PNG) and file size ($\le 5\text{MB}$).
-4. System uploads photo to cloud storage and saves signed URL asset reference.
-5. System renders updated photo grid showing thumbnail preview.
-6. User can drag to reorder avatar primary photo positioning.
+1. User opens photo management.
+2. System displays current photos and upload controls.
+3. User selects a photo.
+4. System validates the photo.
+5. System adds the photo to the profile.
+6. System shows the updated photo list.
 
 #### Alternative Flows
-* **AF08.1: File Too Large (PERF-12 / UX-03)**
-  * Step 3a: File size exceeds 5MB.
-  * Step 3b: System displays Vietnamese message: "Ảnh vượt quá 5 MB. Vui lòng chọn ảnh nhỏ hơn."
-* **AF08.2: Invalid File Type (SEC-16)**
-  * Step 3a: File is executable or unsupported format (e.g. .exe, .gif).
-  * Step 3b: System rejects upload and displays file type error.
-* **AF08.3: Maximum Photo Limit Reached**
-  * Step 2a: Profile already has 5 photos uploaded.
-  * Step 2b: System disables upload button and displays notice: "Maximum 5 photos allowed".
+* **AF08.1: Unsupported or oversized photo**
+  * System detects the alternative condition.
+  * System displays the appropriate state or message.
+  * User can correct the input, retry, or leave the flow when applicable.
+* **AF08.2: Upload fails**
+  * System detects the alternative condition.
+  * System displays the appropriate state or message.
+  * User can correct the input, retry, or leave the flow when applicable.
 
-* **Postconditions:** New photo stored and associated with user's profile card gallery.
-* **Special Requirements:** Max 5MB per image, up to 5 images (`PERF-12`).
-* **UI Prototype Reference:** `![Upload Photos Screen](prototypes/uc01_sign_up.png)`
+* **Postconditions:** The requested upload photos operation is completed successfully, or the system remains in a safe and recoverable state after an alternative flow.
+* **UI Prototype References:**
+  - Main Flow: `prototypes/uc08_upload_photos.png`
+  - AF08.1: `prototypes/uc08_af1_unsupported_or_oversized_photo.png`
+  - AF08.2: `prototypes/uc08_af2_upload_fails.png`
 
 ---
 
@@ -274,26 +268,28 @@
 
 * **Use Case ID:** UC09
 * **Use Case Name:** Manage Interest Tags
-* **Actor(s):** Registered User (Primary)
-* **Description:** Allows user to select and update interest tags (e.g. Travel, Coffee, Music, Board Games) from global catalogue.
-* **Preconditions:** User is logged in; interest tag catalogue exists.
+* **Actor(s):** User
+* **Description:** Allows the user to select and manage interest tags used in their profile.
+* **Preconditions:** User is logged in.
 
 #### Basic Flow (Main Success Scenario)
-1. User selects "Interests" section on profile edit view.
-2. System displays categorized list of interest tags from catalogue.
-3. User selects or deselects tags (minimum 3, maximum 10 tags).
-4. User clicks "Save Interests".
-5. System updates user's tag associations in database.
-6. System confirms update with visual confirmation.
+1. User opens interest management.
+2. System displays available and selected interests.
+3. User selects or removes interests.
+4. User saves the selection.
+5. System updates the profile interests.
+6. System confirms the update.
 
 #### Alternative Flows
-* **AF09.1: Fewer than 3 Tags Selected**
-  * Step 4a: User selects fewer than 3 tags.
-  * Step 4b: System prompts: "Please select at least 3 interest tags for better AI matching accuracy."
+* **AF09.1: Invalid number of selected interests**
+  * System detects the alternative condition.
+  * System displays the appropriate state or message.
+  * User can correct the input, retry, or leave the flow when applicable.
 
-* **Postconditions:** User interest tag preferences stored for AI compatibility calculations.
-* **Special Requirements:** UI response within 200ms.
-* **UI Prototype Reference:** `![Manage Interest Tags Screen](prototypes/uc01_sign_up.png)`
+* **Postconditions:** The requested manage interest tags operation is completed successfully, or the system remains in a safe and recoverable state after an alternative flow.
+* **UI Prototype References:**
+  - Main Flow: `prototypes/uc09_interest_tags.png`
+  - AF09.1: `prototypes/uc09_af1_invalid_number_of_selected_interests.png`
 
 ---
 
@@ -301,60 +297,63 @@
 
 * **Use Case ID:** UC10
 * **Use Case Name:** Change Password
-* **Actor(s):** Registered User (Primary)
-* **Description:** Allows an authenticated user to change password by entering current password and confirming new password.
+* **Actor(s):** User
+* **Description:** Allows the user to change their current password.
 * **Preconditions:** User is logged in.
 
 #### Basic Flow (Main Success Scenario)
-1. User enters Account Security settings and clicks "Change Password".
-2. System renders fields: Current Password, New Password, Confirm New Password.
-3. User inputs current password and new password pair.
-4. System verifies current password against database `bcrypt` hash.
-5. System validates new password meets strength requirements ($\ge 8$ chars).
-6. System updates password hash and revokes old tokens.
-7. System displays success notice: "Password updated successfully".
+1. User opens Change Password.
+2. System displays password fields.
+3. User enters the current and new passwords.
+4. System validates the information.
+5. System saves the new password.
+6. System confirms the change.
 
 #### Alternative Flows
-* **AF10.1: Incorrect Current Password**
-  * Step 4a: Current password check fails.
-  * Step 4b: System displays error: "Current password is incorrect".
+* **AF10.1: Incorrect current password**
+  * System detects the alternative condition.
+  * System displays the appropriate state or message.
+  * User can correct the input, retry, or leave the flow when applicable.
+* **AF10.2: New passwords do not match**
+  * System detects the alternative condition.
+  * System displays the appropriate state or message.
+  * User can correct the input, retry, or leave the flow when applicable.
 
-* **Postconditions:** User password hash updated in database; security log updated.
-* **Special Requirements:** Hash cost factor 12 (`SEC-01`).
-* **UI Prototype Reference:** `![Change Password Screen](prototypes/uc010_change_password.png)`
+* **Postconditions:** The requested change password operation is completed successfully, or the system remains in a safe and recoverable state after an alternative flow.
+* **UI Prototype References:**
+  - Main Flow: `prototypes/uc10_change_password.png`
+  - AF10.1: `prototypes/uc10_af1_incorrect_current_password.png`
+  - AF10.2: `prototypes/uc10_af2_new_passwords_do_not_match.png`
 
 ---
 
-## 3. Onboarding and Preference Setup (FG-10)
-
----
+## FG-10 Onboarding & Preference Setup
 
 ### UC11: Complete Onboarding
 
 * **Use Case ID:** UC11
 * **Use Case Name:** Complete Onboarding
-* **Actor(s):** Registered User (Primary)
-* **Description:** Guided multi-step onboarding wizard for new users to configure profile essentials right after sign up. Includes `UC12`–`UC16`.
-* **Preconditions:** User newly signed up (`UC01`), profile state `PENDING_ONBOARDING`.
+* **Actor(s):** User
+* **Description:** Guides a newly registered user through the required profile and preference setup.
+* **Preconditions:** User has just completed registration and needs profile setup.
 
 #### Basic Flow (Main Success Scenario)
-1. System automatically routes newly registered user to Onboarding wizard.
-2. System executes `UC12` (Upload Initial Photo).
-3. System executes `UC13` (Set Gender Preference).
-4. System executes `UC14` (Set Preferred Age Range).
-5. System executes `UC15` (Set Home City).
-6. System executes `UC16` (Select Initial Interest Tags).
-7. User clicks "Finish Setup".
-8. System updates user profile status to `ACTIVE` and routes to Candidate Discovery feed (`UC18`).
+1. System opens the onboarding wizard after registration.
+2. User completes the required onboarding steps.
+3. System saves each preference.
+4. User selects Finish Setup.
+5. System marks onboarding as complete and opens discovery.
 
 #### Alternative Flows
-* **AF11.1: Skip Onboarding (`UC17`)**
-  * Step 1a: User clicks "Skip for now" on onboarding step.
-  * Step 1b: System triggers `UC17` (Skip Onboarding), setting default preferences and warning user of lower AI score precision.
+* **AF11.1: User skips onboarding**
+  * System detects the alternative condition.
+  * System displays the appropriate state or message.
+  * User can correct the input, retry, or leave the flow when applicable.
 
-* **Postconditions:** User profile is fully initialized and active for candidate discovery.
-* **Special Requirements:** Complete wizard within 3 minutes (`UX-01`).
-* **UI Prototype Reference:** `![Complete Onboarding Screen](prototypes/uc01_sign_up.png)`
+* **Postconditions:** The requested complete onboarding operation is completed successfully, or the system remains in a safe and recoverable state after an alternative flow.
+* **UI Prototype References:**
+  - Main Flow: `prototypes/uc11_onboarding.png`
+  - AF11.1: `prototypes/uc11_af1_user_skips_onboarding.png`
 
 ---
 
@@ -362,24 +361,27 @@
 
 * **Use Case ID:** UC12
 * **Use Case Name:** Upload Initial Photo
-* **Actor(s):** Registered User (Primary)
-* **Description:** Onboarding step for uploading mandatory primary avatar photo. Included by `UC11`.
-* **Preconditions:** User in onboarding wizard flow.
+* **Actor(s):** User
+* **Description:** Allows the user to upload the initial profile photo during onboarding.
+* **Preconditions:** Onboarding is in progress.
 
 #### Basic Flow (Main Success Scenario)
-1. Onboarding wizard presents Photo Upload step.
-2. User uploads primary profile picture.
-3. System validates format and size, stores picture asset, and displays preview.
-4. User proceeds to next onboarding step.
+1. User reaches the Upload Initial Photo step in onboarding.
+2. System displays the required controls.
+3. User uploads Initial Photo according to their preference.
+4. System validates and saves the selection.
+5. System moves to the next onboarding step.
 
 #### Alternative Flows
-* **AF12.1: Photo Upload Error**
-  * Step 3a: Upload fails due to network or validation.
-  * Step 3b: System displays error message and prompts user to retry.
+* **AF12.1: Invalid photo**
+  * System detects the alternative condition.
+  * System displays the appropriate state or message.
+  * User can correct the input, retry, or leave the flow when applicable.
 
-* **Postconditions:** Primary avatar photo saved to user profile.
-* **Special Requirements:** File size $\le 5\text{MB}$ (`PERF-12`).
-* **UI Prototype Reference:** `![Upload Initial Photo Screen](prototypes/uc01_sign_up.png)`
+* **Postconditions:** The requested upload initial photo operation is completed successfully, or the system remains in a safe and recoverable state after an alternative flow.
+* **UI Prototype References:**
+  - Main Flow: `prototypes/uc12_initial_photo.png`
+  - AF12.1: `prototypes/uc12_af1_invalid_photo.png`
 
 ---
 
@@ -387,22 +389,27 @@
 
 * **Use Case ID:** UC13
 * **Use Case Name:** Set Gender Preference
-* **Actor(s):** Registered User (Primary)
-* **Description:** Onboarding step to select target match gender (Male, Female, Everyone). Included by `UC11`.
-* **Preconditions:** User in onboarding flow.
+* **Actor(s):** User
+* **Description:** Allows the user to select the gender preference used for discovery.
+* **Preconditions:** Onboarding is in progress.
 
 #### Basic Flow (Main Success Scenario)
-1. Onboarding presents Gender Preference step.
-2. User selects preferred target gender.
-3. System saves selection in temporary onboarding draft.
+1. User reaches the Set Gender Preference step in onboarding.
+2. System displays the required controls.
+3. User sets Gender Preference according to their preference.
+4. System validates and saves the selection.
+5. System moves to the next onboarding step.
 
 #### Alternative Flows
-* **AF13.1: No Choice Selected**
-  * Step 2a: User clicks Next without selecting.
-  * Step 2b: System defaults preference to "Everyone".
+* **AF13.1: No preference selected**
+  * System detects the alternative condition.
+  * System displays the appropriate state or message.
+  * User can correct the input, retry, or leave the flow when applicable.
 
-* **Postconditions:** Match gender filter saved.
-* **UI Prototype Reference:** `![Set Gender Preference Screen](prototypes/uc01_sign_up.png)`
+* **Postconditions:** The requested set gender preference operation is completed successfully, or the system remains in a safe and recoverable state after an alternative flow.
+* **UI Prototype References:**
+  - Main Flow: `prototypes/uc13_gender_preference.png`
+  - AF13.1: `prototypes/uc13_af1_no_preference_selected.png`
 
 ---
 
@@ -410,23 +417,27 @@
 
 * **Use Case ID:** UC14
 * **Use Case Name:** Set Preferred Age Range
-* **Actor(s):** Registered User (Primary)
-* **Description:** Onboarding step to define minimum and maximum target age preferences using dual-slider. Included by `UC11`.
-* **Preconditions:** User in onboarding flow.
+* **Actor(s):** User
+* **Description:** Allows the user to choose a preferred age range.
+* **Preconditions:** Onboarding is in progress.
 
 #### Basic Flow (Main Success Scenario)
-1. Onboarding presents Age Range selection step (e.g. range 18–99).
-2. User adjusts range sliders (e.g. 20 to 28).
-3. System validates min $\le$ max and age $\ge 18$.
-4. System records age filter preference.
+1. User reaches the Set Preferred Age Range step in onboarding.
+2. System displays the required controls.
+3. User sets Preferred Age Range according to their preference.
+4. System validates and saves the selection.
+5. System moves to the next onboarding step.
 
 #### Alternative Flows
-* **AF14.1: Invalid Range**
-  * Step 3a: Slider min > max.
-  * Step 3b: System auto-adjusts min value to equal max value.
+* **AF14.1: Invalid age range**
+  * System detects the alternative condition.
+  * System displays the appropriate state or message.
+  * User can correct the input, retry, or leave the flow when applicable.
 
-* **Postconditions:** Target age boundary saved.
-* **UI Prototype Reference:** `![Set Preferred Age Range Screen](prototypes/uc01_sign_up.png)`
+* **Postconditions:** The requested set preferred age range operation is completed successfully, or the system remains in a safe and recoverable state after an alternative flow.
+* **UI Prototype References:**
+  - Main Flow: `prototypes/uc14_age_preference.png`
+  - AF14.1: `prototypes/uc14_af1_invalid_age_range.png`
 
 ---
 
@@ -434,23 +445,27 @@
 
 * **Use Case ID:** UC15
 * **Use Case Name:** Set Home City
-* **Actor(s):** Registered User (Primary)
-* **Description:** Onboarding step to select home city/province from dropdown catalogue (e.g. Ho Chi Minh City, Hanoi, Da Nang). Included by `UC11`.
-* **Preconditions:** User in onboarding flow.
+* **Actor(s):** User
+* **Description:** Allows the user to set their home city.
+* **Preconditions:** Onboarding is in progress.
 
 #### Basic Flow (Main Success Scenario)
-1. Onboarding presents City Selection step.
-2. User searches or chooses city from dropdown.
-3. System saves location setting.
+1. User reaches the Set Home City step in onboarding.
+2. System displays the required controls.
+3. User sets Home City according to their preference.
+4. System validates and saves the selection.
+5. System moves to the next onboarding step.
 
 #### Alternative Flows
-* **AF15.1: Unlisted Location**
-  * Step 2a: User location not found in dropdown.
-  * Step 2b: System provides "Other / Nationwide" fallback option.
+* **AF15.1: City not found**
+  * System detects the alternative condition.
+  * System displays the appropriate state or message.
+  * User can correct the input, retry, or leave the flow when applicable.
 
-* **Postconditions:** Province/City level location recorded (`PRIV-03`).
-* **Special Requirements:** Store city level only, no raw GPS (`PRIV-03`).
-* **UI Prototype Reference:** `![Set Home City Screen](prototypes/uc01_sign_up.png)`
+* **Postconditions:** The requested set home city operation is completed successfully, or the system remains in a safe and recoverable state after an alternative flow.
+* **UI Prototype References:**
+  - Main Flow: `prototypes/uc15_city.png`
+  - AF15.1: `prototypes/uc15_af1_city_not_found.png`
 
 ---
 
@@ -458,23 +473,27 @@
 
 * **Use Case ID:** UC16
 * **Use Case Name:** Select Initial Interest Tags
-* **Actor(s):** Registered User (Primary)
-* **Description:** Onboarding step to choose initial set of interest tags. Included by `UC11`.
-* **Preconditions:** User in onboarding flow.
+* **Actor(s):** User
+* **Description:** Allows the user to select initial interests.
+* **Preconditions:** Onboarding is in progress.
 
 #### Basic Flow (Main Success Scenario)
-1. Onboarding displays tag selector UI.
-2. User taps 3 or more interest tags.
-3. System highlights selected tags and enables "Complete" button.
-4. User submits selection.
+1. User reaches the Select Initial Interest Tags step in onboarding.
+2. System displays the required controls.
+3. User selects Initial Interest Tags according to their preference.
+4. System validates and saves the selection.
+5. System moves to the next onboarding step.
 
 #### Alternative Flows
-* **AF16.1: Insufficient Tags Selected**
-  * Step 3a: Fewer than 3 tags selected.
-  * Step 3b: System keeps "Complete" button disabled with guidance text.
+* **AF16.1: No interests selected**
+  * System detects the alternative condition.
+  * System displays the appropriate state or message.
+  * User can correct the input, retry, or leave the flow when applicable.
 
-* **Postconditions:** Initial interest tags saved to user profile.
-* **UI Prototype Reference:** `![Select Initial Interest Tags Screen](prototypes/uc01_sign_up.png)`
+* **Postconditions:** The requested select initial interest tags operation is completed successfully, or the system remains in a safe and recoverable state after an alternative flow.
+* **UI Prototype References:**
+  - Main Flow: `prototypes/uc16_interests.png`
+  - AF16.1: `prototypes/uc16_af1_no_interests_selected.png`
 
 ---
 
@@ -482,59 +501,62 @@
 
 * **Use Case ID:** UC17
 * **Use Case Name:** Skip Onboarding
-* **Actor(s):** Registered User (Primary)
-* **Description:** Allows user to bypass remaining optional onboarding steps and complete setup with system defaults. Extends `UC11`.
-* **Preconditions:** User is currently in the onboarding wizard (`UC11`).
+* **Actor(s):** User
+* **Description:** Allows the user to skip onboarding and continue with default or incomplete preferences.
+* **Preconditions:** Onboarding is in progress.
 
 #### Basic Flow (Main Success Scenario)
-1. User clicks "Skip for now" link at top of onboarding view.
-2. System displays prompt: "Skipping onboarding may decrease AI match score accuracy. Continue?"
-3. User confirms "Yes, Skip".
-4. System sets default preferences (Age: 18-99, City: User default, Gender: Everyone).
-5. System sets account state to `ACTIVE` and routes user to discovery feed (`UC18`).
+1. User selects Skip for now during onboarding.
+2. System explains the effect of skipping.
+3. User confirms the choice.
+4. System keeps the available default/incomplete preferences.
+5. System lets the user continue to the application.
 
 #### Alternative Flows
-* **AF17.1: User Cancels Skip**
-  * Step 3a: User selects "Go Back".
-  * Step 3b: System resumes current onboarding step.
+* **AF17.1: User returns to onboarding later**
+  * System detects the alternative condition.
+  * System displays the appropriate state or message.
+  * User can correct the input, retry, or leave the flow when applicable.
 
-* **Postconditions:** Account activated with default preference parameters.
-* **UI Prototype Reference:** `![Skip Onboarding Screen](prototypes/uc01_sign_up.png)`
+* **Postconditions:** The requested skip onboarding operation is completed successfully, or the system remains in a safe and recoverable state after an alternative flow.
+* **UI Prototype References:**
+  - Main Flow: `prototypes/uc11_onboarding_skip.png`
+  - AF17.1: `prototypes/uc17_af1_user_returns_to_onboarding_later.png`
 
 ---
 
-## 4. AI-Powered Smart Matching (FG-03)
-
----
+## FG-03 AI-Powered Smart Matching
 
 ### UC18: View AI Match Suggestions
 
 * **Use Case ID:** UC18
 * **Use Case Name:** View AI Match Suggestions
-* **Actor(s):** Registered User (Primary), AI Matching Service (Supporting)
-* **Description:** Fetches and presents a candidate feed of recommended user cards sorted by AI compatibility score, accompanied by Vietnamese natural language explanations. Includes `UC19` and `UC20`.
-* **Preconditions:** User is logged in with an active profile.
+* **Actor(s):** User
+* **Description:** Displays candidate profiles recommended using the user's profile and preferences.
+* **Preconditions:** User is logged in and has enough profile information for discovery.
 
 #### Basic Flow (Main Success Scenario)
-1. User opens the "Discover / AI Matches" main tab.
-2. System retrieves candidate profiles matching user's basic gender, age, and location filters.
-3. System invokes `UC19` (Calculate Compatibility Score) for top candidates.
-4. System invokes `UC20` (Display Match Reasons) to attach Vietnamese match explanations.
-5. System renders candidate cards displaying photo, display name, age, city, compatibility score badge (0-100), and AI match reasoning text.
-6. User browses cards or swipes to interact (`UC22`/`UC23`).
+1. User opens AI Match Suggestions.
+2. System retrieves suitable candidate profiles.
+3. System calculates compatibility information (UC19).
+4. System displays match reasons (UC20).
+5. System presents candidate cards with actions for further discovery.
 
 #### Alternative Flows
-* **AF18.1: No Candidate Profiles Found**
-  * Step 2a: Search query returns zero candidate profiles matching filter criteria.
-  * Step 2b: System displays empty state message: "No candidates found matching your criteria. Try broadening your age range or location filters."
-  * Step 2c: System provides quick link to edit preferences.
-* **AF18.2: AI Match Service Timeout / Fallback**
-  * Step 3a: AI module call times out (> 5s).
-  * Step 3b: System falls back to rule-based score calculation based on shared tag counts and renders profiles without delay.
+* **AF18.1: No suitable candidates**
+  * System detects the alternative condition.
+  * System displays the appropriate state or message.
+  * User can correct the input, retry, or leave the flow when applicable.
+* **AF18.2: AI recommendation unavailable**
+  * System detects the alternative condition.
+  * System displays the appropriate state or message.
+  * User can correct the input, retry, or leave the flow when applicable.
 
-* **Postconditions:** User views personalized candidate profiles sorted by compatibility.
-* **Special Requirements:** AI score generation for 50 candidates < 5s (`PERF-06`).
-* **UI Prototype Reference:** `![View AI Match Suggestions Screen](prototypes/uc18_ai_match_suggestions.png)`
+* **Postconditions:** The requested view ai match suggestions operation is completed successfully, or the system remains in a safe and recoverable state after an alternative flow.
+* **UI Prototype References:**
+  - Main Flow: `prototypes/uc18_ai_match_suggestions.png`
+  - AF18.1: `prototypes/uc18_af1_no_suitable_candidates.png`
+  - AF18.2: `prototypes/uc18_af2_ai_recommendation_unavailable.png`
 
 ---
 
@@ -542,25 +564,26 @@
 
 * **Use Case ID:** UC19
 * **Use Case Name:** Calculate Compatibility Score
-* **Actor(s):** System / AI Matching Service (Primary)
-* **Description:** Evaluates multi-dimensional compatibility (shared tags, bio vector similarity, age, location) to produce a composite Compatibility Score from 0 to 100. Included by `UC18`.
-* **Preconditions:** Active user profile and candidate profile data provided.
+* **Actor(s):** User
+* **Description:** Calculates a compatibility score for a user and a candidate.
+* **Preconditions:** A user profile and candidate profile are available.
 
 #### Basic Flow (Main Success Scenario)
-1. System extracts feature vectors for user $A$ and candidate $B$ (interest tags vector, bio embeddings, location distance, age alignment).
-2. System computes weighted similarity matrix:
-   $$\text{Score} = w_1 S_{\text{tags}} + w_2 S_{\text{bio}} + w_3 S_{\text{location}} + w_4 S_{\text{age}}$$
-3. System normalizes score into an integer range $[0, 100]$.
-4. System returns score value to calling component.
+1. System receives the active user's profile and a candidate profile.
+2. System evaluates the available matching factors.
+3. System combines the factors into a compatibility score.
+4. System returns the score for display in UC18.
 
 #### Alternative Flows
-* **AF19.1: Missing Bio or Tag Data**
-  * Step 1a: Candidate has empty bio or no tags.
-  * Step 1b: System calculates score based on available demographic parameters with adjusted weights.
+* **AF19.1: Insufficient profile data**
+  * System detects the alternative condition.
+  * System displays the appropriate state or message.
+  * User can correct the input, retry, or leave the flow when applicable.
 
-* **Postconditions:** Integer score $[0, 100]$ generated for candidate pair.
-* **Special Requirements:** Standalone service architecture (`MAINT-04`).
-* **UI Prototype Reference:** `![Calculate Score Screen](prototypes/uc18_ai_match_suggestions.png)`
+* **Postconditions:** The requested calculate compatibility score operation is completed successfully, or the system remains in a safe and recoverable state after an alternative flow.
+* **UI Prototype References:**
+  - Main Flow: `prototypes/uc18_ai_match_suggestions.png`
+  - AF19.1: `prototypes/uc19_af1_insufficient_profile_data.png`
 
 ---
 
@@ -568,23 +591,25 @@
 
 * **Use Case ID:** UC20
 * **Use Case Name:** Display Match Reasons
-* **Actor(s):** User (Primary), System (Supporting)
-* **Description:** Generates and displays localized Vietnamese explanation detailing why two users are compatible (e.g. "Cả hai cùng thích Du lịch và Cà phê tại TP.HCM"). Included by `UC18`.
-* **Preconditions:** Compatibility score calculated (`UC19`).
+* **Actor(s):** User
+* **Description:** Shows understandable reasons explaining why a candidate may be compatible.
+* **Preconditions:** Compatibility information is available for the candidate.
 
 #### Basic Flow (Main Success Scenario)
-1. System receives shared interest tags and location overlap data from matching engine.
-2. System formats natural language Vietnamese summary string (e.g. "Cùng yêu thích Du lịch, Cà phê và sống tại TP. Hồ Chí Minh").
-3. System attaches explanation string to profile card view model.
-4. System renders summary inside profile details view.
+1. System identifies meaningful shared profile information.
+2. System prepares a short explanation.
+3. System displays the explanation with the candidate profile.
 
 #### Alternative Flows
-* **AF20.1: Minimal Overlap**
-  * Step 1a: No shared tags found.
-  * Step 1b: System displays default match reason: "Cùng độ tuổi phù hợp và có phong cách sống tương đồng."
+* **AF20.1: No strong match reason available**
+  * System detects the alternative condition.
+  * System displays the appropriate state or message.
+  * User can correct the input, retry, or leave the flow when applicable.
 
-* **Postconditions:** Vietnamese match reason displayed on candidate card.
-* **UI Prototype Reference:** `![Display Match Reasons Screen](prototypes/uc18_ai_match_suggestions.png)`
+* **Postconditions:** The requested display match reasons operation is completed successfully, or the system remains in a safe and recoverable state after an alternative flow.
+* **UI Prototype References:**
+  - Main Flow: `prototypes/uc18_ai_match_suggestions.png`
+  - AF20.1: `prototypes/uc20_af1_no_strong_match_reason_available.png`
 
 ---
 
@@ -592,54 +617,56 @@
 
 * **Use Case ID:** UC21
 * **Use Case Name:** Refresh Suggestions
-* **Actor(s):** Registered User (Primary)
-* **Description:** Allows user to manually trigger a pull-to-refresh action to get a fresh batch of candidate match suggestions. Extends `UC18`.
-* **Preconditions:** User viewing AI Match Suggestions screen (`UC18`).
+* **Actor(s):** User
+* **Description:** Refreshes the current set of recommended candidates.
+* **Preconditions:** User is viewing AI match suggestions.
 
 #### Basic Flow (Main Success Scenario)
-1. User triggers pull-to-refresh gesture or clicks "Refresh Feed" button.
-2. System checks rate limit for refresh calls.
-3. System fetches next set of unviewed candidate profiles from database.
-4. System calculates AI scores (`UC19`) and updates UI card deck with animation.
+1. User selects Refresh Suggestions.
+2. System requests another set of candidates.
+3. System prepares compatibility information for the new candidates.
+4. System replaces the visible suggestions.
 
 #### Alternative Flows
-* **AF21.1: Refresh Rate Limit Reached**
-  * Step 2a: User clicks refresh more than 10 times in 1 minute.
-  * Step 2b: System shows toast: "Please wait a moment before refreshing again."
+* **AF21.1: Refresh unavailable**
+  * System detects the alternative condition.
+  * System displays the appropriate state or message.
+  * User can correct the input, retry, or leave the flow when applicable.
 
-* **Postconditions:** Candidate feed updated with new recommendations.
-* **UI Prototype Reference:** `![Refresh Suggestions Screen](prototypes/uc18_ai_match_suggestions.png)`
+* **Postconditions:** The requested refresh suggestions operation is completed successfully, or the system remains in a safe and recoverable state after an alternative flow.
+* **UI Prototype References:**
+  - Main Flow: `prototypes/uc18_ai_match_suggestions.png`
+  - AF21.1: `prototypes/uc21_af1_refresh_unavailable.png`
 
 ---
 
-## 5. Swipe and Match System (FG-04)
-
----
+## FG-04 Swipe & Match System
 
 ### UC22: Like Candidate
 
 * **Use Case ID:** UC22
 * **Use Case Name:** Like Candidate
-* **Actor(s):** Registered User (Primary), System (Supporting)
-* **Description:** Registers a positive "Like" interaction on a candidate profile (swipe right or tap Heart button), checking for a mutual match condition (`UC24`).
-* **Preconditions:** User is viewing a candidate profile card.
+* **Actor(s):** User
+* **Description:** Records that the user likes a candidate.
+* **Preconditions:** User is viewing a candidate profile.
 
 #### Basic Flow (Main Success Scenario)
-1. User swipes right on candidate card or clicks "Heart / Like" button.
-2. System displays swipe confirmation micro-animation instantly ($\le 200\text{ms}$).
-3. System records "LIKE" interaction record (Liker ID, Target ID, Timestamp) in database.
-4. System queries database to check if Target user has previously liked Liker user.
-5. If mutual like exists, system triggers `UC24` (Create Mutual Match).
-6. System removes current card from deck and reveals next candidate.
+1. User selects Like on a candidate.
+2. System records the positive interaction.
+3. System checks whether the other user has already liked this user.
+4. If a mutual like exists, system starts UC24.
+5. Otherwise, system shows the next candidate.
 
 #### Alternative Flows
-* **AF22.1: Network Error during Swipe**
-  * Step 3a: Network connection fails while persisting like action.
-  * Step 3b: System queues interaction locally in offline storage and syncs upon reconnection.
+* **AF22.1: Candidate unavailable or blocked**
+  * System detects the alternative condition.
+  * System displays the appropriate state or message.
+  * User can correct the input, retry, or leave the flow when applicable.
 
-* **Postconditions:** Interaction stored; mutual match created if target previously liked user.
-* **Special Requirements:** Micro-animation feedback < 200ms (`PERF-08` / `UX-02`).
-* **UI Prototype Reference:** `![Like Candidate Screen](prototypes/uc24_mutual_match_modal.png)`
+* **Postconditions:** The requested like candidate operation is completed successfully, or the system remains in a safe and recoverable state after an alternative flow.
+* **UI Prototype References:**
+  - Main Flow: `prototypes/uc22_swipe.png`
+  - AF22.1: `prototypes/uc22_af1_candidate_unavailable_or_blocked.png`
 
 ---
 
@@ -647,23 +674,26 @@
 
 * **Use Case ID:** UC23
 * **Use Case Name:** Skip Candidate
-* **Actor(s):** Registered User (Primary)
-* **Description:** Registers a negative "Skip" interaction on a candidate profile (swipe left or tap X button), removing the card from feed.
-* **Preconditions:** User viewing candidate card.
+* **Actor(s):** User
+* **Description:** Records that the user skips a candidate and moves to another candidate.
+* **Preconditions:** User is viewing a candidate profile.
 
 #### Basic Flow (Main Success Scenario)
-1. User swipes left on candidate card or clicks "X / Skip" button.
-2. System displays swipe left micro-animation (< 200ms).
-3. System records "SKIP" interaction in database to avoid re-showing profile.
-4. System advances deck to display next candidate profile.
+1. User selects Skip on a candidate.
+2. System records the skip interaction.
+3. System removes the candidate from the current deck.
+4. System shows the next candidate.
 
 #### Alternative Flows
-* **AF23.1: Undo Skip (Premium / Future Extension)**
-  * Step 1a: User accidentally skips card.
-  * Step 1b: System provides 3-second undo snackbar to revert last skip.
+* **AF23.1: Undo skip if supported**
+  * System detects the alternative condition.
+  * System displays the appropriate state or message.
+  * User can correct the input, retry, or leave the flow when applicable.
 
-* **Postconditions:** Candidate skipped and hidden from active discovery deck.
-* **UI Prototype Reference:** `![Skip Candidate Screen](prototypes/uc24_mutual_match_modal.png)`
+* **Postconditions:** The requested skip candidate operation is completed successfully, or the system remains in a safe and recoverable state after an alternative flow.
+* **UI Prototype References:**
+  - Main Flow: `prototypes/uc23_skip.png`
+  - AF23.1: `prototypes/uc23_af1_undo_skip_if_supported.png`
 
 ---
 
@@ -671,24 +701,27 @@
 
 * **Use Case ID:** UC24
 * **Use Case Name:** Create Mutual Match
-* **Actor(s):** System (Primary), Registered User (Secondary)
-* **Description:** System background trigger executed when a mutual like is established between two users. Creates match record, triggers notification (`UC40`), and shows match popup (`UC25`). Extends `UC22`.
-* **Preconditions:** Both User A and User B have issued a "LIKE" action on each other's profile.
+* **Actor(s):** User
+* **Description:** Creates a mutual match when two users have liked each other.
+* **Preconditions:** Both users have expressed a positive interest in each other.
 
 #### Basic Flow (Main Success Scenario)
-1. System detects bidirectional "LIKE" records between User A and User B.
-2. System creates new `Match` entry in database (Match ID, User A ID, User B ID, Created At).
-3. System unlocks real-time messaging channel between User A and User B.
-4. System triggers `UC40` (Receive Match Notification) for both users.
-5. System invokes `UC25` (Show Match Confirmation) modal on active user screen.
+1. System detects a mutual positive interaction.
+2. System creates the mutual match.
+3. System enables the matched users to continue to messaging.
+4. System triggers the match notification (UC40).
+5. System shows match confirmation (UC25).
 
 #### Alternative Flows
-* **AF24.1: Target User Account Blocked/Deleted**
-  * Step 1a: Before match creation completes, target user account becomes blocked or deleted.
-  * Step 1b: System cancels match creation silently.
+* **AF24.1: Target account becomes unavailable**
+  * System detects the alternative condition.
+  * System displays the appropriate state or message.
+  * User can correct the input, retry, or leave the flow when applicable.
 
-* **Postconditions:** Match record created in database; conversation channel enabled.
-* **UI Prototype Reference:** `![Create Mutual Match Screen](prototypes/uc24_mutual_match_modal.png)`
+* **Postconditions:** The requested create mutual match operation is completed successfully, or the system remains in a safe and recoverable state after an alternative flow.
+* **UI Prototype References:**
+  - Main Flow: `prototypes/uc24_mutual_match.png`
+  - AF24.1: `prototypes/uc24_af1_target_account_becomes_unavailable.png`
 
 ---
 
@@ -696,24 +729,26 @@
 
 * **Use Case ID:** UC25
 * **Use Case Name:** Show Match Confirmation
-* **Actor(s):** Registered User (Primary)
-* **Description:** Displays full-screen celebratory "It's a Match!" modal screen with match avatars and quick action buttons ("Send Message" / "Keep Swiping"). Included by `UC24`.
-* **Preconditions:** Mutual match created successfully (`UC24`).
+* **Actor(s):** User
+* **Description:** Shows a confirmation when a mutual match is created.
+* **Preconditions:** A mutual match has just been created.
 
 #### Basic Flow (Main Success Scenario)
-1. System overlays celebratory modal on user screen displaying "It's a Match! 🎉".
-2. Modal displays side-by-side profile photos of both matched users.
-3. System presents two buttons: "Send Message" and "Keep Swiping".
-4. If user taps "Send Message", system routes user to messaging view (`UC31`/`UC32`).
-5. If user taps "Keep Swiping", system closes modal and resumes candidate deck (`UC18`).
+1. System displays the match confirmation.
+2. System shows both matched profiles.
+3. User chooses Send Message or Keep Swiping.
+4. System performs the selected action.
 
 #### Alternative Flows
-* **AF25.1: Dismiss Modal**
-  * Step 3a: User taps backdrop background.
-  * Step 3b: Modal closes, returning user to deck.
+* **AF25.1: User dismisses match confirmation**
+  * System detects the alternative condition.
+  * System displays the appropriate state or message.
+  * User can correct the input, retry, or leave the flow when applicable.
 
-* **Postconditions:** User acknowledges match and chooses immediate chat or browsing.
-* **UI Prototype Reference:** `![Show Match Confirmation Screen](prototypes/uc24_mutual_match_modal.png)`
+* **Postconditions:** The requested show match confirmation operation is completed successfully, or the system remains in a safe and recoverable state after an alternative flow.
+* **UI Prototype References:**
+  - Main Flow: `prototypes/uc24_mutual_match.png`
+  - AF25.1: `prototypes/uc25_af1_user_dismisses_match_confirmation.png`
 
 ---
 
@@ -721,54 +756,56 @@
 
 * **Use Case ID:** UC26
 * **Use Case Name:** View Match History
-* **Actor(s):** Registered User (Primary)
-* **Description:** Displays horizontal scroll view or list of all active mutual matches with avatar thumbnails and match timestamps.
+* **Actor(s):** User
+* **Description:** Shows the user's previous mutual matches.
 * **Preconditions:** User is logged in.
 
 #### Basic Flow (Main Success Scenario)
-1. User navigates to Matches tab.
-2. System queries active matches associated with user ID.
-3. System renders list of matched user profiles sorted by match recency.
-4. Tapping a match thumbnail opens user profile details or chat thread.
+1. User opens Match History.
+2. System retrieves the user's mutual matches.
+3. System sorts and displays the matches.
+4. User selects a match to view or message.
 
 #### Alternative Flows
-* **AF26.1: Zero Matches**
-  * Step 2a: User has no active mutual matches yet.
-  * Step 2b: System displays motivational empty state: "No matches yet. Keep swiping to find your connection!"
+* **AF26.1: No matches yet**
+  * System detects the alternative condition.
+  * System displays the appropriate state or message.
+  * User can correct the input, retry, or leave the flow when applicable.
 
-* **Postconditions:** Active matches displayed to user.
-* **UI Prototype Reference:** `![View Match History Screen](prototypes/uc24_mutual_match_modal.png)`
+* **Postconditions:** The requested view match history operation is completed successfully, or the system remains in a safe and recoverable state after an alternative flow.
+* **UI Prototype References:**
+  - Main Flow: `prototypes/uc26_match_history.png`
+  - AF26.1: `prototypes/uc26_af1_no_matches_yet.png`
 
 ---
 
-## 6. Advanced Search and Filtering (FG-05)
-
----
+## FG-05 Advanced Search & Filtering
 
 ### UC27: Search Profiles
 
 * **Use Case ID:** UC27
 * **Use Case Name:** Search Profiles
-* **Actor(s):** Registered User (Primary)
-* **Description:** Allows user to execute custom searches for potential matches by keyword, applying filters and sorting parameters. Includes `UC30` and extended by `UC28`, `UC29`.
+* **Actor(s):** User
+* **Description:** Allows the user to search for candidate profiles.
 * **Preconditions:** User is logged in.
 
 #### Basic Flow (Main Success Scenario)
-1. User opens the "Search & Explore" tab.
-2. System displays search query bar and quick filter chips.
-3. User enters keyword (e.g. name or bio keyword) or applies filter parameters (`UC28`).
-4. System executes search query against database profile records.
-5. System returns matching candidate profiles using paginated result structure (`UC30`).
-6. System renders profile cards with photo, name, age, city, and interest tags.
+1. User opens Search & Explore.
+2. System displays search controls.
+3. User enters a query and/or uses filters.
+4. System finds matching profiles.
+5. System displays the results.
 
 #### Alternative Flows
-* **AF27.1: No Search Results Found**
-  * Step 4a: Database returns zero matches for query.
-  * Step 4b: System displays message: "No profiles matched your search parameters."
+* **AF27.1: No search results**
+  * System detects the alternative condition.
+  * System displays the appropriate state or message.
+  * User can correct the input, retry, or leave the flow when applicable.
 
-* **Postconditions:** Paginated search results rendered to user.
-* **Special Requirements:** Response time < 2s for paginated results (`PERF-13`).
-* **UI Prototype Reference:** `![Search Profiles Screen](prototypes/uc18_ai_match_suggestions.png)`
+* **Postconditions:** The requested search profiles operation is completed successfully, or the system remains in a safe and recoverable state after an alternative flow.
+* **UI Prototype References:**
+  - Main Flow: `prototypes/uc27_search_profiles.png`
+  - AF27.1: `prototypes/uc27_af1_no_search_results.png`
 
 ---
 
@@ -776,23 +813,27 @@
 
 * **Use Case ID:** UC28
 * **Use Case Name:** Apply Search Filters
-* **Actor(s):** Registered User (Primary)
-* **Description:** Configures explicit filter parameters: Target Gender, Age Range (min/max), City/Province, and Specific Interest Tags. Extends `UC27`.
-* **Preconditions:** User in Search & Explore view (`UC27`).
+* **Actor(s):** User
+* **Description:** Allows the user to narrow search results using supported profile preferences.
+* **Preconditions:** User is viewing search results.
 
 #### Basic Flow (Main Success Scenario)
-1. User taps "Filter" button.
-2. System opens filter modal with parameters: Gender (Male, Female, All), Age slider (18-65+), City dropdown, Interest tag checkboxes.
-3. User adjusts filter parameters and taps "Apply Filters".
-4. System updates active filter criteria state and re-executes search (`UC27`).
+1. User opens the filter controls.
+2. System displays supported filters for gender, age range, city, and interests.
+3. User changes filter values.
+4. User applies the filters.
+5. System updates the search results.
 
 #### Alternative Flows
-* **AF28.1: Reset Filters**
-  * Step 3a: User taps "Reset to Default".
-  * Step 3b: System restores default preference filters and updates search results.
+* **AF28.1: Reset filters**
+  * System detects the alternative condition.
+  * System displays the appropriate state or message.
+  * User can correct the input, retry, or leave the flow when applicable.
 
-* **Postconditions:** Custom search filters applied to query.
-* **UI Prototype Reference:** `![Apply Search Filters Screen](prototypes/uc18_ai_match_suggestions.png)`
+* **Postconditions:** The requested apply search filters operation is completed successfully, or the system remains in a safe and recoverable state after an alternative flow.
+* **UI Prototype References:**
+  - Main Flow: `prototypes/uc28_search_filters.png`
+  - AF28.1: `prototypes/uc28_af1_reset_filters.png`
 
 ---
 
@@ -800,22 +841,26 @@
 
 * **Use Case ID:** UC29
 * **Use Case Name:** Sort Search Results
-* **Actor(s):** Registered User (Primary)
-* **Description:** Sorts search result cards by "AI Compatibility Score (High to Low)" or "Recently Active / Newest". Extends `UC27`.
-* **Preconditions:** Search result list populated (`UC27`).
+* **Actor(s):** User
+* **Description:** Allows the user to change the order of search results.
+* **Preconditions:** Search results are displayed.
 
 #### Basic Flow (Main Success Scenario)
-1. User selects "Sort By" dropdown menu on search header.
-2. User selects sort option (e.g. "Compatibility Score: High to Low").
-3. System re-orders result dataset and re-renders profile grid.
+1. User opens the Sort By control.
+2. System displays the available sort options.
+3. User selects a sort option.
+4. System rearranges the displayed results.
 
 #### Alternative Flows
-* **AF29.1: Default Sort**
-  * Step 1a: No sort selected by user.
-  * Step 1b: System defaults to AI Compatibility Score descending.
+* **AF29.1: Default sorting**
+  * System detects the alternative condition.
+  * System displays the appropriate state or message.
+  * User can correct the input, retry, or leave the flow when applicable.
 
-* **Postconditions:** Search results displayed in selected order.
-* **UI Prototype Reference:** `![Sort Search Results Screen](prototypes/uc18_ai_match_suggestions.png)`
+* **Postconditions:** The requested sort search results operation is completed successfully, or the system remains in a safe and recoverable state after an alternative flow.
+* **UI Prototype References:**
+  - Main Flow: `prototypes/uc29_sort_results.png`
+  - AF29.1: `prototypes/uc29_af1_default_sorting.png`
 
 ---
 
@@ -823,57 +868,55 @@
 
 * **Use Case ID:** UC30
 * **Use Case Name:** View Paginated Results
-* **Actor(s):** System (Primary), Registered User (Secondary)
-* **Description:** Manages paginated profile loading (20 profiles per page / infinite scroll batching) to maintain system performance. Included by `UC27`.
-* **Preconditions:** Search or discovery query executed.
+* **Actor(s):** User
+* **Description:** Allows the user to move through multiple pages of search results.
+* **Preconditions:** A search returns more results than can be shown at once.
 
 #### Basic Flow (Main Success Scenario)
-1. System receives page request parameter (e.g. `page=1`, `limit=20`).
-2. System retrieves slice of 20 profile records from database.
-3. System appends profiles to search view grid.
-4. When user scrolls to bottom of list, system automatically fetches page 2.
+1. System displays the first set of search results.
+2. User moves to another page or requests more results.
+3. System loads the next set of results.
+4. System displays the additional profiles.
 
 #### Alternative Flows
-* **AF30.1: End of Result Set**
-  * Step 4a: Subsequent page request returns 0 records.
-  * Step 4b: System disables infinite scroll listener and displays: "You have reached the end of the results."
+* **AF30.1: End of result set**
+  * System detects the alternative condition.
+  * System displays the appropriate state or message.
+  * User can correct the input, retry, or leave the flow when applicable.
 
-* **Postconditions:** Smooth paginated rendering of candidate profiles achieved.
-* **Special Requirements:** Max 20 items per page batch (`PERF-13`).
-* **UI Prototype Reference:** `![View Paginated Results Screen](prototypes/uc18_ai_match_suggestions.png)`
-
----
-
-## 7. Real-time Messaging (FG-06)
-
-| Assignee | Reviewer | Editor |
-| :--- | :--- | :--- |
-| Nguyễn Minh Hoàng | Lê Văn Hoàng Tấn | Trần Đại Nghĩa |
+* **Postconditions:** The requested view paginated results operation is completed successfully, or the system remains in a safe and recoverable state after an alternative flow.
+* **UI Prototype References:**
+  - Main Flow: `prototypes/uc30_paginated_results.png`
+  - AF30.1: `prototypes/uc30_af1_end_of_result_set.png`
 
 ---
+
+## FG-06 Real-time Messaging
 
 ### UC31: View Conversations
 
 * **Use Case ID:** UC31
 * **Use Case Name:** View Conversations
-* **Actor(s):** Registered User (Primary)
-* **Description:** Renders conversation inbox showing all active chat channels with matched users, snippet of latest message, timestamp, unread badge, online status, and typing indicator. Includes `UC34`, `UC35`, `UC36`.
-* **Preconditions:** User is logged in with active matches.
+* **Actor(s):** User
+* **Description:** Shows the user's conversation list and the selected conversation.
+* **Preconditions:** User is logged in and has at least one conversation or match.
 
 #### Basic Flow (Main Success Scenario)
-1. User clicks "Messages / Chat" main tab.
-2. System fetches all active conversation channels associated with user.
-3. System invokes `UC34` (View Message History snippet), `UC35` (View Online Status), and `UC36` (View Typing Indicator).
-4. System renders conversation list sorted by most recent message timestamp.
-5. User selects a conversation thread to open full chat interface.
+1. User opens Messages.
+2. System displays the conversation list.
+3. User selects a conversation.
+4. System displays the conversation and relevant message information.
 
 #### Alternative Flows
-* **AF31.1: No Active Conversations**
-  * Step 2a: User has matches but no initiated chats.
-  * Step 2b: System shows top horizontal row of match avatars prompting user to "Say Hello!".
+* **AF31.1: No active conversations**
+  * System detects the alternative condition.
+  * System displays the appropriate state or message.
+  * User can correct the input, retry, or leave the flow when applicable.
 
-* **Postconditions:** User inbox rendered with real-time status indicators.
-* **UI Prototype Reference:** `![View Conversations Screen](prototypes/uc31_realtime_chat.png)`
+* **Postconditions:** The requested view conversations operation is completed successfully, or the system remains in a safe and recoverable state after an alternative flow.
+* **UI Prototype References:**
+  - Main Flow: `prototypes/uc31_realtime_chat.png`
+  - AF31.1: `prototypes/uc31_af1_no_active_conversations.png`
 
 ---
 
@@ -881,31 +924,27 @@
 
 * **Use Case ID:** UC32
 * **Use Case Name:** Send Message
-* **Actor(s):** Registered User (Primary)
-* **Description:** Transmits text message to matched user over WebSocket real-time channel with fallback retries.
-* **Preconditions:** Mutual match established between sender and recipient; active chat thread open.
+* **Actor(s):** User
+* **Description:** Allows the user to send a message in an active conversation.
+* **Preconditions:** User has an active conversation.
 
 #### Basic Flow (Main Success Scenario)
-1. User types message text into chat input box.
-2. User taps "Send" button or presses Enter.
-3. Client validates message content non-empty and length $\le 1000$ characters.
-4. Client transmits message payload via WebSocket connection (`/ws/chat`).
-5. Server persists message in database, updates conversation `last_message_at`, and echoes message receipt.
-6. Server forwards message payload instantly to recipient socket (`UC33`).
-7. Client renders sent message bubble with "Sent" status indicator.
+1. User enters a message.
+2. User selects Send.
+3. System validates the message.
+4. System sends the message to the selected conversation.
+5. System displays the sent message.
 
 #### Alternative Flows
-* **AF32.1: WebSocket Disconnection / Retry (PLAT-06)**
-  * Step 4a: WebSocket connection is disconnected when user sends message.
-  * Step 4b: System attempts up to 3 automatic retries over 5 seconds.
-  * Step 4c: If retries fail, message bubble shows "Failed to send. Tap to retry" error indicator.
-* **AF32.2: Recipient Unmatched or Blocked**
-  * Step 5a: Recipient has blocked user (`UC42`) or unmatched.
-  * Step 5b: Server rejects message delivery with error code: "Cannot send message to this user."
+* **AF32.1: Message cannot be sent**
+  * System detects the alternative condition.
+  * System displays the appropriate state or message.
+  * User can correct the input, retry, or leave the flow when applicable.
 
-* **Postconditions:** Message persisted and delivered to recipient; conversation timestamp updated.
-* **Special Requirements:** End-to-end latency < 300ms (`PERF-05`); WebSocket auto-reconnect (`PLAT-06`).
-* **UI Prototype Reference:** `![Send Message Screen](prototypes/uc31_realtime_chat.png)`
+* **Postconditions:** The requested send message operation is completed successfully, or the system remains in a safe and recoverable state after an alternative flow.
+* **UI Prototype References:**
+  - Main Flow: `prototypes/uc31_realtime_chat.png`
+  - AF32.1: `prototypes/uc32_af1_message_cannot_be_sent.png`
 
 ---
 
@@ -913,23 +952,26 @@
 
 * **Use Case ID:** UC33
 * **Use Case Name:** Receive Message
-* **Actor(s):** Registered User (Primary)
-* **Description:** Receives incoming WebSocket text message event from matched sender, updating active thread UI and issuing notification if chat inactive.
-* **Preconditions:** Mutual match active; WebSocket connection connected.
+* **Actor(s):** User
+* **Description:** Displays a newly received message to the recipient.
+* **Preconditions:** The user is an active recipient of a conversation.
 
 #### Basic Flow (Main Success Scenario)
-1. Recipient client receives incoming `CHAT_MESSAGE` event over WebSocket.
-2. If recipient is currently viewing sender's chat thread, client appends message bubble to chat window with sound effect.
-3. If recipient is on a different screen, system triggers `UC41` (Receive Message Notification) to display unread toast and badge counter increment.
+1. A matched user sends a message.
+2. System receives the new message.
+3. System makes the new message available to the recipient.
+4. System updates the conversation and unread state when appropriate.
 
 #### Alternative Flows
-* **AF33.1: Client Offline upon Transmission**
-  * Step 1a: Recipient socket is disconnected.
-  * Step 1b: Server stores message in DB and queues push notification (`UC41`). Message renders when client reconnects.
+* **AF33.1: Message arrives while user is offline**
+  * System detects the alternative condition.
+  * System displays the appropriate state or message.
+  * User can correct the input, retry, or leave the flow when applicable.
 
-* **Postconditions:** Incoming message displayed to recipient.
-* **Special Requirements:** Delivery latency < 300ms (`PERF-05`).
-* **UI Prototype Reference:** `![Receive Message Screen](prototypes/uc31_realtime_chat.png)`
+* **Postconditions:** The requested receive message operation is completed successfully, or the system remains in a safe and recoverable state after an alternative flow.
+* **UI Prototype References:**
+  - Main Flow: `prototypes/uc31_realtime_chat.png`
+  - AF33.1: `prototypes/uc33_af1_message_arrives_while_user_is_offline.png`
 
 ---
 
@@ -937,24 +979,26 @@
 
 * **Use Case ID:** UC34
 * **Use Case Name:** View Message History
-* **Actor(s):** Registered User (Primary)
-* **Description:** Fetches and displays chronological chat log history for a specific conversation channel with pagination on upward scroll. Included by `UC31`.
-* **Preconditions:** Active conversation selected.
+* **Actor(s):** User
+* **Description:** Shows previous messages in a conversation.
+* **Preconditions:** A conversation is selected.
 
 #### Basic Flow (Main Success Scenario)
-1. User selects a chat thread.
-2. System loads latest 50 messages for conversation.
-3. System renders message bubbles grouped by date headers.
-4. User scrolls up to view older messages.
-5. System fetches next 50 historical messages page and prepends to scroll view.
+1. User opens a conversation.
+2. System displays recent messages.
+3. User scrolls through the conversation.
+4. System displays older messages when available.
 
 #### Alternative Flows
-* **AF34.1: End of Message History**
-  * Step 5a: No further historical messages exist.
-  * Step 5b: System displays top marker: "Beginning of conversation".
+* **AF34.1: No older messages**
+  * System detects the alternative condition.
+  * System displays the appropriate state or message.
+  * User can correct the input, retry, or leave the flow when applicable.
 
-* **Postconditions:** Message history rendered to user.
-* **UI Prototype Reference:** `![View Message History Screen](prototypes/uc31_realtime_chat.png)`
+* **Postconditions:** The requested view message history operation is completed successfully, or the system remains in a safe and recoverable state after an alternative flow.
+* **UI Prototype References:**
+  - Main Flow: `prototypes/uc31_realtime_chat.png`
+  - AF34.1: `prototypes/uc34_af1_no_older_messages.png`
 
 ---
 
@@ -962,22 +1006,25 @@
 
 * **Use Case ID:** UC35
 * **Use Case Name:** View Online Status
-* **Actor(s):** Registered User (Primary)
-* **Description:** Displays real-time presence status (Green dot for Online, "Active X mins ago" for Offline) next to matched user avatar. Included by `UC31`.
-* **Preconditions:** User viewing conversation list or chat window.
+* **Actor(s):** User
+* **Description:** Shows whether a matched user is currently online or recently active when permitted.
+* **Preconditions:** A conversation or match is visible.
 
 #### Basic Flow (Main Success Scenario)
-1. System subscribes to presence state of matched users via WebSocket presence channel.
-2. System renders green status indicator dot for online users.
-3. When matched user disconnects, system updates status to "Active 5m ago".
+1. User views a conversation or match.
+2. System determines whether the matched user has shared their presence.
+3. System displays Online or recent activity when allowed.
 
 #### Alternative Flows
-* **AF35.1: Privacy Masking**
-  * Step 2a: User or match has hidden online status in privacy settings.
-  * Step 2b: System suppresses status indicator display.
+* **AF35.1: Online status hidden**
+  * System detects the alternative condition.
+  * System displays the appropriate state or message.
+  * User can correct the input, retry, or leave the flow when applicable.
 
-* **Postconditions:** Online status accurately reflected.
-* **UI Prototype Reference:** `![View Online Status Screen](prototypes/uc31_realtime_chat.png)`
+* **Postconditions:** The requested view online status operation is completed successfully, or the system remains in a safe and recoverable state after an alternative flow.
+* **UI Prototype References:**
+  - Main Flow: `prototypes/uc31_realtime_chat.png`
+  - AF35.1: `prototypes/uc35_af1_online_status_hidden.png`
 
 ---
 
@@ -985,55 +1032,55 @@
 
 * **Use Case ID:** UC36
 * **Use Case Name:** View Typing Indicator
-* **Actor(s):** Registered User (Primary)
-* **Description:** Displays animated "User is typing..." indicator when matched user is actively typing a message in the thread. Included by `UC31`.
-* **Preconditions:** Chat thread open between matched users.
+* **Actor(s):** User
+* **Description:** Shows a typing indicator while the matched user is typing.
+* **Preconditions:** A conversation is open.
 
 #### Basic Flow (Main Success Scenario)
-1. Matched user inputs keystrokes in chat field, broadcasting `TYPING_START` socket event.
-2. Recipient client receives event and renders three-dot typing animation below chat log.
-3. When matched user stops typing for 3 seconds or sends message, `TYPING_STOP` event clears animation.
+1. User opens a conversation.
+2. The matched user starts typing.
+3. System displays the typing indicator.
+4. System removes the indicator when typing stops or a message is sent.
 
 #### Alternative Flows
-* **AF36.1: Socket Timeout**
-  * Step 3a: No `TYPING_STOP` received after 5 seconds.
-  * Step 3b: Client automatically hides typing indicator.
+* **AF36.1: Typing status unavailable**
+  * System detects the alternative condition.
+  * System displays the appropriate state or message.
+  * User can correct the input, retry, or leave the flow when applicable.
 
-* **Postconditions:** Typing status dynamically displayed.
-* **UI Prototype Reference:** `![View Typing Indicator Screen](prototypes/uc31_realtime_chat.png)`
-
----
-
-## 8. Notification Center (FG-07)
-
-| Assignee | Reviewer | Editor |
-| :--- | :--- | :--- |
-| Nguyễn Minh Hoàng | Lê Văn Hoàng Tấn | Trần Đại Nghĩa |
+* **Postconditions:** The requested view typing indicator operation is completed successfully, or the system remains in a safe and recoverable state after an alternative flow.
+* **UI Prototype References:**
+  - Main Flow: `prototypes/uc31_realtime_chat.png`
+  - AF36.1: `prototypes/uc36_af1_typing_status_unavailable.png`
 
 ---
+
+## FG-07 Notification Center
 
 ### UC37: View Notifications
 
 * **Use Case ID:** UC37
 * **Use Case Name:** View Notifications
-* **Actor(s):** Registered User (Primary)
-* **Description:** Renders central notifications drop-down list showing alerts for new matches, new messages, and system announcements. Extended by `UC38`, `UC39`.
+* **Actor(s):** User
+* **Description:** Shows notifications related to matches, messages, and system activity.
 * **Preconditions:** User is logged in.
 
 #### Basic Flow (Main Success Scenario)
-1. User clicks Bell icon in navigation header.
-2. System fetches user notification records from database.
-3. System renders notification item list showing type icon, title, description, timestamp, and read status indicator.
-4. Clicking a notification redirects user to corresponding resource (e.g. Chat thread or Match confirmation).
+1. User opens the notification center.
+2. System retrieves available notifications.
+3. System groups and displays notifications.
+4. User can select a notification to continue to the related function.
 
 #### Alternative Flows
-* **AF37.1: Empty Notification Center**
-  * Step 2a: User has no notifications.
-  * Step 2b: System renders: "You're all caught up! No new notifications."
+* **AF37.1: No notifications**
+  * System detects the alternative condition.
+  * System displays the appropriate state or message.
+  * User can correct the input, retry, or leave the flow when applicable.
 
-* **Postconditions:** User views list of alerts; unread badge state managed.
-* **Special Requirements:** Real-time badge update without page refresh (`UX-04`).
-* **UI Prototype Reference:** `![View Notifications Screen](prototypes/uc31_realtime_chat.png)`
+* **Postconditions:** The requested view notifications operation is completed successfully, or the system remains in a safe and recoverable state after an alternative flow.
+* **UI Prototype References:**
+  - Main Flow: `prototypes/uc37_notifications.png`
+  - AF37.1: `prototypes/uc37_af1_no_notifications.png`
 
 ---
 
@@ -1041,22 +1088,25 @@
 
 * **Use Case ID:** UC38
 * **Use Case Name:** Mark Notification as Read
-* **Actor(s):** Registered User (Primary)
-* **Description:** Updates status of single notification item from `UNREAD` to `READ` upon click or manual action. Extends `UC37`.
-* **Preconditions:** User viewing notifications list (`UC37`).
+* **Actor(s):** User
+* **Description:** Marks one notification as read.
+* **Preconditions:** Notifications are available.
 
 #### Basic Flow (Main Success Scenario)
-1. User taps an unread notification item.
-2. System issues request to mark notification ID as `READ`.
-3. System updates item styling (removes highlight) and decrements unread counter badge.
+1. User selects an unread notification.
+2. System marks the notification as read.
+3. System updates the unread indicator.
 
 #### Alternative Flows
-* **AF38.1: Already Read**
-  * Step 1a: User taps an item already marked `READ`.
-  * Step 1b: System navigates to resource without sending state update request.
+* **AF38.1: Notification already read**
+  * System detects the alternative condition.
+  * System displays the appropriate state or message.
+  * User can correct the input, retry, or leave the flow when applicable.
 
-* **Postconditions:** Target notification status updated to `READ` in database.
-* **UI Prototype Reference:** `![Mark Notification as Read Screen](prototypes/uc31_realtime_chat.png)`
+* **Postconditions:** The requested mark notification as read operation is completed successfully, or the system remains in a safe and recoverable state after an alternative flow.
+* **UI Prototype References:**
+  - Main Flow: `prototypes/uc37_notifications.png`
+  - AF38.1: `prototypes/uc38_af1_notification_already_read.png`
 
 ---
 
@@ -1064,22 +1114,25 @@
 
 * **Use Case ID:** UC39
 * **Use Case Name:** Mark All Notifications as Read
-* **Actor(s):** Registered User (Primary)
-* **Description:** Bulk updates all unread notifications associated with user to `READ` status. Extends `UC37`.
-* **Preconditions:** User viewing notifications list (`UC37`).
+* **Actor(s):** User
+* **Description:** Marks all available notifications as read.
+* **Preconditions:** Notifications are available.
 
 #### Basic Flow (Main Success Scenario)
-1. User clicks "Mark All as Read" button at top of notification drawer.
-2. System sends bulk update request for user ID.
-3. System updates database records, updates UI items to read state, and resets header unread badge counter to 0.
+1. User selects Mark All as Read.
+2. System marks all unread notifications as read.
+3. System updates the notification count.
 
 #### Alternative Flows
-* **AF39.1: No Unread Notifications**
-  * Step 1a: Unread count is already 0.
-  * Step 1b: Button is disabled.
+* **AF39.1: No unread notifications**
+  * System detects the alternative condition.
+  * System displays the appropriate state or message.
+  * User can correct the input, retry, or leave the flow when applicable.
 
-* **Postconditions:** All notifications marked `READ`; unread badge cleared.
-* **UI Prototype Reference:** `![Mark All as Read Screen](prototypes/uc31_realtime_chat.png)`
+* **Postconditions:** The requested mark all notifications as read operation is completed successfully, or the system remains in a safe and recoverable state after an alternative flow.
+* **UI Prototype References:**
+  - Main Flow: `prototypes/uc37_notifications.png`
+  - AF39.1: `prototypes/uc39_af1_no_unread_notifications.png`
 
 ---
 
@@ -1087,23 +1140,25 @@
 
 * **Use Case ID:** UC40
 * **Use Case Name:** Receive Match Notification
-* **Actor(s):** Registered User (Primary), System (Supporting)
-* **Description:** System-generated real-time push/in-app alert dispatched when a mutual match is formed (`UC24`).
-* **Preconditions:** Mutual match created (`UC24`).
+* **Actor(s):** User
+* **Description:** Delivers a notification when a mutual match is created.
+* **Preconditions:** A mutual match has been created.
 
 #### Basic Flow (Main Success Scenario)
-1. System creates new notification record of type `NEW_MATCH`.
-2. System pushes real-time WebSocket event `NOTIFICATION_RECEIVED` to online user.
-3. Client renders toast notification: "You matched with [Name]! 🎉".
-4. System increments unread notification badge counter by 1.
+1. A mutual match is created.
+2. System creates a match notification.
+3. System makes the notification available to both matched users.
 
 #### Alternative Flows
-* **AF40.1: User Offline**
-  * Step 2a: User is offline.
-  * Step 2b: Notification stored in database and shown on next log in.
+* **AF40.1: Notification delivery unavailable**
+  * System detects the alternative condition.
+  * System displays the appropriate state or message.
+  * User can correct the input, retry, or leave the flow when applicable.
 
-* **Postconditions:** Match alert delivered to user.
-* **UI Prototype Reference:** `![Receive Match Notification Screen](prototypes/uc31_realtime_chat.png)`
+* **Postconditions:** The requested receive match notification operation is completed successfully, or the system remains in a safe and recoverable state after an alternative flow.
+* **UI Prototype References:**
+  - Main Flow: `prototypes/uc40_match_notification.png`
+  - AF40.1: `prototypes/uc40_af1_notification_delivery_unavailable.png`
 
 ---
 
@@ -1111,54 +1166,55 @@
 
 * **Use Case ID:** UC41
 * **Use Case Name:** Receive Message Notification
-* **Actor(s):** Registered User (Primary), System (Supporting)
-* **Description:** Dispatches notification alert when user receives a new message while outside that specific chat room.
-* **Preconditions:** New chat message sent (`UC32`/`UC33`).
+* **Actor(s):** User
+* **Description:** Delivers a notification when a new message is received.
+* **Preconditions:** A new message is available for the recipient.
 
 #### Basic Flow (Main Success Scenario)
-1. System detects incoming message for user who is not currently in sender's active chat window.
-2. System creates notification record of type `NEW_MESSAGE`.
-3. System displays top banner toast: "[Name]: [Message snippet]".
-4. System increments header chat badge counter.
+1. A new message is received.
+2. System creates a message notification when appropriate.
+3. System makes the notification available to the recipient.
 
 #### Alternative Flows
-* **AF41.1: Muted Conversation**
-  * Step 1a: User has muted notifications for this specific match.
-  * Step 1b: System increments unread badge silently without banner toast.
+* **AF41.1: Notification delivery unavailable**
+  * System detects the alternative condition.
+  * System displays the appropriate state or message.
+  * User can correct the input, retry, or leave the flow when applicable.
 
-* **Postconditions:** Message notification delivered.
-* **UI Prototype Reference:** `![Receive Message Notification Screen](prototypes/uc31_realtime_chat.png)`
+* **Postconditions:** The requested receive message notification operation is completed successfully, or the system remains in a safe and recoverable state after an alternative flow.
+* **UI Prototype References:**
+  - Main Flow: `prototypes/uc41_message_notification.png`
+  - AF41.1: `prototypes/uc40_af1_notification_delivery_unavailable.png`
 
 ---
 
-## 9. Privacy and Safety Controls (FG-08)
-
----
+## FG-08 Privacy & Safety Controls
 
 ### UC42: Block User
 
 * **Use Case ID:** UC42
 * **Use Case Name:** Block User
-* **Actor(s):** Registered User (Primary)
-* **Description:** Allows user to block another profile, immediately terminating mutual match status, hiding profiles from each other, and preventing all communication.
-* **Preconditions:** User viewing target profile or active chat thread.
+* **Actor(s):** User
+* **Description:** Prevents further interaction with a selected user by blocking them.
+* **Preconditions:** User is logged in and can access the selected profile.
 
 #### Basic Flow (Main Success Scenario)
-1. User clicks "..." action menu on target user profile or chat window.
-2. User selects "Block User".
-3. System displays confirmation modal: "Block [Name]? They will not be able to see your profile or message you."
-4. User confirms "Block".
-5. System creates `Block` record in database (Blocker ID, Blocked ID, Timestamp).
-6. System revokes mutual match status, deletes chat channel access, and removes target profile from user's views.
-7. System displays success notice: "User blocked".
+1. User opens the selected profile's safety options.
+2. User selects Block User.
+3. System asks for confirmation.
+4. User confirms.
+5. System blocks the selected account from further interaction.
 
 #### Alternative Flows
-* **AF42.1: Cancel Block**
-  * Step 4a: User selects "Cancel".
-  * Step 4b: System closes modal without modifying block list.
+* **AF42.1: User already blocked**
+  * System detects the alternative condition.
+  * System displays the appropriate state or message.
+  * User can correct the input, retry, or leave the flow when applicable.
 
-* **Postconditions:** User blocked; communication channels destroyed; profiles mutually invisible (`SEC-12`).
-* **UI Prototype Reference:** `![Block User Screen](prototypes/uc31_realtime_chat.png)`
+* **Postconditions:** The requested block user operation is completed successfully, or the system remains in a safe and recoverable state after an alternative flow.
+* **UI Prototype References:**
+  - Main Flow: `prototypes/uc42_block_user.png`
+  - AF42.1: `prototypes/uc42_af1_user_already_blocked.png`
 
 ---
 
@@ -1166,25 +1222,27 @@
 
 * **Use Case ID:** UC43
 * **Use Case Name:** Report User
-* **Actor(s):** Registered User (Primary)
-* **Description:** Allows user to report another user for violations (harassment, fake profile, inappropriate photos, spam) for admin review (`UC48`/`UC50`).
-* **Preconditions:** User logged in.
+* **Actor(s):** User
+* **Description:** Allows the user to report another user for a safety or policy concern.
+* **Preconditions:** User is logged in and can access the report function.
 
 #### Basic Flow (Main Success Scenario)
-1. User opens action menu on candidate profile or chat and selects "Report User".
-2. System presents modal requesting report reason category (Harassment, Fake Profile, Inappropriate Content, Spam) and optional text description.
-3. User selects category, adds detail notes, and taps "Submit Report".
-4. System creates `Report` ticket in database with status `PENDING` attached to target user ID.
-5. System displays prompt: "Report submitted. Would you also like to block this user?"
-6. If confirmed, system executes `UC42` (Block User).
+1. User opens the report function.
+2. System displays report reasons.
+3. User selects a reason and submits the report.
+4. System records the report.
+5. System confirms submission.
 
 #### Alternative Flows
-* **AF43.1: Missing Reason Category**
-  * Step 3a: User attempts submission without selecting a category.
-  * Step 3b: System highlights required category selection.
+* **AF43.1: Report submission incomplete**
+  * System detects the alternative condition.
+  * System displays the appropriate state or message.
+  * User can correct the input, retry, or leave the flow when applicable.
 
-* **Postconditions:** Moderation ticket generated for Admin review in Admin Dashboard (`UC48`).
-* **UI Prototype Reference:** `![Report User Screen](prototypes/uc31_realtime_chat.png)`
+* **Postconditions:** The requested report user operation is completed successfully, or the system remains in a safe and recoverable state after an alternative flow.
+* **UI Prototype References:**
+  - Main Flow: `prototypes/uc43_report_user.png`
+  - AF43.1: `prototypes/uc43_af1_report_submission_incomplete.png`
 
 ---
 
@@ -1192,24 +1250,27 @@
 
 * **Use Case ID:** UC44
 * **Use Case Name:** Deactivate Account
-* **Actor(s):** Registered User (Primary)
-* **Description:** Allows user to temporarily deactivate account, hiding profile from candidate feeds while preserving account data for future reactivation.
+* **Actor(s):** User
+* **Description:** Temporarily deactivates the user's account and hides it from normal discovery.
 * **Preconditions:** User is logged in.
 
 #### Basic Flow (Main Success Scenario)
-1. User opens Account Privacy Settings and selects "Deactivate Account".
-2. System displays warning modal explaining that profile will be hidden from matching discovery.
-3. User enters current password for verification.
-4. System validates password, updates account status to `DEACTIVATED`, and terminates session (`UC03`).
-5. System redirects to login page with message: "Your account is deactivated. Log in anytime to reactivate."
+1. User opens account settings.
+2. User selects Deactivate Account.
+3. System explains the effect.
+4. User confirms.
+5. System deactivates the account and hides it from normal discovery.
 
 #### Alternative Flows
-* **AF44.1: Invalid Password Verification**
-  * Step 4a: Password check fails.
-  * Step 4b: System displays error and denies deactivation.
+* **AF44.1: Invalid confirmation**
+  * System detects the alternative condition.
+  * System displays the appropriate state or message.
+  * User can correct the input, retry, or leave the flow when applicable.
 
-* **Postconditions:** Account state set to `DEACTIVATED`; profile hidden from feeds.
-* **UI Prototype Reference:** `![Deactivate Account Screen](prototypes/uc31_realtime_chat.png)`
+* **Postconditions:** The requested deactivate account operation is completed successfully, or the system remains in a safe and recoverable state after an alternative flow.
+* **UI Prototype References:**
+  - Main Flow: `prototypes/uc44_deactivate_account.png`
+  - AF44.1: `prototypes/uc44_af1_invalid_confirmation.png`
 
 ---
 
@@ -1217,54 +1278,56 @@
 
 * **Use Case ID:** UC45
 * **Use Case Name:** Permanently Delete Account
-* **Actor(s):** Registered User (Primary)
-* **Description:** Permanently purges user account, profile, uploaded photos, match records, and chat history within 24 hours in compliance with privacy regulations (`PRIV-01`).
+* **Actor(s):** User
+* **Description:** Allows the user to permanently request deletion of their account and associated data.
 * **Preconditions:** User is logged in.
 
 #### Basic Flow (Main Success Scenario)
-1. User opens Security Settings and selects "Delete Account Permanently".
-2. System displays strong confirmation modal warning: "This action is irreversible. All photos, matches, and messages will be permanently deleted within 24 hours."
-3. User types "DELETE" into text box and enters current password.
-4. System validates password and confirmation text.
-5. System schedules permanent data purge job (TTL $\le 24\text{h}$) and marks account `PENDING_DELETION`.
-6. System terminates user session (`UC03`) and displays completion notification.
+1. User opens account deletion settings.
+2. System displays a permanent-deletion warning.
+3. User confirms the deletion request.
+4. System validates the confirmation.
+5. System records the deletion request and ends the session.
 
 #### Alternative Flows
-* **AF45.1: Mismatched Confirmation String**
-  * Step 4a: Confirmation string does not match "DELETE".
-  * Step 4b: System disables deletion button.
+* **AF45.1: Confirmation does not match**
+  * System detects the alternative condition.
+  * System displays the appropriate state or message.
+  * User can correct the input, retry, or leave the flow when applicable.
 
-* **Postconditions:** User data queued for total removal within 24 hours (`PRIV-01`).
-* **Special Requirements:** Full data purge within 24 hours (`PRIV-01`).
-* **UI Prototype Reference:** `![Permanently Delete Account Screen](prototypes/uc31_realtime_chat.png)`
-
----
-
-## 10. Administration (FG-09)
+* **Postconditions:** The requested permanently delete account operation is completed successfully, or the system remains in a safe and recoverable state after an alternative flow.
+* **UI Prototype References:**
+  - Main Flow: `prototypes/uc45_delete_account.png`
+  - AF45.1: `prototypes/uc45_af1_confirmation_does_not_match.png`
 
 ---
+
+## FG-09 Admin Dashboard
 
 ### UC46: View Admin Dashboard
 
 * **Use Case ID:** UC46
 * **Use Case Name:** View Admin Dashboard
-* **Actor(s):** Administrator (Primary)
-* **Description:** Provides central administrative command view displaying platform telemetry metrics, pending reports queue, and management modules. Includes `UC47`.
-* **Preconditions:** Admin user logged in with `ROLE_ADMIN` (`UC02`/`UC06`).
+* **Actor(s):** Admin
+* **Description:** Provides the administrator with the main dashboard for platform management.
+* **Preconditions:** Admin is authenticated and authorized.
 
 #### Basic Flow (Main Success Scenario)
-1. Admin user logs into administrative portal.
-2. System verifies `ROLE_ADMIN` authorization (`UC06`).
-3. System invokes `UC47` (View Platform Statistics).
-4. System renders dashboard layout displaying metric cards (Total Users, Active Users Today, Total Matches, Pending Report Tickets), recent user registration chart, and management navigation menu.
+1. Admin opens the Admin Dashboard.
+2. System verifies administrative access.
+3. System displays platform summary information and management navigation.
+4. Admin selects an administrative function.
 
 #### Alternative Flows
-* **AF46.1: Unauthorized Access Attempt (SEC-11)**
-  * Step 2a: Non-admin token attempts to access `/admin/dashboard`.
-  * Step 2b: System blocks access with HTTP 403 Forbidden and logs security incident (`SEC-13`).
+* **AF46.1: Unauthorized admin access**
+  * System detects the alternative condition.
+  * System displays the appropriate state or message.
+  * User can correct the input, retry, or leave the flow when applicable.
 
-* **Postconditions:** Admin metrics and management interface displayed.
-* **UI Prototype Reference:** `![View Admin Dashboard Screen](prototypes/uc46_admin_dashboard.png)`
+* **Postconditions:** The requested view admin dashboard operation is completed successfully, or the system remains in a safe and recoverable state after an alternative flow.
+* **UI Prototype References:**
+  - Main Flow: `prototypes/uc46_admin_dashboard.png`
+  - AF46.1: `prototypes/uc46_af1_unauthorized_admin_access.png`
 
 ---
 
@@ -1272,22 +1335,26 @@
 
 * **Use Case ID:** UC47
 * **Use Case Name:** View Platform Statistics
-* **Actor(s):** Administrator (Primary), System (Supporting)
-* **Description:** Aggregates and renders real-time platform performance statistics (Total Users, Daily Active Users, Match Rate, Reported Accounts). Included by `UC46`.
-* **Preconditions:** Admin dashboard requested (`UC46`).
+* **Actor(s):** Admin
+* **Description:** Shows platform-level statistics to the administrator.
+* **Preconditions:** Admin dashboard is available.
 
 #### Basic Flow (Main Success Scenario)
-1. System queries database analytics views for total user count, DAU, match counts, and pending report tickets.
-2. System computes platform health metrics.
-3. System renders summary metric cards and visual bar charts on dashboard.
+1. Admin opens platform statistics.
+2. System gathers current platform statistics.
+3. System displays summary values and charts.
+4. Admin reviews the information.
 
 #### Alternative Flows
-* **AF47.1: Analytics Service Delay**
-  * Step 1a: Aggregation query takes > 2s.
-  * Step 1b: System displays cached statistics snapshot with timestamp indicator.
+* **AF47.1: Statistics temporarily unavailable**
+  * System detects the alternative condition.
+  * System displays the appropriate state or message.
+  * User can correct the input, retry, or leave the flow when applicable.
 
-* **Postconditions:** Platform telemetry visualized for Admin.
-* **UI Prototype Reference:** `![View Platform Statistics Screen](prototypes/uc46_admin_dashboard.png)`
+* **Postconditions:** The requested view platform statistics operation is completed successfully, or the system remains in a safe and recoverable state after an alternative flow.
+* **UI Prototype References:**
+  - Main Flow: `prototypes/uc46_admin_dashboard.png`
+  - AF47.1: `prototypes/uc47_af1_statistics_temporarily_unavailable.png`
 
 ---
 
@@ -1295,22 +1362,26 @@
 
 * **Use Case ID:** UC48
 * **Use Case Name:** Manage Users
-* **Actor(s):** Administrator (Primary)
-* **Description:** Provides administrative user management portal to search, filter, inspect details, block, unblock, or delete user accounts. Includes `UC49`, `UC50`.
-* **Preconditions:** Admin logged in.
+* **Actor(s):** Admin
+* **Description:** Provides the administrator with user-management operations.
+* **Preconditions:** Admin is authenticated and authorized.
 
 #### Basic Flow (Main Success Scenario)
-1. Admin clicks "User Management" tab on sidebar menu.
-2. System executes `UC49` (Search Users) and renders paginated list of user accounts with columns: User ID, Name, Email, Status (`ACTIVE`/`BLOCKED`/`DEACTIVATED`), Date Joined, and Actions.
-3. Admin clicks a user row to invoke `UC50` (View User Details).
+1. Admin opens User Management.
+2. System displays the user-management view.
+3. Admin searches or selects a user.
+4. System displays available management actions.
 
 #### Alternative Flows
-* **AF48.1: Filter by Status**
-  * Step 2a: Admin selects filter dropdown (e.g. "Status: Pending Reports").
-  * Step 2b: System filters list to show only accounts with pending report tickets.
+* **AF48.1: User management unavailable**
+  * System detects the alternative condition.
+  * System displays the appropriate state or message.
+  * User can correct the input, retry, or leave the flow when applicable.
 
-* **Postconditions:** Account list rendered for administration.
-* **UI Prototype Reference:** `![Manage Users Screen](prototypes/uc46_admin_dashboard.png)`
+* **Postconditions:** The requested manage users operation is completed successfully, or the system remains in a safe and recoverable state after an alternative flow.
+* **UI Prototype References:**
+  - Main Flow: `prototypes/uc48_manage_users.png`
+  - AF48.1: `prototypes/uc48_af1_user_management_unavailable.png`
 
 ---
 
@@ -1318,22 +1389,26 @@
 
 * **Use Case ID:** UC49
 * **Use Case Name:** Search Users
-* **Actor(s):** Administrator (Primary)
-* **Description:** Allows Admin to search user accounts by ID, display name, or email address. Included by `UC48`.
-* **Preconditions:** Admin in User Management view (`UC48`).
+* **Actor(s):** Admin
+* **Description:** Allows the administrator to find users in the management view.
+* **Preconditions:** Admin is viewing user management.
 
 #### Basic Flow (Main Success Scenario)
-1. Admin types search term (e.g. email or username) into Admin Search bar.
-2. System executes database search query against user records.
-3. System displays matching accounts list.
+1. Admin opens the user search control.
+2. Admin enters search information.
+3. System finds matching users.
+4. System displays the matching users.
 
 #### Alternative Flows
-* **AF49.1: No Accounts Found**
-  * Step 2a: No matching account records.
-  * Step 2b: System displays: "No users found matching search term."
+* **AF49.1: No matching users**
+  * System detects the alternative condition.
+  * System displays the appropriate state or message.
+  * User can correct the input, retry, or leave the flow when applicable.
 
-* **Postconditions:** Target user accounts filtered for Admin.
-* **UI Prototype Reference:** `![Search Users Screen](prototypes/uc46_admin_dashboard.png)`
+* **Postconditions:** The requested search users operation is completed successfully, or the system remains in a safe and recoverable state after an alternative flow.
+* **UI Prototype References:**
+  - Main Flow: `prototypes/uc48_manage_users.png`
+  - AF49.1: `prototypes/uc49_af1_no_matching_users.png`
 
 ---
 
@@ -1341,25 +1416,26 @@
 
 * **Use Case ID:** UC50
 * **Use Case Name:** View User Details
-* **Actor(s):** Administrator (Primary)
-* **Description:** Renders complete profile audit view for a specific user, including account history, uploaded photos, report tickets, and action triggers (`UC51`, `UC52`, `UC53`). Included by `UC48`.
-* **Preconditions:** Admin in User Management view (`UC48`).
+* **Actor(s):** Admin
+* **Description:** Shows detailed information about a selected user.
+* **Preconditions:** Admin has selected a user.
 
 #### Basic Flow (Main Success Scenario)
-1. Admin selects a user account from user table.
-2. System renders comprehensive details panel: Account Metadata, Profile Photos, Activity Logs, and Associated Report Tickets.
-3. System displays administrative action buttons: "Block Account", "Unblock Account", and "Delete Account".
+1. Admin selects a user.
+2. System loads the user's available details.
+3. System displays profile and account information.
+4. Admin selects an available management action if needed.
 
 #### Alternative Flows
-* **AF50.1: Execute Account Block (`UC51`)**
-  * Step 3a: Admin selects "Block Account" to trigger `UC51`.
-* **AF50.2: Execute Account Unblock (`UC52`)**
-  * Step 3a: Admin selects "Unblock Account" to trigger `UC52`.
-* **AF50.3: Execute Account Delete (`UC53`)**
-  * Step 3a: Admin selects "Delete Account" to trigger `UC53`.
+* **AF50.1: User details unavailable**
+  * System detects the alternative condition.
+  * System displays the appropriate state or message.
+  * User can correct the input, retry, or leave the flow when applicable.
 
-* **Postconditions:** Complete audit details displayed to Admin.
-* **UI Prototype Reference:** `![View User Details Screen](prototypes/uc46_admin_dashboard.png)`
+* **Postconditions:** The requested view user details operation is completed successfully, or the system remains in a safe and recoverable state after an alternative flow.
+* **UI Prototype References:**
+  - Main Flow: `prototypes/uc50_user_details.png`
+  - AF50.1: `prototypes/uc50_af1_user_details_unavailable.png`
 
 ---
 
@@ -1367,26 +1443,27 @@
 
 * **Use Case ID:** UC51
 * **Use Case Name:** Block User Account
-* **Actor(s):** Administrator (Primary)
-* **Description:** Allows Admin to administratively block a user account due to community violations, revoking active sessions and locking login. Extends `UC50`.
-* **Preconditions:** Admin viewing user details (`UC50`).
+* **Actor(s):** Admin
+* **Description:** Blocks a user account from normal platform use.
+* **Preconditions:** Admin has selected an account that may be blocked.
 
 #### Basic Flow (Main Success Scenario)
-1. Admin clicks "Block Account" button on user details view.
-2. System prompts Admin for reason for administrative ban (e.g. Harassment, Fake Account) and audit notes.
-3. Admin inputs reason and clicks "Confirm Block".
-4. System updates account status to `BLOCKED` in database.
-5. System revokes all active JWT tokens for target user and logs audit record (`SEC-13`).
-6. System displays confirmation: "User account blocked successfully".
+1. Admin selects Block User Account.
+2. System displays a confirmation.
+3. Admin confirms the action.
+4. System blocks the account.
+5. System updates the account status.
 
 #### Alternative Flows
-* **AF51.1: Missing Ban Reason**
-  * Step 3a: Admin submits without specifying a reason note.
-  * Step 3b: System prompts: "Audit reason required for account ban."
+* **AF51.1: Account cannot be blocked**
+  * System detects the alternative condition.
+  * System displays the appropriate state or message.
+  * User can correct the input, retry, or leave the flow when applicable.
 
-* **Postconditions:** User account blocked; active session revoked; audit log recorded (`SEC-13`).
-* **Special Requirements:** Audit log record required (`SEC-13`).
-* **UI Prototype Reference:** `![Block User Account Screen](prototypes/uc46_admin_dashboard.png)`
+* **Postconditions:** The requested block user account operation is completed successfully, or the system remains in a safe and recoverable state after an alternative flow.
+* **UI Prototype References:**
+  - Main Flow: `prototypes/uc50_user_details.png`
+  - AF51.1: `prototypes/uc51_af1_account_cannot_be_blocked.png`
 
 ---
 
@@ -1394,24 +1471,27 @@
 
 * **Use Case ID:** UC52
 * **Use Case Name:** Unblock User Account
-* **Actor(s):** Administrator (Primary)
-* **Description:** Allows Admin to restore a previously blocked user account to `ACTIVE` status. Extends `UC50`.
-* **Preconditions:** Admin viewing details of a `BLOCKED` account (`UC50`).
+* **Actor(s):** Admin
+* **Description:** Restores a previously blocked user account.
+* **Preconditions:** Admin has selected a blocked account.
 
 #### Basic Flow (Main Success Scenario)
-1. Admin clicks "Unblock Account" button on user details view.
-2. System presents confirmation modal: "Unblock user [Name] and restore access?"
-3. Admin enters unblock justification note and clicks "Confirm Unblock".
-4. System updates account status to `ACTIVE` and logs audit entry (`SEC-13`).
-5. System displays notice: "User account unblocked successfully".
+1. Admin selects an account that is blocked.
+2. Admin selects Unblock User Account.
+3. System asks for confirmation.
+4. Admin confirms.
+5. System restores the account's active status.
 
 #### Alternative Flows
-* **AF52.1: Account Already Active**
-  * Step 1a: Target account is not blocked.
-  * Step 1b: Unblock button is disabled.
+* **AF52.1: Account is not blocked**
+  * System detects the alternative condition.
+  * System displays the appropriate state or message.
+  * User can correct the input, retry, or leave the flow when applicable.
 
-* **Postconditions:** Account state restored to `ACTIVE`; audit entry logged (`SEC-13`).
-* **UI Prototype Reference:** `![Unblock User Account Screen](prototypes/uc46_admin_dashboard.png)`
+* **Postconditions:** The requested unblock user account operation is completed successfully, or the system remains in a safe and recoverable state after an alternative flow.
+* **UI Prototype References:**
+  - Main Flow: `prototypes/uc50_user_details.png`
+  - AF52.1: `prototypes/uc52_af1_account_is_not_blocked.png`
 
 ---
 
@@ -1419,24 +1499,27 @@
 
 * **Use Case ID:** UC53
 * **Use Case Name:** Delete User Account
-* **Actor(s):** Administrator (Primary)
-* **Description:** Allows Admin to administratively delete a user account and purge user data from system. Extends `UC50`.
-* **Preconditions:** Admin viewing user details (`UC50`).
+* **Actor(s):** Admin
+* **Description:** Permanently removes a user account through the administrative process.
+* **Preconditions:** Admin has selected an account eligible for deletion.
 
 #### Basic Flow (Main Success Scenario)
-1. Admin clicks "Delete User Account" button on user details view.
-2. System presents warning dialog requiring Admin password confirmation.
-3. Admin enters password and clicks "Confirm Permanent Deletion".
-4. System verifies Admin password, deletes user record and associated assets, and logs audit record (`SEC-13`).
-5. System displays notification: "User account permanently deleted".
+1. Admin selects Delete User Account.
+2. System displays a permanent-deletion warning.
+3. Admin confirms the action.
+4. System processes the deletion.
+5. System updates the user-management list.
 
 #### Alternative Flows
-* **AF53.1: Incorrect Admin Password**
-  * Step 4a: Password check fails.
-  * Step 4b: System denies deletion action.
+* **AF53.1: Deletion cannot be completed**
+  * System detects the alternative condition.
+  * System displays the appropriate state or message.
+  * User can correct the input, retry, or leave the flow when applicable.
 
-* **Postconditions:** Target user data purged from system database; audit logged (`SEC-13`).
-* **UI Prototype Reference:** `![Delete User Account Screen](prototypes/uc46_admin_dashboard.png)`
+* **Postconditions:** The requested delete user account operation is completed successfully, or the system remains in a safe and recoverable state after an alternative flow.
+* **UI Prototype References:**
+  - Main Flow: `prototypes/uc50_user_details.png`
+  - AF53.1: `prototypes/uc53_af1_deletion_cannot_be_completed.png`
 
 ---
 
@@ -1444,23 +1527,25 @@
 
 * **Use Case ID:** UC54
 * **Use Case Name:** Manage Interest Tag Catalogue
-* **Actor(s):** Administrator (Primary)
-* **Description:** Provides management view for global interest tag catalogue (e.g. Travel, Music, Gaming, Coffee), allowing creation and removal of tags. Includes `UC55`, `UC56`.
-* **Preconditions:** Admin logged in.
+* **Actor(s):** Admin
+* **Description:** Provides the administrator with the interest-tag catalogue management view.
+* **Preconditions:** Admin is authenticated and authorized.
 
 #### Basic Flow (Main Success Scenario)
-1. Admin selects "Interest Tags" menu item.
-2. System loads and renders current tag catalogue grouped by categories (e.g. Lifestyle, Sports, Entertainment).
-3. Admin executes `UC55` (Add Interest Tag) or `UC56` (Remove Interest Tag).
-4. System updates global catalogue view.
+1. Admin opens the interest-tag catalogue.
+2. System displays existing tags and management controls.
+3. Admin selects an add or remove operation.
 
 #### Alternative Flows
-* **AF54.1: Empty Category**
-  * Step 2a: Category has no tags.
-  * Step 2b: System displays empty category container with "Add Tag" button.
+* **AF54.1: Catalogue unavailable**
+  * System detects the alternative condition.
+  * System displays the appropriate state or message.
+  * User can correct the input, retry, or leave the flow when applicable.
 
-* **Postconditions:** Interest tag catalogue displayed for management.
-* **UI Prototype Reference:** `![Manage Interest Tag Catalogue Screen](prototypes/uc46_admin_dashboard.png)`
+* **Postconditions:** The requested manage interest tag catalogue operation is completed successfully, or the system remains in a safe and recoverable state after an alternative flow.
+* **UI Prototype References:**
+  - Main Flow: `prototypes/uc54_interest_catalogue.png`
+  - AF54.1: `prototypes/uc54_af1_catalogue_unavailable.png`
 
 ---
 
@@ -1468,25 +1553,27 @@
 
 * **Use Case ID:** UC55
 * **Use Case Name:** Add Interest Tag
-* **Actor(s):** Administrator (Primary)
-* **Description:** Allows Admin to add a new interest tag name and category to global catalogue. Included by `UC54`.
-* **Preconditions:** Admin viewing tag catalogue (`UC54`).
+* **Actor(s):** Admin
+* **Description:** Adds a new interest tag to the catalogue.
+* **Preconditions:** Admin can manage the interest-tag catalogue.
 
 #### Basic Flow (Main Success Scenario)
-1. Admin clicks "Add New Tag" button.
-2. System presents modal requesting Tag Name (Vietnamese/English) and Category selection.
-3. Admin enters tag details (e.g. "Board Games", category "Entertainment") and submits.
-4. System verifies tag name uniqueness.
-5. System inserts tag into catalogue database table.
-6. System refreshes tag list view.
+1. Admin selects Add Interest Tag.
+2. System displays the tag form.
+3. Admin enters the tag information.
+4. Admin confirms the addition.
+5. System adds the new tag to the catalogue.
 
 #### Alternative Flows
-* **AF55.1: Duplicate Tag Name**
-  * Step 4a: Tag name already exists in catalogue.
-  * Step 4b: System displays error: "Interest tag already exists in catalogue."
+* **AF55.1: Duplicate interest tag**
+  * System detects the alternative condition.
+  * System displays the appropriate state or message.
+  * User can correct the input, retry, or leave the flow when applicable.
 
-* **Postconditions:** New interest tag added to global catalogue.
-* **UI Prototype Reference:** `![Add Interest Tag Screen](prototypes/uc46_admin_dashboard.png)`
+* **Postconditions:** The requested add interest tag operation is completed successfully, or the system remains in a safe and recoverable state after an alternative flow.
+* **UI Prototype References:**
+  - Main Flow: `prototypes/uc55_add_interest.png`
+  - AF55.1: `prototypes/uc55_af1_duplicate_interest_tag.png`
 
 ---
 
@@ -1494,21 +1581,47 @@
 
 * **Use Case ID:** UC56
 * **Use Case Name:** Remove Interest Tag
-* **Actor(s):** Administrator (Primary)
-* **Description:** Allows Admin to archive or remove an interest tag from global catalogue. Included by `UC54`.
-* **Preconditions:** Admin viewing tag catalogue (`UC54`).
+* **Actor(s):** Admin
+* **Description:** Removes an existing interest tag from the catalogue.
+* **Preconditions:** Admin can manage the interest-tag catalogue.
 
 #### Basic Flow (Main Success Scenario)
-1. Admin clicks "Delete" icon next to target interest tag.
-2. System displays confirmation modal asking whether to remove tag from catalogue.
-3. Admin confirms deletion.
-4. System soft-deletes tag record from active catalogue while retaining historical profile links.
-5. System updates catalogue UI.
+1. Admin selects an existing interest tag.
+2. Admin selects Remove Interest Tag.
+3. System asks for confirmation.
+4. Admin confirms.
+5. System removes the tag from the available catalogue.
 
 #### Alternative Flows
-* **AF56.1: Cancel Removal**
-  * Step 3a: Admin cancels prompt.
-  * Step 3b: Tag remains active in catalogue.
+* **AF56.1: Interest tag is still in use**
+  * System detects the alternative condition.
+  * System displays the appropriate state or message.
+  * User can correct the input, retry, or leave the flow when applicable.
 
-* **Postconditions:** Interest tag removed from active global selection list.
-* **UI Prototype Reference:** `![Remove Interest Tag Screen](prototypes/uc46_admin_dashboard.png)`
+* **Postconditions:** The requested remove interest tag operation is completed successfully, or the system remains in a safe and recoverable state after an alternative flow.
+* **UI Prototype References:**
+  - Main Flow: `prototypes/uc56_remove_interest.png`
+  - AF56.1: `prototypes/uc56_af1_interest_tag_is_still_in_use.png`
+
+---
+
+## 57. Prototype Submission Checklist
+
+The specification references prototype files by UC and Alternative Flow. The submission package must contain the referenced files under:
+
+```text
+prototypes/
+```
+
+At minimum, each UC needs a main-flow prototype. Alternative-flow prototypes are required when the alternative flow changes what the user sees (for example, validation errors, empty states, confirmation dialogs, permission errors, unavailable services, or failed submissions).
+
+The two prototype screenshots already available in the project can be reused where they genuinely match the corresponding UC; they should not be copied to unrelated UCs.
+
+## 58. Specification Quality Rules Applied
+
+- Actors are consistent with the revised Use-Case Model: `Guest User`, `User`, and `Admin`.
+- `UC01: Sign Up` uses `Guest User`, not registered `User`.
+- Every UC keeps its `UCxx` identifier.
+- Basic flows describe user goals and system behavior rather than implementation.
+- Technical implementation details such as bcrypt, JWT, REST paths, HTTP status codes, database queries, WebSocket events, framework names, and internal class names are excluded from the UC flows.
+- Alternative flows are explicitly documented and have a prototype reference when they produce a visible UI state.
