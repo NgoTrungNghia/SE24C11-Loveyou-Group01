@@ -63,6 +63,14 @@ async function getCandidates(userId) {
       where: { swiperId: currentUserId },
       select: { targetId: true },
     });
+    const activeMatches = await prisma.match.findMany({
+      where: {
+        OR: [{ user1Id: currentUserId }, { user2Id: currentUserId }],
+        isUnmatched: false,
+      },
+      select: { user1Id: true, user2Id: true },
+    });
+    const matchedPartnerIds = activeMatches.map(m => m.user1Id === currentUserId ? m.user2Id : m.user1Id);
     const blocksGiven = await prisma.userBlock.findMany({
       where: { blockerId: currentUserId },
       select: { blockedId: true },
@@ -74,6 +82,7 @@ async function getCandidates(userId) {
     const excludedIds = [
       currentUserId,
       ...existingSwipes.map(s => s.targetId),
+      ...matchedPartnerIds,
       ...blocksGiven.map(b => b.blockedId),
       ...blocksReceived.map(b => b.blockerId),
     ];
@@ -518,6 +527,48 @@ async function getWhoILiked(userId) {
   };
 }
 
+/**
+ * Thiết lập lại danh sách đề xuất (Reset suggestions)
+ * Xóa các lượt quẹt (swipes) do user thực hiện ngoại trừ các match đang hoạt động (active matches)
+ */
+async function resetCandidates(userId) {
+  const currentUserId = Number(userId);
+
+  try {
+    const activeMatches = await prisma.match.findMany({
+      where: {
+        OR: [
+          { user1Id: currentUserId },
+          { user2Id: currentUserId },
+        ],
+        isUnmatched: false,
+      },
+      select: { user1Id: true, user2Id: true },
+    });
+
+    const matchedPartnerIds = activeMatches.map(m => m.user1Id === currentUserId ? m.user2Id : m.user1Id);
+
+    if (matchedPartnerIds.length > 0) {
+      await prisma.swipe.deleteMany({
+        where: {
+          swiperId: currentUserId,
+          targetId: { notIn: matchedPartnerIds },
+        },
+      });
+    } else {
+      await prisma.swipe.deleteMany({
+        where: {
+          swiperId: currentUserId,
+        },
+      });
+    }
+  } catch (err) {
+    console.error('Error resetting candidates:', err);
+  }
+
+  return { success: true, message: 'Đã thiết lập lại danh sách đề xuất' };
+}
+
 module.exports = {
   getCandidates,
   handleSwipe,
@@ -525,5 +576,7 @@ module.exports = {
   unmatchUser,
   getWhoLikedMe,
   getWhoILiked,
+  resetCandidates,
 };
+
 

@@ -63,6 +63,16 @@ async function getWhoILiked(req, res, next) {
   }
 }
 
+async function resetCandidates(req, res, next) {
+  try {
+    const userId = req.user.userId;
+    const result = await matchingService.resetCandidates(userId);
+    return success(res, result);
+  } catch (err) {
+    return next(err);
+  }
+}
+
 module.exports = {
   getCandidates,
   swipe,
@@ -70,5 +80,7 @@ module.exports = {
   unmatch,
   getWhoLikedMe,
   getWhoILiked,
+  resetCandidates,
 };
+
 

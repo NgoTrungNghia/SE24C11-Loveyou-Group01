@@ -123,4 +123,54 @@ describe('Feature Suite: Unmatch, Filter & Mini Game Options', () => {
     const newMsg = await chatService.saveMessage(convRecord.id, userA.userId, 'Chúng mình đã kết nối lại!');
     expect(newMsg.content).toBe('Chúng mình đã kết nối lại!');
   });
+
+  test('resetCandidates clears swiped candidates allowing them to be recommended again while preserving active matches', async () => {
+    const timestamp = Date.now();
+    const userC = await prisma.user.create({
+      data: {
+        username: `test_user_c_${timestamp}`,
+        email: `userc_${timestamp}@example.com`,
+        passwordHash: 'hashed_password',
+        fullName: 'User C Test',
+        gender: 'FEMALE',
+        dateOfBirth: new Date('1999-01-01'),
+        latitude: 10.762622,
+        longitude: 106.660172,
+        status: 'ACTIVE',
+        role: 'USER',
+      },
+    });
+
+    try {
+      // 1. Initial candidates should include userC
+      let candidates = await matchingService.getCandidates(userA.userId);
+      expect(candidates.some(c => c.id === userC.userId)).toBe(true);
+
+      // 2. User A swipes PASS on User C
+      await matchingService.handleSwipe(userA.userId, userC.userId, 'PASS');
+
+      // 3. User C should no longer be in candidates
+      candidates = await matchingService.getCandidates(userA.userId);
+      expect(candidates.some(c => c.id === userC.userId)).toBe(false);
+
+      // 4. Reset candidates for User A
+      const resetRes = await matchingService.resetCandidates(userA.userId);
+      expect(resetRes.success).toBe(true);
+
+      // 5. User C should reappear in candidates
+      candidates = await matchingService.getCandidates(userA.userId);
+      expect(candidates.some(c => c.id === userC.userId)).toBe(true);
+
+      // 6. Active match with User B is NOT in candidates deck
+      expect(candidates.some(c => c.id === userB.userId)).toBe(false);
+
+      // 7. Test getAICandidates as well
+      const aiCandidates = await aiMatchingService.getAICandidates(userA.userId);
+      expect(aiCandidates.some(c => c.id === userC.userId)).toBe(true);
+      expect(aiCandidates.some(c => c.id === userB.userId)).toBe(false);
+    } finally {
+      await prisma.swipe.deleteMany({ where: { OR: [{ swiperId: userC.userId }, { targetId: userC.userId }] } });
+      await prisma.user.delete({ where: { userId: userC.userId } }).catch(() => {});
+    }
+  });
 });

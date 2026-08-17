@@ -105,6 +105,20 @@ async function getAICandidates(userId) {
   });
   const swipedIds = new Set([uid, ...swiped.map(s => s.targetId)]);
 
+  let matchedIds = new Set();
+  try {
+    const activeMatches = await prisma.match.findMany({
+      where: {
+        OR: [{ user1Id: uid }, { user2Id: uid }],
+        isUnmatched: false,
+      },
+      select: { user1Id: true, user2Id: true },
+    });
+    activeMatches.forEach(m => {
+      matchedIds.add(m.user1Id === uid ? m.user2Id : m.user1Id);
+    });
+  } catch { /* ignore */ }
+
   let blockedIds = new Set();
   try {
     const blocks = await prisma.userBlock.findMany({
@@ -117,7 +131,7 @@ async function getAICandidates(userId) {
     });
   } catch { /* ignore */ }
 
-  const excludeIds = Array.from(new Set([uid, ...swipedIds, ...blockedIds]));
+  const excludeIds = Array.from(new Set([uid, ...swipedIds, ...matchedIds, ...blockedIds]));
 
   const where = {
     userId: { notIn: excludeIds },

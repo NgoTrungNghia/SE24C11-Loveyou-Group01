@@ -368,6 +368,21 @@ export default function Dashboard() {
     }
   };
 
+  const handleReloadCandidates = async () => {
+    setLoadingDeck(true);
+    try {
+      await matchingApi.resetCandidates();
+      setCandidateIdx(0);
+      await loadCandidates();
+      setToast({ type: 'success', message: '🔄 Đã làm mới và hiển thị lại danh sách gợi ý từ đầu!' });
+    } catch {
+      setCandidateIdx(0);
+      await loadCandidates();
+    } finally {
+      setLoadingDeck(false);
+    }
+  };
+
   const handleUnmatch = async (targetId, name) => {
     try { await matchingApi.unmatch(targetId); } catch { /* ignore */ }
     setMatches(prev => prev.filter(m => m.id !== targetId));
@@ -1291,7 +1306,7 @@ export default function Dashboard() {
               {useAI ? 'Smart Match đã gợi ý hết những người phù hợp nhất!' : 'Bạn đã xem hết danh sách hôm nay.'}
             </p>
             <button
-              onClick={() => { setCandidateIdx(0); loadCandidates(); }}
+              onClick={handleReloadCandidates}
               className="btn btn-primary"
               style={{ padding: '0.8rem 1.8rem', borderRadius: '20px', fontWeight: 700 }}
             >🔄 Tải lại</button>

@@ -8,6 +8,7 @@ const authMiddleware = require('../middlewares/authMiddleware');
 router.use(authMiddleware);
 
 router.get('/candidates', controller.getCandidates);
+router.post('/reset-candidates', controller.resetCandidates);
 router.post('/swipe', validate(schemas.swipeSchema), controller.swipe);
 router.get('/matches', controller.getMatches);
 router.post('/unmatch', controller.unmatch);
