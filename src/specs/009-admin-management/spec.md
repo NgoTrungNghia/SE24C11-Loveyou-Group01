@@ -1,46 +1,44 @@
-# Feature Specification: Admin Management
+# Feature Specification: Admin Management & Moderation Portal (009)
 
-**Feature Branch**: `009-admin-management`
+**Feature Branch**: `009-admin-management`  
+**Created**: 2026-08-13 (Updated: 2026-08-18)  
+**Status**: Completed / Enhanced  
 
-**Created**: 2026-08-13
+---
 
-**Status**: Approved
+## 1. Overview & Context
+Comprehensive administrative portal providing system analytics, user account inspection, real-time ban/unban enforcement with instant session revocation, user violation reports moderation, and citizen identity verification approvals.
 
-**Input**: Create an Admin Management module (Feature 009) with default Admin account `admin@loveyou.com` (password `123456`). Admin users can view system stats, list all registered accounts with creation timestamps, inspect full profile details, and toggle account status (Ban / Unban).
+---
 
-## Actors
+## 2. Actors & Permissions
+- **Admin (`role: ADMIN`)**: Full access to `/admin` routes, user ban controls, report moderation, CCCD verification, and system analytics.
+- **User (`role: USER`)**: Restricted from all administrative endpoints.
 
-- **Admin**: User with `role: ADMIN` who can access administrative tools, inspect all accounts, and manage account statuses.
-- **User**: Standard user with `role: USER`.
+---
 
-## User Scenarios & Testing
+## 3. User Stories & Acceptance Criteria
 
-### User Story 1 - Default Admin Access & System Overview (Priority: P1)
-An administrator logs in with default credentials `admin@loveyou.com` / `123456` and accesses system statistics.
+### User Story 1 — Admin Dashboard & System Overview (Priority: P1)
+Admin logs in and accesses `/api/admin/stats` to view total user registrations, active counts, banned accounts, total matches, and pending moderation tickets.
 
-**Acceptance Scenarios**:
-1. **Given** default admin credentials, **When** logging in, **Then** a 7-day JWT token with `role: ADMIN` is issued.
-2. **Given** an Admin user, **When** querying `/api/admin/stats`, **Then** the total count of users, active users, banned users, and matches are returned.
+### User Story 2 — User Account List & Details (Priority: P1)
+Admin views paginated list of accounts (`GET /api/admin/users`), inspects photos, bio, phone, verified status, and registration date.
 
-### User Story 2 - User Account List & Profile Inspection (Priority: P1)
-An administrator views all accounts registered on the platform, including their registration timestamps and profile information.
+### User Story 3 — Real-time Account Ban & Session Revocation (Priority: P1)
+Admin bans an abusive user (`PUT /api/admin/users/:userId/ban`). The database status updates to `BANNED`, and the server emits `account_banned` via Socket.io. The client immediately wipes JWT from localStorage and forces redirect to `/login?banned=true`. Middleware denies any subsequent requests with `403 ACCOUNT_BANNED`.
 
-**Acceptance Scenarios**:
-1. **Given** an Admin user, **When** requesting `/api/admin/users`, **Then** all users ordered by creation date (newest first) are returned with `createdAt`, `status`, `role`, and profile fields.
-2. **Given** an Admin user, **When** inspecting a specific user, **Then** full profile details (avatar, bio, phone, location, age) are displayed.
+### User Story 4 — User Violation Reports Moderation (Priority: P1)
+Admin views all user-submitted violation reports (`GET /api/admin/reports`) with reason, custom notes, reporter and reported user details. Admin can update report status (`PENDING` -> `REVIEWED` -> `RESOLVED`) and ban the offending user directly from the report modal.
 
-### User Story 3 - Account Ban & Unban Management (Priority: P1)
-An administrator bans or unbans a user account. Banned users are denied login and access.
+### User Story 5 — Citizen Identity Verification Moderation (Priority: P1)
+Admin views pending CCCD eKYC submissions (`GET /api/admin/verifications`), compares front/back ID photos with OCR extracted details, and approves (`isCitizenVerified: true`) or rejects with feedback reason.
 
-**Acceptance Scenarios**:
-1. **Given** an active user account, **When** Admin toggles ban status, **Then** status changes to `BANNED`.
-2. **Given** a banned user, **When** they attempt login, **Then** the system returns 403 Forbidden with a clear message.
-3. **Given** a banned user, **When** Admin toggles ban status again, **Then** status reverts to `ACTIVE`.
+---
 
-## Requirements
+## 4. Requirements
 
-- **FR-001**: System MUST seed default admin `admin@loveyou.com` with password `123456` and `role: ADMIN`.
-- **FR-002**: All `/api/admin/*` endpoints MUST require `authMiddleware` and `roleMiddleware('ADMIN')`.
-- **FR-003**: System MUST provide API to list users with `createdAt` timestamps.
-- **FR-004**: System MUST allow toggling user status (`ACTIVE` vs `BANNED`).
-- **FR-005**: Banned accounts MUST be denied authentication with 403 HTTP response.
+- **FR-009-1**: All `/api/admin/*` endpoints MUST be protected by `authMiddleware` and `roleMiddleware('ADMIN')`.
+- **FR-009-2**: Banning a user MUST instantly broadcast `account_banned` via Socket.io to terminate active client sessions.
+- **FR-009-3**: System MUST provide report management endpoints (`GET /api/admin/reports`, `PUT /api/admin/reports/:reportId/status`).
+- **FR-009-4**: System MUST provide verification endpoints (`GET /api/admin/verifications`, `PUT /api/admin/verifications/:userId/approve`, `PUT /api/admin/verifications/:userId/reject`).

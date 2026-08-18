@@ -1,0 +1,92 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "LoveYou Payment API",
+    "version": "1.0.0",
+    "description": "API endpoints for PayOS payment link creation, status check, and webhook handling"
+  },
+  "paths": {
+    "/api/payment/create-payment-link": {
+      "post": {
+        "summary": "Tạo liên kết thanh toán PayOS VietQR nâng cấp VIP",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "returnUrl": { "type": "string" },
+                  "cancelUrl": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Tạo link thanh toán thành công",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "checkoutUrl": { "type": "string" },
+                        "orderCode": { "type": "integer" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/payment/status/{orderCode}": {
+      "get": {
+        "summary": "Kiểm tra trạng thái đơn hàng PayOS",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "name": "orderCode", "in": "path", "required": true, "schema": { "type": "integer" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Trạng thái đơn hàng",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "status": { "type": "string", "enum": ["PENDING", "PAID", "CANCELLED"] }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/payment/webhook": {
+      "post": {
+        "summary": "PayOS Webhook nhận thông báo thanh toán thành công",
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "type": "object" } } }
+        },
+        "responses": {
+          "200": { "description": "Webhook received successfully" }
+        }
+      }
+    }
+  }
+}

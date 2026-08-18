@@ -1,0 +1,83 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "LoveYou Citizen Verification API",
+    "version": "1.0.0",
+    "description": "API endpoints for citizen identity verification submission and administrative moderation"
+  },
+  "paths": {
+    "/api/users/verify-citizen": {
+      "post": {
+        "summary": "Người dùng gửi hồ sơ CCCD và kết quả OCR để xác thực",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "citizenIdNumber": { "type": "string" },
+                  "citizenName": { "type": "string" },
+                  "citizenDob": { "type": "string" },
+                  "citizenGender": { "type": "string" },
+                  "citizenAddress": { "type": "string" },
+                  "citizenIssueDate": { "type": "string" },
+                  "frontPhoto": { "type": "string" },
+                  "backPhoto": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Gửi yêu cầu xác thực thành công" }
+        }
+      }
+    },
+    "/api/admin/verifications": {
+      "get": {
+        "summary": "Admin lấy danh sách yêu cầu xác thực CCCD",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": { "description": "Danh sách hồ sơ CCCD" }
+        }
+      }
+    },
+    "/api/admin/verifications/{userId}/approve": {
+      "put": {
+        "summary": "Admin duyệt cấp tích xanh CCCD cho người dùng",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "name": "userId", "in": "path", "required": true, "schema": { "type": "integer" } }
+        ],
+        "responses": {
+          "200": { "description": "Duyệt thành công" }
+        }
+      }
+    },
+    "/api/admin/verifications/{userId}/reject": {
+      "put": {
+        "summary": "Admin từ chối hồ sơ CCCD kèm lý do",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "name": "userId", "in": "path", "required": true, "schema": { "type": "integer" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": { "reason": { "type": "string" } }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Từ chối thành công" }
+        }
+      }
+    }
+  }
+}

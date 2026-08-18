@@ -1,0 +1,69 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "LoveYou Live Support Chat API",
+    "version": "1.0.0",
+    "description": "API endpoints for customer support chat between users and administrators"
+  },
+  "paths": {
+    "/api/support/messages": {
+      "get": {
+        "summary": "Lấy lịch sử tin nhắn hỗ trợ của người dùng hiện tại",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": { "description": "Danh sách tin nhắn hỗ trợ" }
+        }
+      },
+      "post": {
+        "summary": "Người dùng gửi tin nhắn hỗ trợ tới ban quản trị",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": { "content": { "type": "string" } }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Tin nhắn đã được gửi" }
+        }
+      }
+    },
+    "/api/admin/support/conversations": {
+      "get": {
+        "summary": "Admin lấy danh sách tất cả các cuộc trò chuyện hỗ trợ",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": { "description": "Danh sách hội thoại hỗ trợ" }
+        }
+      }
+    },
+    "/api/admin/support/messages": {
+      "post": {
+        "summary": "Admin gửi phản hồi tin nhắn hỗ trợ tới người dùng",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "userId": { "type": "integer" },
+                  "content": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Phản hồi hỗ trợ thành công" }
+        }
+      }
+    }
+  }
+}
