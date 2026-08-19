@@ -1,29 +1,28 @@
 # Test Cases
-**Performed by:** Huy Tuong  
+**Executed by:** Huy Tuong
 **Reviewed by:** Trung Nghia
 **Edited by:** Huy Tuong
 
-## Use Case 1: Register
+## Use Case 1: Registration
 
-### TC-REG-01 — Register with valid information
+### TC-REG-01 — Registration with valid information
 
-**Precondition:**
-- User is on the Register page.
-- The email address has not been registered before.
+**Prerequisites:**
+- User is on the Registration page.
+- Email address has not been registered previously.
 
-**Test Steps:**
+**Test steps:**
 1. Enter a valid full name.
 2. Enter a valid email address.
 3. Enter a valid password.
-4. Enter the same password in the confirmation field.
-5. Click the **Register** button.
+4. Click the **Register** button.
 
-**Expected Result:**
-- The system validates all information successfully.
+**Expected results:**
+- System successfully validates all information.
 - A new user account is created.
-- The user is redirected to the appropriate page or receives a successful registration message.
+- User is redirected to the appropriate page or receives a successful registration notification.
 
-**Actual Result:**
+**Actual results:**
 - ...
 
 **Status:**
@@ -31,24 +30,23 @@ PASS
 
 ---
 
-### TC-REG-02 — Register with existing email
+### TC-REG-02 — Registration with an existing email
 
-**Precondition:**
-- User is on the Register page.
-- The email address is already registered in the system.
+**Prerequisites:**
+- User is on the Registration page.
+- Email address is already registered in the system.
 
-**Test Steps:**
+**Test steps:**
 1. Enter a valid full name.
-2. Enter an email address that already exists.
+2. Enter an existing email address.
 3. Enter a valid password.
-4. Enter the same password in the confirmation field.
-5. Click the **Register** button.
+4. Click the **Register** button.
 
-**Expected Result:**
-- The system rejects the registration.
-- The user is informed that the email address is already registered.
+**Expected results:**
+- System rejects the registration.
+- User is notified that the email address is already registered.
 
-**Actual Result:**
+**Actual results:**
 - ...
 
 **Status:**
@@ -56,23 +54,22 @@ PASS
 
 ---
 
-### TC-REG-03 — Register with invalid email format
+### TC-REG-03 — Registration with invalid email format
 
-**Precondition:**
-- User is on the Register page.
+**Prerequisites:**
+- User is on the Registration page.
 
-**Test Steps:**
+**Test steps:**
 1. Enter a valid full name.
-2. Enter an invalid email address, such as `user@`.
-3. Enter a valid password.
-4. Enter the same password in the confirmation field.
+2. Enter an invalid email format (e.g., starting with numbers like 123@abc.com).
+3. Enter a valid password. 4. Re-enter the same password in the password confirmation field.
 5. Click the **Register** button.
 
-**Expected Result:**
+**Expected result:**
 - The system rejects the invalid email address.
-- A validation message is displayed indicating that the email format is invalid.
+- A validation message is displayed indicating the email format is invalid.
 
-**Actual Result:**
+**Actual result:**
 - ...
 
 **Status:**
@@ -80,23 +77,22 @@ PASS
 
 ---
 
-### TC-REG-04 — Register with empty email
+### TC-REG-04 — Registration with the email field left blank
 
-**Precondition:**
-- User is on the Register page.
+**Prerequisites:**
+- The user is on the Registration page.
 
-**Test Steps:**
+**Test steps:**
 1. Enter a valid full name.
-2. Leave the email field empty.
+2. Leave the email field blank.
 3. Enter a valid password.
-4. Enter the same password in the confirmation field.
-5. Click the **Register** button.
+4. Click the **Register** button.
 
-**Expected Result:**
-- The system does not create the account.
+**Expected result:**
+- The system does not create an account.
 - A validation message is displayed indicating that the email is required.
 
-**Actual Result:**
+**Actual result:**
 - ...
 
 **Status:**
@@ -104,23 +100,22 @@ PASS
 
 ---
 
-### TC-REG-05 — Register with empty password
+### TC-REG-05 — Registration with the password field left blank
 
-**Precondition:**
-- User is on the Register page.
+**Prerequisites:**
+- The user is on the Registration page.
 
-**Test Steps:**
+**Test steps:**
 1. Enter a valid full name.
 2. Enter a valid email address.
-3. Leave the password field empty.
-4. Enter a value in the confirmation password field.
-5. Click the **Register** button.
+3. Leave the password field blank.
+4. Click the **Register** button.
 
-**Expected Result:**
-- The system does not create the account.
+**Expected result:**
+- The system does not create an account.
 - A validation message is displayed indicating that the password is required.
 
-**Actual Result:**
+**Actual result:**
 - ...
 
 **Status:**
@@ -128,20 +123,18 @@ PASS
 
 ---
 
-### TC-REG-06 — Register with empty required fields
+### TC-REG-06 — Registration with mandatory fields left blank
 
-**Precondition:**
-- User is on the Register page.
+**Prerequisites:**
+- The user is on the Registration page.
 
-**Test Steps:**
-1. Leave all required registration fields empty.
+**Test steps:**
+1. Leave all mandatory registration fields blank.
 2. Click the **Register** button.
 
-**Expected Result:**
+**Expected result:**
 - The system does not create an account.
-- Validation messages are displayed for the required fields.
-
-**Actual Result:**
+- Validation messages are displayed for the mandatory fields. **Actual Result:**
 - ...
 
 **Status:**
@@ -149,46 +142,22 @@ PASS
 
 ---
 
-### TC-REG-07 — Register with mismatched passwords
+### TC-REG-08 — Registration with a password that does not meet requirements
 
-**Precondition:**
-- User is on the Register page.
-
-**Test Steps:**
-1. Enter a valid full name.
-2. Enter a valid email address.
-3. Enter a valid password.
-4. Enter a different password in the confirmation field.
-5. Click the **Register** button.
-
-**Expected Result:**
-- The system rejects the registration.
-- A validation message is displayed indicating that the passwords do not match.
-
-**Actual Result:**
-- ...
-
-**Status:**
-PASS
-
----
-
-### TC-REG-08 — Register with password that does not meet requirements
-
-**Precondition:**
-- User is on the Register page.
+**Prerequisites:**
+- User is on the Registration page.
 - The system has password validation requirements.
 
 **Test Steps:**
 1. Enter a valid full name.
 2. Enter a valid email address.
-3. Enter a password that does not satisfy the password requirements.
-4. Enter the same password in the confirmation field.
+3. Enter a password that does not meet the password requirements.
+4. Re-enter the same password in the password confirmation field.
 5. Click the **Register** button.
 
 **Expected Result:**
 - The system rejects the registration.
-- A validation message explains the password requirements.
+- A validation message explaining the password requirements is displayed.
 
 **Actual Result:**
 - ...
@@ -198,73 +167,69 @@ PASS
 
 ---
 
-### TC-REG-09 — Register with invalid required information
+### TC-REG-09 — Registration with an invalid email address
 
-**Precondition:**
-- User is on the Register page.
-
-**Test Steps:**
-1. Enter invalid data in one or more required fields.
-2. Enter valid data in the remaining fields.
-3. Click the **Register** button.
-
-**Expected Result:**
-- The system validates the submitted information.
-- The system rejects the invalid data.
-- Appropriate validation messages are displayed.
-- No account is created.
-
-**Actual Result:**
-- ...
-
-**Status:**
-PASS
-
----
-
-### TC-REG-10 — Register again using an email that has already been registered
-
-**Precondition:**
-- A user account has already been successfully registered.
-- The user is on the Register page.
+**Prerequisites:**
+- User is on the Registration page.
 
 **Test Steps:**
 1. Enter a valid full name.
-2. Enter the email address of the existing account.
+2. Enter an email address with an incorrect format.
 3. Enter a valid password.
-4. Enter the same password in the confirmation field.
+4. Click the **Register** button. **Expected results:**
+- The system validates the email address.
+- The system rejects the registration request.
+- A notification indicating an invalid email address is displayed.
+- No account is created.
+
+**Actual results:**
+- ...
+
+**Status:**
+...
+
+### TC-REG-10 — Re-registering with an already registered email
+
+**Prerequisites:**
+- A user account has been successfully registered previously.
+- The user is on the Registration page.
+
+**Test steps:**
+1. Enter a valid full name.
+2. Enter the email address of an existing account.
+3. Enter a valid password.
+4. Re-enter the same password in the password confirmation field.
 5. Click the **Register** button.
 
-**Expected Result:**
+**Expected results:**
 - The system prevents the creation of a duplicate account.
-- The user is informed that the email address is already in use.
+- The user is notified that the email address has already been used.
 
 **Actual Result:**
 - ...
 
 **Status:**
-PASS 
-...
+PASS
 
 ---
 
-## Use Case 2: Admin User Management
+## Use Case 2: User Management for Admins
 
 ### TC-ADMIN-01 — View user list
 
-**Precondition:**
+**Prerequisites:**
 - Admin is logged in.
-- Admin has permission to manage users.
+- Admin has user management permissions.
 
-**Test Steps:**
-1. Navigate to the **User Management** page.
+**Test steps:**
+1. Access the **User Management** page.
 2. View the list of users.
 
-**Expected Result:**
+**Expected results:**
 - The system displays the list of users.
-- The user information is displayed correctly.
+- User information is displayed accurately.
 
-**Actual Result:**
+**Actual results:**
 - ...
 
 **Status:**
@@ -274,21 +239,21 @@ PASS
 
 ### TC-ADMIN-02 — Search for a specific user
 
-**Precondition:**
+**Prerequisites:**
 - Admin is logged in.
-- Admin has permission to manage users.
-- The target user exists in the system.
+- Admin has user management permissions.
+- The user to be found exists in the system.
 
-**Test Steps:**
-1. Navigate to the **User Management** page.
-2. Enter the user's name or email in the search field.
+**Test steps:**
+1. Access the **User Management** page.
+2. Enter the user's name or email into the search field.
 3. Click the **Search** button.
 
-**Expected Result:**
+**Expected results:**
 - The system displays the matching user.
-- The displayed user information is correct.
+- User information is displayed accurately.
 
-**Actual Result:**
+**Actual results:**
 - ...
 
 **Status:**
@@ -298,21 +263,21 @@ PASS
 
 ### TC-ADMIN-03 — View user details
 
-**Precondition:**
+**Prerequisites:**
 - Admin is logged in.
-- Admin has permission to manage users.
-- The target user exists in the system.
+- Admin has user management permissions.
+- The user to be viewed exists in the system.
 
-**Test Steps:**
-1. Navigate to the **User Management** page.
+**Test steps:**
+1. Access the **User Management** page.
 2. Select a user from the user list.
-3. Open the user's details.
+3. Open the user's detailed information.
 
-**Expected Result:**
-- The system displays the selected user's details.
-- The displayed information corresponds to the selected user.
+**Expected results:**
+- The system displays the details of the selected user.
+- The displayed information corresponds accurately to the selected user.
 
-**Actual Result:**
+**Actual results:**
 - ...
 
 **Status:**
@@ -320,25 +285,23 @@ PASS
 
 ---
 
-### TC-ADMIN-04 — Edit user information
+### TC-ADMIN-04 — View detailed user information
 
-**Precondition:**
-- Admin is logged in.
-- Admin has permission to manage users.
+**Prerequisites:**
+- Admin is logged in. - Admin has user management privileges.
 - The target user exists in the system.
 
-**Test Steps:**
-1. Navigate to the **User Management** page.
-2. Select a user.
+**Test steps:**
+1. Access the **User Management** page.
+2. Select a user from the list.
 3. Open the user's details.
-4. Edit the user's information with valid data.
-5. Click the **Save** button.
 
-**Expected Result:**
-- The system saves the updated user information successfully.
-- The updated information is displayed correctly.
+**Expected results:**
+- The system displays the details of the selected user.
+- The displayed information is accurate and corresponds to the selected user.
+- The admin cannot edit the user's profile information.
 
-**Actual Result:**
+**Actual results:**
 - ...
 
 **Status:**
@@ -346,25 +309,25 @@ PASS
 
 ---
 
-### TC-ADMIN-05 — Disable a user account
+### TC-ADMIN-05 — Deactivate user account
 
-**Precondition:**
+**Prerequisites:**
 - Admin is logged in.
-- Admin has permission to manage users.
+- Admin has user management privileges.
 - The target user has an active account.
 
-**Test Steps:**
-1. Navigate to the **User Management** page.
+**Test steps:**
+1. Access the **User Management** page.
 2. Select an active user.
-3. Choose the **Disable Account** action.
+3. Select the **Deactivate account** action.
 4. Confirm the action.
 
-**Expected Result:**
-- The system disables the selected user account.
-- The user's account status is updated to disabled.
-- The user can no longer access features that require an active account.
+**Expected results:**
+- The system deactivates the selected user's account.
+- The user's account status is updated to "deactivated."
+- The user can no longer access functions requiring an active account.
 
-**Actual Result:**
+**Actual results:**
 - ...
 
 **Status:**
@@ -372,23 +335,22 @@ PASS
 
 ---
 
-### TC-ADMIN-06 — Enable a disabled user account
+### TC-ADMIN-06 — Reactivate a deactivated user account
 
-**Precondition:**
+**Prerequisites:**
 - Admin is logged in.
-- Admin has permission to manage users.
-- The target user's account is disabled.
+- Admin has user management privileges.
+- The target user's account is currently deactivated.
 
-**Test Steps:**
-1. Navigate to the **User Management** page.
-2. Select a disabled user.
-3. Choose the **Enable Account** action.
+**Test steps:**
+1. Access the **User Management** page.
+2. Select a deactivated user.
+3. Select the **Activate account** action.
 4. Confirm the action.
 
-**Expected Result:**
-- The system enables the selected user account.
-- The user's account status is updated to active.
-- The user can access the system again according to the account rules.
+**Expected results:**
+- The system reactivates the selected user's account. - The user's account status is updated to "active."
+- The user can regain access to the system in accordance with account rules.
 
 **Actual Result:**
 - ...
@@ -398,37 +360,11 @@ PASS
 
 ---
 
-### TC-ADMIN-07 — Handle a reported user
+### TC-ADMIN-08 — Accessing User Management without Admin privileges
 
-**Precondition:**
-- Admin is logged in.
-- Admin has permission to manage reported users.
-- At least one user report exists.
-
-**Test Steps:**
-1. Navigate to the **Reports** or **User Management** page.
-2. Select a reported user.
-3. Review the report information.
-4. Apply the appropriate administrative action.
-
-**Expected Result:**
-- The system displays the report information correctly.
-- The admin can process the report.
-- The selected administrative action is recorded successfully.
-
-**Actual Result:**
-- ...
-
-**Status:**
-...
-
----
-
-### TC-ADMIN-08 — Access user management without admin permission
-
-**Precondition:**
+**Prerequisites:**
 - User is logged in.
-- User does not have administrator permissions.
+- User does not have administrator privileges.
 
 **Test Steps:**
 1. Attempt to access the **User Management** page directly.
@@ -437,7 +373,7 @@ PASS
 **Expected Result:**
 - The system prevents unauthorized access.
 - The user cannot perform administrative actions.
-- An appropriate authorization message is displayed or the user is redirected.
+- An appropriate permission-related message is displayed, or the user is redirected.
 
 **Actual Result:**
 - ...
@@ -447,221 +383,55 @@ PASS
 
 ---
 
-### TC-ADMIN-09 — Search for a non-existing user
+### TC-ADMIN-09 — Searching for a non-existent user
 
-**Precondition:**
+**Prerequisites:**
 - Admin is logged in.
-- Admin has permission to manage users.
+- Admin has user management privileges.
 
 **Test Steps:**
-1. Navigate to the **User Management** page.
-2. Enter a name or email that does not exist in the system.
-3. Click the **Search** button.
+1. Access the **User Management** page.
+2. Enter a name or email that does not exist in the system. 3. Click the **Search** button.
 
-**Expected Result:**
-- The system does not display unrelated users.
-- The system displays an appropriate message indicating that no matching user was found.
+**Expected result:**
+- The system does not display irrelevant users.
+- The system displays an appropriate notification indicating that no matching user was found.
 
-**Actual Result:**
+**Actual result:**
 - ...
 
 **Status:**
 ...
 
----
+### TC-ADMIN-10 — Canceling an Admin Action
 
-### TC-ADMIN-10 — Cancel an administrative action
+**Prerequisites:**
 
-**Precondition:**
 - Admin is logged in.
-- Admin has permission to manage users.
-- An administrative action is available for a user.
+- Admin has user management privileges.
+- An admin action is available for the user.
 
-**Test Steps:**
-1. Navigate to the **User Management** page.
+**Testing Steps:**
+1. Access the **User Management** page.
 2. Select a user.
-3. Start an administrative action.
+3. Start an admin action.
 4. Click the **Cancel** button.
 
 **Expected Result:**
-- The administrative action is cancelled.
+- The admin action is canceled.
 - No changes are applied to the user's account.
 - The user's information remains unchanged.
 
 **Actual Result:**
+
 - ...
 
 **Status:**
+
 ...
 
 ---
-
-## Use Case 3: Profile
-
-### TC-PROFILE-01 — View profile with valid information
-
-**Precondition:**
-- User is logged in.
-- User has an existing profile.
-
-**Test Steps:**
-1. Navigate to the **Profile** page.
-2. View the profile information.
-
-**Expected Result:**
-- The system displays the user's profile.
-- The displayed information matches the information stored in the user's account.
-
-**Actual Result:**
-- ...
-
-**Status:**
-...
-
----
-
-### TC-PROFILE-02 — View profile with incomplete information
-
-**Precondition:**
-- User is logged in.
-- User's profile contains some incomplete or optional information.
-
-**Test Steps:**
-1. Navigate to the **Profile** page.
-2. View the profile information.
-
-**Expected Result:**
-- The system displays the available profile information.
-- Missing optional information does not cause the profile page to malfunction.
-
-**Actual Result:**
-- ...
-
-**Status:**
-...
-
----
-
-### TC-PROFILE-03 — Edit profile with valid information
-
-**Precondition:**
-- User is logged in.
-- User is on the Profile page.
-
-**Test Steps:**
-1. Click the **Edit Profile** button.
-2. Modify the profile information with valid data.
-3. Click the **Save** button.
-
-**Expected Result:**
-- The system accepts the updated information.
-- The profile is updated successfully.
-- The new information is displayed on the Profile page.
-
-**Actual Result:**
-- ...
-
-**Status:**
-...
-
----
-
-### TC-PROFILE-04 — Edit profile with empty required field
-
-**Precondition:**
-- User is logged in.
-- User is editing their profile.
-
-**Test Steps:**
-1. Open **Edit Profile**.
-2. Clear a required profile field.
-3. Click the **Save** button.
-
-**Expected Result:**
-- The system does not save the invalid profile information.
-- A validation message indicates that the required field must be completed.
-
-**Actual Result:**
-- ...
-
-**Status:**
-...
-
----
-
-### TC-PROFILE-05 — Edit profile with invalid information
-
-**Precondition:**
-- User is logged in.
-- User is editing their profile.
-
-**Test Steps:**
-1. Open **Edit Profile**.
-2. Enter invalid data into a profile field.
-3. Click the **Save** button.
-
-**Expected Result:**
-- The system validates the entered information.
-- The invalid information is rejected.
-- An appropriate validation message is displayed.
-
-**Actual Result:**
-- ...
-
-**Status:**
-...
-
----
-
-### TC-PROFILE-06 — Cancel profile editing
-
-**Precondition:**
-- User is logged in.
-- User is editing their profile.
-
-**Test Steps:**
-1. Open **Edit Profile**.
-2. Change one or more profile fields.
-3. Click the **Cancel** button.
-
-**Expected Result:**
-- The changes are discarded.
-- The profile remains unchanged.
-- The user returns to the Profile page.
-
-**Actual Result:**
-- ...
-
-**Status:**
-...
-
----
-
-### TC-PROFILE-07 — Update profile information successfully
-
-**Precondition:**
-- User is logged in.
-- User has an existing profile.
-
-**Test Steps:**
-1. Open **Edit Profile**.
-2. Change the profile information.
-3. Click the **Save** button.
-4. Reload the Profile page.
-
-**Expected Result:**
-- The updated information is saved successfully.
-- The updated information remains displayed after reloading the page.
-
-**Actual Result:**
-- ...
-
-**Status:**
-...
-
----
-
-### TC-PROFILE-08 — Refresh profile after updating information
+sh profile after updating information
 
 **Precondition:**
 - User is logged in.
@@ -684,17 +454,159 @@ PASS
 
 ---
 
-### TC-PROFILE-09 — Access profile without authentication
+## Use Case 3: Profile
 
-**Precondition:**
-- User is not logged in.
+### TC-PROFILE-01 — View profile with valid information
 
-**Test Steps:**
-1. Attempt to access the Profile page directly.
+**Prerequisites:**
+- User is logged in.
+- User has a profile.
+
+**Test steps:**
+1. Access the **Profile** page.
+2. View profile information.
+
+**Expected results:**
+- The system displays the user's profile.
+- Displayed information matches the data stored in the user account.
+
+**Actual results:**
+- ...
+
+**Status:**
+...
+
+---
+
+### TC-PROFILE-02 — View profile with incomplete information
+
+**Prerequisites:**
+- User is logged in.
+- User profile contains some incomplete or non-mandatory information.
+
+**Test steps:**
+1. Access the **Profile** page.
+2. View profile information.
+
+**Expected results:**
+- The system displays the available profile information.
+- Missing non-mandatory information does not cause errors on the Profile page.
+
+**Actual results:**
+- ...
+
+**Status:**
+...
+
+---
+
+### TC-PROFILE-03 — Edit profile with valid information
+
+**Prerequisites:**
+- User is logged in.
+- User is on the Profile page.
+
+**Test steps:**
+1. Click the **Edit Profile** button.
+2. Modify profile information using valid data.
+3. Click the **Save** button.
+
+**Expected results:**
+- The system accepts the updated information.
+- The profile is successfully updated.
+- The new information is displayed on the Profile page.
+
+**Actual results:**
+- ...
+
+**Status:**
+...
+
+---
+
+### TC-PROFILE-04 — Edit profile with mandatory field left blank
+
+**Prerequisites:**
+- User is logged in.
+- User is editing their profile. **Test steps:**
+1. Open **Edit Profile**.
+2. Clear the content of a mandatory profile field.
+3. Click the **Save** button.
+
+**Expected results:**
+- The system does not save the invalid profile information.
+- A validation message indicates that the mandatory field must be filled in.
+
+**Actual results:**
+- ...
+
+**Status:**
+...
+
+---
+
+### TC-PROFILE-05 — Edit profile with invalid information
+
+**Prerequisites:**
+- User is logged in.
+- User is editing their profile.
+
+**Test steps:**
+1. Open **Edit Profile**.
+2. Enter invalid data into a profile field.
+3. Click the **Save** button.
+
+**Expected results:**
+- The system validates the entered information.
+- Invalid information is rejected.
+- An appropriate validation message is displayed.
+
+**Actual results:**
+- ...
+
+**Status:**
+...
+
+---
+
+### TC-PROFILE-06 — Cancel profile editing
+
+**Prerequisites:**
+- User is logged in.
+- User is editing their profile.
+
+**Test steps:**
+1. Open **Edit Profile**.
+2. Modify one or more profile fields.
+3. Click the **Cancel** button.
+
+**Expected results:**
+- Changes are discarded.
+- The profile remains unchanged.
+- The user returns to the Profile page.
+
+**Actual results:**
+- ...
+
+**Status:**
+...
+
+---
+
+### TC-PROFILE-07 — Successful profile information update
+
+**Prerequisites:**
+- User is logged in.
+- User already has a profile.
+
+**Test steps:**
+1. Open **Edit Profile**.
+2. Modify profile information. 3. Click the **Save** button.
+4. Reload the Profile page.
 
 **Expected Result:**
-- The system prevents unauthorized access to the user's profile.
-- The user is redirected to the Login page or shown an appropriate authentication message.
+- The updated information is saved successfully.
+- The updated information remains displayed after reloading the page.
 
 **Actual Result:**
 - ...
@@ -704,22 +616,63 @@ PASS
 
 ---
 
-### TC-PROFILE-10 — Prevent unauthorized modification of another user's profile
+### TC-PROFILE-08 — Refreshing profile after updating information
 
-**Precondition:**
+**Prerequisites:**
+- User is logged in.
+- User has successfully updated their profile.
+
+**Test Steps:**
+1. Access the Profile page.
+2. Check the updated information.
+3. Refresh the page.
+
+**Expected Result:**
+- The Profile page loads successfully.
+- The updated information remains displayed after refreshing the page.
+
+**Actual Result:**
+- ...
+
+**Status:**
+...
+
+---
+
+### TC-PROFILE-09 — Accessing profile without authentication
+
+**Prerequisites:**
+- User is not logged in.
+
+**Test Steps:**
+1. Attempt to access the Profile page directly.
+
+**Expected Result:**
+- The system prevents unauthorized access to the user profile.
+- The user is redirected to the Login page or an appropriate authentication message is displayed.
+
+**Actual Result:**
+- ...
+
+**Status:**
+...
+
+---
+
+### TC-PROFILE-10 — Preventing unauthorized editing of another user's profile
+
+**Prerequisites:**
 - User is logged in.
 - Another user's profile exists in the system.
 
 **Test Steps:**
-1. Attempt to access another user's profile editing function.
-2. Attempt to modify the other user's profile information.
+1. Attempt to access the profile editing function for another user.
+2. Attempt to edit the profile information of another user.
 3. Submit the changes.
 
 **Expected Result:**
-- The system prevents the user from modifying another user's profile.
-- The other user's profile remains unchanged.
-
-**Actual Result:**
+- The system prevents the user from editing another user's profile.
+- The other user's profile remains unchanged. **Actual results:**
 - ...
 
 **Status:**
@@ -731,19 +684,19 @@ PASS
 
 ### TC-MATCH-01 — View matching recommendations
 
-**Precondition:**
+**Prerequisites:**
 - User is logged in.
-- User has completed the required profile information.
+- User has completed mandatory profile information.
 
-**Test Steps:**
-1. Navigate to the **Matching** page.
-2. View the recommended profiles.
+**Test steps:**
+1. Access the **Matching** page.
+2. View recommended profiles.
 
-**Expected Result:**
-- The system displays profiles recommended for the user.
-- The recommended profiles are displayed correctly.
+**Expected results:**
+- The system displays recommended profiles to the user.
+- Recommended profiles are displayed correctly.
 
-**Actual Result:**
+**Actual results:**
 - ...
 
 **Status:**
@@ -751,22 +704,22 @@ PASS
 
 ---
 
-### TC-MATCH-02 — View details of a recommended profile
+### TC-MATCH-02 — View recommended profile details
 
-**Precondition:**
+**Prerequisites:**
 - User is logged in.
 - Matching recommendations are available.
 
-**Test Steps:**
-1. Navigate to the **Matching** page.
+**Test steps:**
+1. Access the **Matching** page.
 2. Select a recommended profile.
-3. View the profile details.
+3. View profile details.
 
-**Expected Result:**
-- The system displays the selected user's available profile information.
+**Expected results:**
+- The system displays available profile information for the selected user.
 - The user can view the profile before making a matching decision.
 
-**Actual Result:**
+**Actual results:**
 - ...
 
 **Status:**
@@ -776,20 +729,20 @@ PASS
 
 ### TC-MATCH-03 — Like a recommended profile
 
-**Precondition:**
+**Prerequisites:**
 - User is logged in.
 - At least one recommended profile is available.
 
-**Test Steps:**
-1. Navigate to the **Matching** page.
+**Test steps:**
+1. Access the **Matching** page.
 2. Select a recommended profile.
 3. Click the **Like** button.
 
-**Expected Result:**
-- The system records the user's Like action.
-- The selected profile is processed according to the matching rules.
+**Expected results:**
+- The system records the user's "Like" action.
+- The selected profile is processed according to matching rules.
 
-**Actual Result:**
+**Actual results:**
 - ...
 
 **Status:**
@@ -799,20 +752,18 @@ PASS
 
 ### TC-MATCH-04 — Dislike a recommended profile
 
-**Precondition:**
+**Prerequisites:**
 - User is logged in.
-- At least one recommended profile is available.
-
-**Test Steps:**
+- At least one recommended profile is available. **Test steps:**
 1. Navigate to the **Matching** page.
-2. Select a recommended profile.
+2. Select a suggested profile.
 3. Click the **Dislike** button.
 
-**Expected Result:**
+**Expected results:**
 - The system records the user's Dislike action.
-- The selected profile is removed or skipped according to the matching rules.
+- The selected profile is removed or skipped in accordance with matching rules.
 
-**Actual Result:**
+**Actual results:**
 - ...
 
 **Status:**
@@ -820,24 +771,24 @@ PASS
 
 ---
 
-### TC-MATCH-05 — Match when two users like each other
+### TC-MATCH-05 — Match creation when two users like each other
 
-**Precondition:**
+**Prerequisites:**
 - User A and User B are eligible for matching.
 - User A likes User B.
 - User B likes User A.
 
-**Test Steps:**
+**Test steps:**
 1. User A likes User B.
 2. User B likes User A.
-3. Check the matching result for both users.
+3. Check the matching results for both users.
 
-**Expected Result:**
+**Expected results:**
 - The system identifies the mutual Like.
 - A Match is created between User A and User B.
-- Both users are informed about the Match.
+- Both users are notified of the Match.
 
-**Actual Result:**
+**Actual results:**
 - ...
 
 **Status:**
@@ -845,23 +796,21 @@ PASS
 
 ---
 
-### TC-MATCH-06 — No match when only one user likes the other
+### TC-MATCH-06 — No Match created when only one user likes the other
 
-**Precondition:**
+**Prerequisites:**
 - User A and User B are eligible for matching.
 - User A likes User B.
 - User B does not like User A.
 
-**Test Steps:**
+**Test steps:**
 1. User A likes User B.
 2. User B does not like User A.
-3. Check the matching result.
+3. Check the matching results.
 
-**Expected Result:**
+**Expected results:**
 - No Match is created between the two users.
-- The system records User A's Like according to the matching rules.
-
-**Actual Result:**
+- The system records User A's Like in accordance with matching rules. **Actual Result:**
 - ...
 
 **Status:**
@@ -869,19 +818,19 @@ PASS
 
 ---
 
-### TC-MATCH-07 — Prevent matching with the same profile repeatedly
+### TC-MATCH-07 — Prevent display of previously processed profiles
 
-**Precondition:**
+**Prerequisites:**
 - User is logged in.
-- User has already processed a recommended profile.
+- User has previously processed a suggested profile.
 
 **Test Steps:**
-1. Navigate to the **Matching** page.
-2. Process the same recommended profile.
+1. Access the **Matching** page.
+2. Process that same suggested profile.
 3. Refresh or revisit the Matching page.
 
 **Expected Result:**
-- The previously processed profile is not repeatedly presented as a new recommendation, according to the matching rules.
+- The previously processed profile is not displayed again as a new suggestion, in accordance with matching rules.
 
 **Actual Result:**
 - ...
@@ -891,18 +840,18 @@ PASS
 
 ---
 
-### TC-MATCH-08 — Matching with no available recommendations
+### TC-MATCH-08 — Matching when no suggestions are available
 
-**Precondition:**
+**Prerequisites:**
 - User is logged in.
-- There are no eligible profiles available for matching.
+- No eligible profiles are available for matching.
 
 **Test Steps:**
-1. Navigate to the **Matching** page.
-2. Wait for the system to load recommendations.
+1. Access the **Matching** page.
+2. Wait for the system to load suggestions.
 
 **Expected Result:**
-- The system displays an appropriate message indicating that there are no available recommendations.
+- The system displays an appropriate message indicating that no suggestions are available.
 - The Matching page remains functional.
 
 **Actual Result:**
@@ -913,9 +862,9 @@ PASS
 
 ---
 
-### TC-MATCH-09 — Access Matching without authentication
+### TC-MATCH-09 — Accessing Matching without authentication
 
-**Precondition:**
+**Prerequisites:**
 - User is not logged in.
 
 **Test Steps:**
@@ -933,23 +882,22 @@ PASS
 
 ---
 
-### TC-MATCH-10 — Matching recommendations respect user preferences
+### TC-MATCH-10 — Matching suggestions respect user preferences
 
-**Precondition:**
-- User is logged in.
-- User has configured matching preferences in their profile.
-- Eligible profiles with different characteristics are available.
+**Prerequisites:**
+- User is logged in. - The user has configured matching preferences in their profile.
+- There are eligible profiles with varying characteristics.
 
-**Test Steps:**
+**Test steps:**
 1. Navigate to the **Matching** page.
-2. View the recommended profiles.
-3. Compare the recommendations with the user's configured matching preferences.
+2. View the suggested profiles.
+3. Compare the suggestions against the user's configured matching preferences.
 
-**Expected Result:**
-- The system recommends profiles according to the configured matching preferences and matching rules.
-- Profiles that do not meet the required criteria are excluded when applicable.
+**Expected results:**
+- The system suggests profiles based on the configured matching preferences and matching rules.
+- Profiles that do not meet mandatory criteria are excluded.
 
-**Actual Result:**
+**Actual results:**
 - ...
 
 **Status:**
