@@ -2,8 +2,8 @@
 
 | Field | Value |
 | --- | --- |
-| Project | LoveYou â€” Online Dating Web Application |
-| Class / Group | SE24C11 â€” Group 01 |
+| Project | LoveYou Online Dating Web Application |
+| Class / Group | SE24C11 Group 01 |
 | Document | Test Plan (PA5-2026) |
 | Version | 1.0 |
 | Author | Nguyen Cong Chien |
