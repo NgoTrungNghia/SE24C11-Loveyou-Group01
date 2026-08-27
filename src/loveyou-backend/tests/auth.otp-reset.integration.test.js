@@ -52,15 +52,15 @@ describe('Password Reset OTP', () => {
       expect(getLastOtp()).toMatch(/^\d{6}$/);
     });
 
-    test('unregistered email is rejected and sends no mail', async () => {
+    test('unregistered email receives generic confirmation and sends no mail', async () => {
       const res = await request(app)
         .post('/api/auth/forgot-password')
         .send({ email: uniqueEmail('unknown') });
 
-      expect(res.status).toBe(404);
-      expect(res.body.error).toEqual({
-        message: 'No account is registered with this email.',
-        code: 'EMAIL_NOT_REGISTERED',
+      expect(res.status).toBe(200);
+      expect(res.body).toEqual({
+        success: true,
+        data: { message: 'A reset code was sent to your email' },
       });
       expect(sentMails).toHaveLength(0);
     });

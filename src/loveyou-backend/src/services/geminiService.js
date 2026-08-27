@@ -355,17 +355,21 @@ Trường "safetyScore" là số nguyên từ 0 đến 100.`;
       redFlags: Array.isArray(result.redFlags) ? result.redFlags : [],
       greenFlags: Array.isArray(result.greenFlags) ? result.greenFlags : [],
       advice: result.advice || 'Hãy tiếp tục quan sát và tìm hiểu đối phương một cách cẩn trọng.',
+      aiPowered: true,
+      isDegraded: false,
     };
   } catch (err) {
     console.error('[Gemini] detectRedFlags error:', err.message);
-    // Fallback nếu API lỗi hoặc hết lượt
+    // Explicit degraded fallback response (BUG-21 / TC-CHAT-13)
     return {
-      riskLevel: 'CAUTION',
-      safetyScore: 70,
-      summary: `Hệ thống đã xem qua 100 tin nhắn gần nhất giữa ${currentUserName} và ${partnerName}. Giao tiếp tương đối ổn định nhưng cần duy trì sự cảnh giác tự nhiên.`,
-      redFlags: ['Cần chú ý nếu đối phương yêu cầu thông tin cá nhân nhạy cảm hoặc giao dịch tài chính.'],
-      greenFlags: ['Cả hai vẫn đang tương tác chủ động qua lại.'],
-      advice: 'Không bao giờ chia sẻ mật khẩu, OTP hoặc chuyển tiền cho người mới quen trên ứng dụng hẹn hò.',
+      riskLevel: 'UNKNOWN',
+      safetyScore: null,
+      isDegraded: true,
+      aiPowered: false,
+      summary: 'Dịch vụ AI phân tích hiện không khả dụng. Không thể thực hiện đánh giá tự động cho cuộc trò chuyện này lúc này.',
+      redFlags: [],
+      greenFlags: [],
+      advice: 'Vui lòng luôn giữ cảnh giác: tuyệt đối không chia sẻ mã OTP, mật khẩu hoặc chuyển tiền cho người mới quen trên ứng dụng hẹn hò.',
     };
   }
 }

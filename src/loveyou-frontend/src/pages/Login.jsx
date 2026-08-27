@@ -32,10 +32,8 @@ export default function Login() {
     setFieldErrors({});
 
     // Client-side validation
-    if (!form.email)    { setFieldErrors({ email: 'Vui lòng nhập địa chỉ email' }); return; }
+    if (!form.email)    { setFieldErrors({ email: 'Vui lòng nhập email hoặc username' }); return; }
     if (!form.password) { setFieldErrors({ password: 'Vui lòng nhập mật khẩu' }); return; }
-    const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email);
-    if (!emailOk) { setFieldErrors({ email: 'Địa chỉ email không đúng định dạng' }); return; }
 
     setLoading(true);
     const result = await login(form.email, form.password);
@@ -73,11 +71,11 @@ export default function Login() {
         )}
 
         <Field
-          label="Địa chỉ Email"
+          label="Email hoặc username"
           id="email"
-          type="email"
-          placeholder="nhap_email@gmail.com"
-          autoComplete="email"
+          type="text"
+          placeholder="Nhập email hoặc username"
+          autoComplete="username"
           value={form.email}
           onChange={set('email')}
           error={fieldErrors.email}

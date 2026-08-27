@@ -8,8 +8,13 @@ const signupSchema = z.object({
 });
 
 const loginSchema = z.object({
-  email: z.string({ error: 'Email is required' }).email('Enter a valid email address'),
+  email: z.string().min(1, 'Email or username is required').optional(),
+  username: z.string().min(1, 'Username is required').optional(),
+  identifier: z.string().min(1, 'Identifier is required').optional(),
   password: z.string({ error: 'Password is required' }).min(1, 'Password is required'),
+}).refine((data) => Boolean(data.email || data.username || data.identifier), {
+  message: 'Email or username is required',
+  path: ['email'],
 });
 
 const forgotPasswordSchema = z.object({

@@ -72,7 +72,7 @@ export function AuthProvider({ children }) {
       const errData = err.response?.data?.error;
       return {
         ok:      false,
-        message: errData?.message || 'Login failed',
+        message: errData?.message || 'Đăng nhập thất bại, vui lòng kiểm tra lại',
         issues:  errData?.issues  || [],
       };
     } finally { setLoading(false); }

@@ -88,7 +88,8 @@ function emailNotRegisteredError() {
 async function requestPasswordResetOtp(email) {
   const user = await findByEmail(email);
   if (!user) {
-    throw emailNotRegisteredError();
+    // Avoid user enumeration: return generic success without sending email
+    return { sent: true };
   }
 
   if (!rateLimiter.canRequest(email)) {
@@ -120,7 +121,7 @@ async function requestPasswordResetOtp(email) {
     await emailService.sendPasswordResetOtp(user.email, otp);
   } catch (err) {
     console.warn('[Email Warning]: Could not send Password Reset OTP via SMTP:', err.message);
-    console.log(`[DEV Password Reset OTP Code for ${user.email}]:`, otp);
+    throw deliveryFailedError();
   }
 
   return { sent: true };

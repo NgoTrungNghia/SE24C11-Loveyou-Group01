@@ -29,12 +29,13 @@ async function signup(req, res, next) {
 
 async function login(req, res, next) {
   try {
-    const { email, password } = req.body;
-    const user = await authService.verifyCredentials(email, password);
+    const identifier = req.body.email || req.body.username || req.body.identifier;
+    const { password } = req.body;
+    const user = await authService.verifyCredentials(identifier, password);
     if (!user) {
       return res.status(401).json({
         success: false,
-        error: { message: 'Invalid credentials', code: 'INVALID_CREDENTIALS' },
+        error: { message: 'Tài khoản hoặc mật khẩu không chính xác', code: 'INVALID_CREDENTIALS' },
       });
     }
     const token = createAccessToken({

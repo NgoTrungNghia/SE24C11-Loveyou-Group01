@@ -1043,7 +1043,8 @@ export default function ChatPanel({ match, currentUserId, currentUserProfile, is
 
             {/* CASE 3: ANALYSIS RESULT */}
             {!isAnalyzingRedFlag && redFlagResult && (() => {
-              const { riskLevel, safetyScore, summary, redFlags, greenFlags, advice } = redFlagResult;
+              const { riskLevel, safetyScore, summary, redFlags, greenFlags, advice, isDegraded, aiPowered } = redFlagResult;
+              const isDegradedMode = isDegraded || aiPowered === false || riskLevel === 'UNKNOWN';
               const isDanger = riskLevel === 'DANGER';
               const isCaution = riskLevel === 'CAUTION';
 
@@ -1054,34 +1055,52 @@ export default function ChatPanel({ match, currentUserId, currentUserProfile, is
 
               return (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem' }}>
-                  {/* Risk Badge & Safety Score */}
-                  <div style={{
-                    background: badgeBg, border: `1px solid ${badgeBorder}`,
-                    borderRadius: '16px', padding: '1rem 1.2rem',
-                    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                  }}>
-                    <div>
-                      <div style={{ color: badgeColor, fontWeight: 800, fontSize: '0.95rem', marginBottom: '4px' }}>
-                        {badgeText}
+                  {/* Degraded mode indicator vs AI Assessment Badge */}
+                  {isDegradedMode ? (
+                    <div style={{
+                      background: 'rgba(245,158,11,0.15)', border: '1px solid rgba(245,158,11,0.4)',
+                      borderRadius: '16px', padding: '1rem 1.2rem',
+                      display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                    }}>
+                      <div>
+                        <div style={{ color: '#F59E0B', fontWeight: 800, fontSize: '0.95rem', marginBottom: '4px' }}>
+                          ⚠️ CHẾ ĐỘ AN TOÀN DỰ PHÒNG (AI KHÔNG KHẢ DỤNG)
+                        </div>
+                        <div style={{ fontSize: '0.78rem', color: 'rgba(255,255,255,0.65)' }}>
+                          Hệ thống không thể kết nối AI để chấm điểm tự động. Vui lòng tham khảo lưu ý an toàn.
+                        </div>
                       </div>
-                      <div style={{ fontSize: '0.78rem', color: 'rgba(255,255,255,0.65)' }}>
-                        Đánh giá dựa trên 100 tin nhắn gần nhất
+                      <div style={{ fontSize: '1.8rem' }}>🛡️</div>
+                    </div>
+                  ) : (
+                    <div style={{
+                      background: badgeBg, border: `1px solid ${badgeBorder}`,
+                      borderRadius: '16px', padding: '1rem 1.2rem',
+                      display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                    }}>
+                      <div>
+                        <div style={{ color: badgeColor, fontWeight: 800, fontSize: '0.95rem', marginBottom: '4px' }}>
+                          {badgeText}
+                        </div>
+                        <div style={{ fontSize: '0.78rem', color: 'rgba(255,255,255,0.65)' }}>
+                          Đánh giá dựa trên 100 tin nhắn gần nhất
+                        </div>
+                      </div>
+                      <div style={{ textAlign: 'center' }}>
+                        <div style={{ fontSize: '1.5rem', fontWeight: 900, color: badgeColor, lineHeight: '1' }}>
+                          {safetyScore}<span style={{ fontSize: '0.85rem' }}>/100</span>
+                        </div>
+                        <div style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.5)', marginTop: '2px' }}>
+                          Điểm An Toàn
+                        </div>
                       </div>
                     </div>
-                    <div style={{ textAlign: 'center' }}>
-                      <div style={{ fontSize: '1.5rem', fontWeight: 900, color: badgeColor, lineHeight: '1' }}>
-                        {safetyScore}<span style={{ fontSize: '0.85rem' }}>/100</span>
-                      </div>
-                      <div style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.5)', marginTop: '2px' }}>
-                        Điểm An Toàn
-                      </div>
-                    </div>
-                  </div>
+                  )}
 
-                  {/* AI Summary */}
+                  {/* Summary */}
                   <div style={{ background: 'rgba(255,255,255,0.04)', borderRadius: '14px', padding: '1rem', border: '1px solid rgba(255,255,255,0.08)' }}>
                     <div style={{ fontWeight: 700, fontSize: '0.85rem', color: '#EC4899', marginBottom: '0.4rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                      📝 Nhận xét của AI:
+                      {isDegradedMode ? '📋 Thông báo an toàn:' : '📝 Nhận xét của AI:'}
                     </div>
                     <p style={{ margin: 0, fontSize: '0.85rem', color: 'rgba(255,255,255,0.85)', lineHeight: '1.55' }}>
                       {summary}

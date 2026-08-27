@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { adminApi, userApi, matchingApi, aiMatchingApi, chatApi, paymentApi } from '../utils/api';
@@ -21,6 +21,8 @@ export default function Dashboard() {
   const [profile, setProfile] = useState(null);
   const [candidates, setCandidates] = useState([]);
   const [candidateIdx, setCandidateIdx] = useState(0);
+  const [isSwiping, setIsSwiping] = useState(false);
+  const swipingRef = useRef(false);
   const [matchedPartner, setMatchedPartner] = useState(null);
   const [likedPartner, setLikedPartner] = useState(null);
   const [matches, setMatches] = useState([]);
@@ -430,8 +432,12 @@ export default function Dashboard() {
   };
 
   const handleSwipe = async (action, targetCandidate = null) => {
+    if (swipingRef.current) return;
     const candidateToSwipe = targetCandidate || candidates[candidateIdx];
     if (!candidateToSwipe) return;
+
+    swipingRef.current = true;
+    setIsSwiping(true);
     setLikedPartner(null);
     setMatchedPartner(null);
 
@@ -458,9 +464,12 @@ export default function Dashboard() {
         setLikedPartner(candidateToSwipe);
         setTimeout(() => setLikedPartner(null), 2500);
       }
+    } finally {
+      if (selectedProfile) setSelectedProfile(null);
+      setCandidateIdx(prev => prev + 1);
+      swipingRef.current = false;
+      setIsSwiping(false);
     }
-    if (selectedProfile) setSelectedProfile(null);
-    setCandidateIdx(prev => prev + 1);
   };
 
   const handleBlockUserInDashboard = (matchId, targetId, message) => {
@@ -1376,8 +1385,8 @@ export default function Dashboard() {
 
             {/* Action Buttons */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '2.5rem', marginTop: '1.8rem', justifyContent: 'center' }}>
-              <button className="action-btn-pass" onClick={() => handleSwipe('PASS')} style={{ width: '72px', height: '72px', borderRadius: '50%', background: '#181c22', border: '2px solid #ff4458', color: '#ff4458', fontSize: '2rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 8px 25px rgba(255,68,88,0.25)' }}>✕</button>
-              <button className="action-btn-like" onClick={() => handleSwipe('LIKE')} style={{ width: '72px', height: '72px', borderRadius: '50%', background: '#181c22', border: '2px solid #34D399', color: '#34D399', fontSize: '2rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 8px 25px rgba(52,211,153,0.25)' }}>💖</button>
+              <button className="action-btn-pass" disabled={isSwiping} onClick={() => handleSwipe('PASS')} style={{ width: '72px', height: '72px', borderRadius: '50%', background: '#181c22', border: '2px solid #ff4458', color: '#ff4458', fontSize: '2rem', cursor: isSwiping ? 'not-allowed' : 'pointer', opacity: isSwiping ? 0.6 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 8px 25px rgba(255,68,88,0.25)' }}>✕</button>
+              <button className="action-btn-like" disabled={isSwiping} onClick={() => handleSwipe('LIKE')} style={{ width: '72px', height: '72px', borderRadius: '50%', background: '#181c22', border: '2px solid #34D399', color: '#34D399', fontSize: '2rem', cursor: isSwiping ? 'not-allowed' : 'pointer', opacity: isSwiping ? 0.6 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 8px 25px rgba(52,211,153,0.25)' }}>💖</button>
             </div>
           </>
         )}
@@ -1511,8 +1520,8 @@ export default function Dashboard() {
                 </div>
               ) : (
                 <div style={{ display: 'flex', justifyContent: 'center', gap: '2rem', marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid rgba(255,255,255,0.08)' }}>
-                  <button onClick={() => handleSwipe('PASS', selectedProfile)} style={{ width: '64px', height: '64px', borderRadius: '50%', background: '#181c22', border: '2px solid #ff4458', color: '#ff4458', fontSize: '1.8rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
-                  <button onClick={() => handleSwipe('LIKE', selectedProfile)} style={{ width: '64px', height: '64px', borderRadius: '50%', background: '#181c22', border: '2px solid #34D399', color: '#34D399', fontSize: '1.8rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>💖</button>
+                  <button disabled={isSwiping} onClick={() => handleSwipe('PASS', selectedProfile)} style={{ width: '64px', height: '64px', borderRadius: '50%', background: '#181c22', border: '2px solid #ff4458', color: '#ff4458', fontSize: '1.8rem', cursor: isSwiping ? 'not-allowed' : 'pointer', opacity: isSwiping ? 0.6 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
+                  <button disabled={isSwiping} onClick={() => handleSwipe('LIKE', selectedProfile)} style={{ width: '64px', height: '64px', borderRadius: '50%', background: '#181c22', border: '2px solid #34D399', color: '#34D399', fontSize: '1.8rem', cursor: isSwiping ? 'not-allowed' : 'pointer', opacity: isSwiping ? 0.6 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>💖</button>
                 </div>
               )}
             </div>
