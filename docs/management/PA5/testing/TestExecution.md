@@ -4,6 +4,8 @@ Execution date: **2026-08-20**. Tester: **Nguyen Cong Chien**. The current PA5 s
 
 ## 1. Execution records
 
+> **Performed by:** Chiến, Văn | **Reviewed by:** Nghĩa | **Edited by:** Chiến
+
 | Range | Result | Actual result / evidence | Bug |
 |---|---|---|---|
 | TC-AUTH-01..05, 07..09, 11..13, 15, 17..20 | Pass | Jest/API checks passed for valid registration, duplicate validation, login, auth middleware, OTP happy path/rate limit and reset-token paths. | - |
@@ -36,9 +38,13 @@ Execution date: **2026-08-20**. Tester: **Nguyen Cong Chien**. The current PA5 s
 
 ## 2. Jest evidence
 
+> **Performed by:** Chiến | **Reviewed by:** Hoàng | **Edited by:** Chiến
+
 After installing the declared `@payos/node` dependency and regenerating Prisma Client, 4 suites ran: 3 suites passed, 1 failed; 16 tests passed and 6 failed. The six failures map to BUG-05, BUG-06, BUG-07, BUG-08 and BUG-01/BUG-02 contract defects.
 
 ## 3. Summary
+
+> **Performed by:** Chiến, Nghĩa | **Reviewed by:** Whole Team | **Edited by:** Nghĩa
 
 | Feature | Cases | Pass | Fail | Awaiting/not executed |
 |---|---:|---:|---:|---:|

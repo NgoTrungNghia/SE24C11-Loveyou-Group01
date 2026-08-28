@@ -2,6 +2,10 @@
 
 Tester: Nguyen Cong Chien. Statuses are the disposition at the end of this test cycle. NFR gaps were deliberately left open per the agreed testing scope; no code changes were made for them.
 
+## 1. Defect Catalog
+
+> **Performed by:** Chiến, Văn | **Reviewed by:** Nghĩa | **Edited by:** Chiến
+
 | ID | Description, reproduction and expected vs actual | Severity | Status / linked cases |
 |---|---|---|---|
 | BUG-01 | Password-reset request for an unknown email: call forgot-password with an unregistered address. Expected the same generic `200` confirmation as a known address (FR-004); actual `404 EMAIL_NOT_REGISTERED`, exposing account existence. | High | Open; TC-AUTH-16 |
@@ -29,6 +33,8 @@ Tester: Nguyen Cong Chien. Statuses are the disposition at the end of this test 
 | BUG-24 | Start a mini-game while Gemini question generation is unavailable. Expected a recoverable retry state and report to admin or system; actual the backend pauses the session and the UI displays an error message. | Medium | Open; TC-GAME-04 |
 | BUG-25 | Submit an incomplete game answer set or submit the same question twice through the game service. Expected incomplete submission to be rejected and duplicate submission to be rejected or ignored; actual incomplete evaluation returned a result and the duplicate answer overwrote the first answer. TC-GAME-12 now passes because nonexistent sessions produce a Socket.io error. | Medium | Open; TC-GAME-07, TC-GAME-08 |
 
-## Notes
+## 2. Notes
+
+> **Performed by:** Chiến | **Reviewed by:** Nghĩa | **Edited by:** Chiến
 
 The earlier generated OTP test expected `404` for an unknown email. That expected result was corrected in this document to the specification's non-enumerating `200`; the resulting implementation mismatch is BUG-01. The Gemini key is configured and was never written into this report.

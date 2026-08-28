@@ -4,6 +4,8 @@ Execution date for this cycle: 2026-08-20. Expected results follow the written s
 
 ## UC1 - Registration, Login and Password Recovery
 
+> **Performed by:** Chiến, Văn | **Reviewed by:** Nghĩa | **Edited by:** Chiến
+
 | ID | Scenario / steps | Expected result | Type |
 |---|---|---|---|
 | TC-AUTH-01 | Register with valid unique username, email and 8-character password | `201`, account created | Positive |
@@ -29,6 +31,8 @@ Execution date for this cycle: 2026-08-20. Expected results follow the written s
 
 ## UC2 - Discover and Smart Matching
 
+> **Performed by:** Văn | **Reviewed by:** Hoàng | **Edited by:** Văn
+
 | ID | Scenario / steps | Expected result | Type |
 |---|---|---|---|
 | TC-MATCH-01 | Get candidate list as authenticated member | `200`, `data.candidates` array | Positive |
@@ -46,6 +50,8 @@ Execution date for this cycle: 2026-08-20. Expected results follow the written s
 | TC-MATCH-14 | Request VIP-only discovery feature as non-VIP | Paywall/VIP-required response; no privileged data leaked | Authorization |
 
 ## UC3 - Realtime Chat and AI Red-Flag Analysis
+
+> **Performed by:** Văn, Chiến | **Reviewed by:** Hoàng | **Edited by:** Văn
 
 | ID | Scenario / steps | Expected result | Type |
 |---|---|---|---|
@@ -66,6 +72,8 @@ Execution date for this cycle: 2026-08-20. Expected results follow the written s
 
 ## UC4 - AI Mini-Games
 
+> **Performed by:** Chiến | **Reviewed by:** Hoàng | **Edited by:** Chiến
+
 | ID | Scenario / steps | Expected result | Type |
 |---|---|---|---|
 | TC-GAME-01 | Start WYR game | Session created with 10 Gemini-generated questions | AI |
@@ -82,6 +90,8 @@ Execution date for this cycle: 2026-08-20. Expected results follow the written s
 | TC-GAME-12 | Finish nonexistent/expired session | `404`/documented session error; no result fabricated | Negative |
 
 ## UC5 - Admin Management
+
+> **Performed by:** Chiến | **Reviewed by:** Nghĩa | **Edited by:** Chiến
 
 | ID | Scenario / steps | Expected result | Type |
 |---|---|---|---|
@@ -100,6 +110,8 @@ Execution date for this cycle: 2026-08-20. Expected results follow the written s
 
 ## UC6 - Citizen ID Verification
 
+> **Performed by:** Tấn, Văn | **Reviewed by:** Chiến | **Edited by:** Tấn
+
 | ID | Scenario / steps | Expected result | Type |
 |---|---|---|---|
 | TC-VERIFY-01 | Submit front and back ID photos | `201`/pending verification created | Positive |
@@ -116,6 +128,8 @@ Execution date for this cycle: 2026-08-20. Expected results follow the written s
 | TC-VERIFY-12 | OCR-readable ID image | Extracted fields are shown for review; unreadable OCR is handled gracefully | UI/OCR |
 
 ## NFR cases
+
+> **Performed by:** Chiến | **Reviewed by:** Nghĩa | **Edited by:** Chiến
 
 | ID | Requirement and method | Expected threshold |
 |---|---|---|
