@@ -1,0 +1,14 @@
+{
+  "name": "se24c11-loveyou-root",
+  "version": "1.0.0",
+  "private": true,
+  "description": "LoveYou Dating Platform - Root Scripts",
+  "scripts": {
+    "install:all": "npm --prefix src/loveyou-backend install && npm --prefix src/loveyou-frontend install",
+    "dev:backend": "npm --prefix src/loveyou-backend run dev",
+    "dev:frontend": "npm --prefix src/loveyou-frontend run dev",
+    "dev:windows": "start cmd /k \"npm --prefix src/loveyou-backend run dev\" && start cmd /k \"npm --prefix src/loveyou-frontend run dev\"",
+    "dev:window": "npm run dev:windows",
+    "prisma:generate": "npm --prefix src/loveyou-backend run prisma:generate"
+  }
+}

@@ -145,7 +145,7 @@ In accordance with team governance rules established in PA1 (Section 5: Accounta
 | :--- | :---: | :---: | :---: | :---: | :---: | :---: |
 | **Nghĩa** | 19127484 | Present | Present | Present | 100% | **100%** |
 | **Nguyễn Công Chiến** | 23127331 | Present | Present | Present | 100% | **100%** |
-| **Vũ Lê Trọng Văn** | 23127476 | Present | Present | Present | 100% | **100%** |
+| **Vũ Lê Trọng Văn** | 20127095 | Present | Present | Present | 100% | **100%** |
 | **Nguyễn Minh Hoàng** | 23127368 | Present | Present | Present | 100% | **100%** |
 | **Lê Hoàng Tấn** | 23127471 | Present | Present | Present | 100% | **100%** |
 | **Nguyễn Tường Huy** | 23127197 | **Absent** | **Absent** | **Absent** | **0%** | **30%** |
